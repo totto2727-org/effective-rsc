@@ -1,5 +1,8 @@
 # Architecture
 
+> Workers fork: [WORKERS.md](WORKERS.md) takes precedence for the active workspace.
+> Bun/Rspack and legacy development-tool decisions below describe the preserved upstream implementation, not the active Workers path.
+
 Current implementation overview. Accepted future work is in [DECISIONS.md](DECISIONS.md); unresolved
 choices are in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 

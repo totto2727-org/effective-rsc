@@ -1,241 +1,139 @@
-<picture>
-  <source
-    media="(prefers-color-scheme: dark)"
-    srcset="https://raw.githubusercontent.com/nikhilsnayak/effective-rsc/main/packages/effective-rsc/logo-dark.svg"
-  />
-  <img
-    src="https://raw.githubusercontent.com/nikhilsnayak/effective-rsc/main/packages/effective-rsc/logo.svg"
-    alt=""
-    width="72"
-    height="72"
-  />
-</picture>
+# effective-rsc for Workers
 
-# effective-rsc
-
-**React owns the UI. Effect owns the runtime.**
-
-An experimental, Effect-native React Server Components framework for Bun. Built on Rspack's
-native RSC support.
-
-> Experimental. Uses React Canary, Effect v4 RC, TypeScript 7, Rspack's RSC support, and modern
-> browser APIs. [Current limitations](https://github.com/nikhilsnayak/effective-rsc/blob/main/docs/ARCHITECTURE.md#known-limitations).
+An experimental, Effect-native React Server Components framework running natively on Cloudflare Workers.
+This local fork preserves the history of [nikhilsnayak/effective-rsc](https://github.com/nikhilsnayak/effective-rsc) while replacing its active Bun/Rspack path with VitePlus, the Vite RSC plugin, and Cloudflare's Vite plugin.
+Bun and containers are not required.
 
 ## Requirements
 
-- Bun 1.4 or newer is the only supported server runtime.
-- Client navigation requires the Navigation API and `NavigationPrecommitController`; there is no
-  History API fallback. Browsers without them still hydrate Client Components and support Server
-  Functions, but links use full-page navigation. Without JavaScript, links and native forms still work.
-- React, React DOM, Effect, Effect's browser and Bun platforms, and
-  `react-server-dom-rspack` must use the exact compatible versions shown below.
+- Node.js compatible with VitePlus and the VitePlus `vp` command.
+- Dependencies pinned in `pnpm-workspace.yaml` and `pnpm-lock.yaml`, including React Canary and Effect v4 RC.
+- Local workerd support on your platform.
 
-## Create an application
+The active workspace contains `packages/effective-rsc` and `examples/workers` only.
+Other upstream examples and tooling remain for comparison and are not supported by this fork.
 
-```sh
-bunx create-ersc-app my-effective-rsc-app
-cd my-effective-rsc-app
-bun run dev
-```
+## Run locally
 
-Run `bunx create-ersc-app` without a directory for the interactive flow.
-
-## Why effective-rsc
-
-effective-rsc is built around three deliberate constraints:
-
-- **Effect owns the application runtime.** Pages, Layouts, Components, and Server Functions retain
-  inferred service requirements and run as request-scoped Effects. One application Layer provides
-  services and native Effect HTTP; Effect scopes own resources, interruption, and shutdown.
-- **Routes and ownership are explicit.** One application-scoped ERSC identity composes an immutable
-  route graph in `src/application.tsx`. Concern identity, middleware reach, and service requirements
-  remain visible in that composition.
-- **Navigation is browser-native.** ERSC intercepts the Navigation API and settles it at the
-  destination's first UI commit, so URL/history, focus, scroll, and React View Transitions are not
-  blocked by Flight EOF. The router retains the remaining stream until EOF or render retirement,
-  and tags publication with navigation, direction, UA visual-transition, Server Function, and HMR
-  transition types while applications own the `<ViewTransition>` boundaries and CSS.
-
-## Manual installation
-
-Create a Bun package and install the framework with its exact compatible peers:
+From the repository root:
 
 ```sh
-mkdir my-effective-rsc-app
-cd my-effective-rsc-app
-bun init -y
-bun add effective-rsc \
-  effect@4.0.0-rc.113 \
-  @effect/platform-browser@4.0.0-rc.113 \
-  @effect/platform-bun@4.0.0-rc.113 \
-  react@19.3.0-canary-1d34f91d-20260909 \
-  react-dom@19.3.0-canary-1d34f91d-20260909 \
-  react-server-dom-rspack@0.1.0
-bun add --dev \
-  typescript@7.0.2 \
-  @types/bun@^1.4.0 \
-  @types/react@19.2.18 \
-  @types/react-dom@19.2.7
+vp install
+vp run dev
 ```
 
-Add the framework commands to `package.json`:
+Open <http://127.0.0.1:5173>.
+This is Vite's development server with the Cloudflare plugin executing the application inside workerd, not a Node or Bun HTTP server emulating Workers.
+Alternatively, run `vp dev` directly from `examples/workers`.
 
-```json
-{
-  "type": "module",
-  "scripts": {
-    "dev": "ersc dev",
-    "check": "tsc --noEmit",
-    "build": "ersc build",
-    "start": "ersc start"
-  }
-}
+To serve a production build locally without Vite:
+
+```sh
+vp run build
+vp run local
 ```
 
-Create `tsconfig.json`:
+Open <http://127.0.0.1:8787>.
+Wrangler reads the generated `examples/workers/dist/rsc/wrangler.json`, including its built Worker and asset configuration.
+No Cloudflare account, deployment, or container is needed for these local commands.
 
-```json
-{
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "jsx": "react-jsx",
-    "noEmit": true,
-    "strict": true,
-    "erasableSyntaxOnly": true,
-    "exactOptionalPropertyTypes": true,
-    "noUncheckedIndexedAccess": true,
-    "noUncheckedSideEffectImports": true,
-    "types": ["bun", "react", "react-dom", "react/canary"],
-    "lib": ["ESNext", "DOM", "DOM.Iterable"]
-  },
-  "include": ["src"]
-}
-```
+## Runtime environment
 
-Create `src/environment.d.ts` so TypeScript accepts stylesheet imports:
+Set ordinary local bindings in `examples/workers/wrangler.jsonc` under `vars`.
+For local secrets, copy `examples/workers/.dev.vars.example` to `.dev.vars` in that directory and change the example value.
+The `.dev.vars` file is ignored by Git.
+Wrangler's `--var` and `--env-file` options can also supply values when serving the generated configuration.
+Do not put secrets into Vite `define`, `import.meta.env`, Client Component props, or rendered output.
+
+The example reads `APP_LABEL` and reports whether `SERVER_TOKEN` is configured without displaying the token.
+Environment values are request-scoped and are not automatically serialized into HTML or Flight.
+Application code can still explicitly leak values by rendering or passing them to Client Components.
+
+## Fetch API
 
 ```ts
-declare module '*.css' {}
+// src/worker.ts
+import { createFetchHandler } from "effective-rsc/workers";
+import application from "./application";
+
+export default {
+  fetch: createFetchHandler(application),
+};
 ```
 
-## Quick start
+The returned function accepts `(request, env, executionContext)` and returns `Promise<Response>`.
+Inside server-side Effect computations:
 
-Create `src/application.tsx`:
+```ts
+import { Effect } from "effect";
+import { getWorkersEnv, getWorkersRequestContext } from "effective-rsc/workers";
 
-```tsx
-import { Effect } from 'effect';
-import { Application } from 'effective-rsc';
+type Env = { APP_LABEL: string; SERVER_TOKEN?: string };
+type Context = { waitUntil(promise: Promise<unknown>): void };
 
-const ERSC = Application.ersc();
-
-const RootLayout = ERSC.Layout.make({
-  render: ({ children }) =>
-    Effect.succeed(
-      <html lang='en'>
-        <body>{children}</body>
-      </html>,
-    ),
-});
-
-const HomePage = ERSC.Page.make({
-  render: () => Effect.succeed(<h1>Hello from effective-rsc</h1>),
-});
-
-export default ERSC.make({
-  routes: ERSC.Routes.make({ layout: RootLayout }).page('/', HomePage),
+const label = Effect.gen(function* () {
+  const env = yield* getWorkersEnv<Env>();
+  const { request } = yield* getWorkersRequestContext<Env, Context>();
+  return { label: env.APP_LABEL, path: new URL(request.url).pathname };
 });
 ```
 
-Run `bun run dev`, then open `http://localhost:18193`. For a production run, use `bun run check`,
-`bun run build`, and `bun run start`.
+The type parameters describe your host bindings, not runtime schema validation.
+These helpers must run within the request's Effect context.
+The application Layer is acquired per request and retained through the response body's lifetime.
+The portable HTTP graph uses Effect's `HttpRouter.toWebHandler` rather than a Bun server.
+A future Node/Bun adapter can invoke the same Fetch interface, but those adapters are not included here.
 
-For deployment, `ersc start` accepts `--hostname` and `--port`. Command-line flags take precedence
-over `HOST` and `PORT`; the defaults are `localhost` and `18193`.
+## Vite integration
 
-For a custom Bun entry, await `start({ root, hostname, port })` from `effective-rsc/server`.
-Use `ersc build --adapter <package>` to package deployment output without uploading it.
-See the [production startup guide](https://github.com/nikhilsnayak/effective-rsc/blob/main/packages/effective-rsc/docs/03-advanced/04-production-startup/index.md).
+```ts
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { ersc } from "effective-rsc/vite";
+import { defineConfig } from "vite-plus";
 
-## Styling
-
-Import stylesheets from the modules that use them; there is no framework stylesheet entry point:
-
-```tsx
-import './styles.css';
+export default defineConfig({
+  plugins: [
+    ersc(),
+    cloudflare({
+      viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
+    }),
+  ],
+});
 ```
 
-Tailwind uses the same CSS pipeline. Install it:
+`ersc()` owns the RSC and React plugins, so do not register those plugins a second time.
+It uses `src/worker.ts` as the default RSC input and supports `rsc` and `application` path options.
+Cloudflare configuration remains application-owned.
+See `examples/workers/vite.config.ts` for the complete runnable configuration.
+
+## Quality checks
 
 ```sh
-bun add --dev tailwindcss@4.3.3
+vp fmt --check
+vp lint
+vp run typecheck
+vp test run
+vp run test:e2e
 ```
 
-Then create a stylesheet, such as `src/styles.css`:
+Formatting uses the same default VitePlus baseline as the source monorepo.
+Lint uses VitePlus's default rules without the upstream custom lint plugin.
+The browser acceptance runner exercises both the real development server and the built Worker served by Wrangler.
 
-```css
-@import 'tailwindcss';
-```
+## Scope and limitations
 
-## Authoring model
+- This is experimental local implementation work, not a production-stability promise.
+- D1, KV, R2, deployment automation, Node/Bun adapters, the old CLI, Bun filesystem hosting, Rspack builds, and the old development panel are not part of the active milestone.
+- Client navigation retains the upstream Navigation API requirement, with full-page navigation when unavailable.
+- React Canary, Effect RC, Vite RSC, and Workers compatibility require coordinated upgrades.
+- The package exposes source entries intended for Vite bundling, not an unbundled Node import or an npm release guarantee.
+- No PR, push, cloud deployment, or publishing is performed for this local fork.
 
-`Application.ersc<Services>()` creates one application-scoped ERSC identity and its base authoring
-view:
+## Documentation
 
-- `Page` is an Effectful route leaf and may decode typed path parameters with Schema.
-- `Layout` is an Effectful wrapper with one `children` outlet; the root Layout owns the document.
-- `Loading` is a synchronous, service-free Suspense fallback.
-- `Component` defines an Effectful Server Component that is not itself a route.
-- `ServerFn` adds Effect and Schema to React's native Server Function protocol.
-- `Middleware` adapts Effect HTTP middleware and may provide typed request services.
-- `Routes` immutably composes Pages and nested Layout/Loading scopes and activates middleware
-  retained by its authoring view.
+[Workers architecture](../../docs/WORKERS.md) is authoritative for the active fork.
+Other architecture documents describe the upstream design unless explicitly updated for Workers.
 
-Create application values from one ERSC identity and its derived middleware views.
-`ERSC.withMiddleware(middleware)` derives a view whose values retain that middleware scope. Declare
-the complete service universe through `Services` and provide the application Layer at
-`ERSC.make({ layer })`.
+## License
 
-## Runtime boundary
-
-The package-root API is available only under the `react-server` condition. The framework build
-enables that condition for application authoring modules; importing `effective-rsc` from another
-runtime, including a Client Component, throws immediately.
-
-## Examples and documentation
-
-- [Hello world](https://github.com/nikhilsnayak/effective-rsc/tree/main/examples/hello-world): a small
-  example with streaming, navigation, a counter, and a Server Function form.
-- [Event platform](https://github.com/nikhilsnayak/effective-rsc/tree/main/examples/event-platform):
-  the complete application example, using local SQLite persistence.
-
-- [Getting started](https://github.com/nikhilsnayak/effective-rsc/blob/main/packages/effective-rsc/docs/01-getting-started/index.md)
-- [Guides](https://github.com/nikhilsnayak/effective-rsc/blob/main/packages/effective-rsc/docs/02-guides/index.md)
-- [Advanced](https://github.com/nikhilsnayak/effective-rsc/blob/main/packages/effective-rsc/docs/03-advanced/index.md)
-- [API reference](https://github.com/nikhilsnayak/effective-rsc/blob/main/packages/effective-rsc/docs/04-api-reference/index.md)
-- [Combined LLM reference](https://github.com/nikhilsnayak/effective-rsc/blob/main/packages/effective-rsc/LLMS.md)
-
-## Credits
-
-### Key dependencies
-
-- [Rspack](https://github.com/web-infra-dev/rspack) and
-  [react-server-dom-rspack](https://www.npmjs.com/package/react-server-dom-rspack) provide native
-  RSC compilation and transport. Special thanks to [Cong-Cong Pan](https://github.com/SyMind) for
-  their work on Rspack's RSC implementation.
-
-### Prior art
-
-- [rsc-html-stream](https://github.com/devongovett/rsc-html-stream) by
-  [Devon Govett](https://x.com/devongovett) established the compact streamed-HTML Flight embedding
-  shape adapted by ERSC's injector.
-- [Next.js](https://github.com/vercel/next.js) is a reference for production RSC conventions and
-  protocol behavior.
-- [Waku](https://github.com/wakujs/waku) by [Daishi Kato](https://x.com/dai_shi) and
-  [Twofold](https://github.com/twofold-rsc/twofold) by
-  [Ryan Toronto](https://x.com/ryantotweets) demonstrated compact RSC framework design.
-- [rspack-rsc](https://github.com/rstackjs/rstack-examples/tree/main/rspack/rspack-rsc),
-  [rsbuild-plugin-rsc](https://github.com/rstackjs/rsbuild-plugin-rsc), and
-  [Vite RSC](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-rsc) provide
-  reference implementations for RSC bundling and Server Function integration.
+MIT, as in the upstream repository.

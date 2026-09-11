@@ -1,5 +1,8 @@
 # effective-rsc documentation
 
+> Workers fork: [WORKERS.md](WORKERS.md) takes precedence for the active workspace.
+> Bun/Rspack and legacy development-tool decisions below describe the preserved upstream implementation, not the active Workers path.
+
 Read this index before changing framework behavior.
 
 ## Status
