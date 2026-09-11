@@ -26,7 +26,7 @@ const run = (name, args) =>
   });
 
 const start = (label, name, args) => {
-  const child = spawn(executable(name), args, { cwd: root, stdio: "inherit" });
+  const child = spawn(executable(name), args, { cwd: root, detached: true, stdio: "inherit" });
   child.once("error", (error) => {
     throw new Error(`${label} failed to start: ${error.message}`);
   });
@@ -37,7 +37,11 @@ const stop = async (child, label) => {
   if (child.exitCode !== null || child.signalCode !== null) {
     return;
   }
-  child.kill("SIGINT");
+  try {
+    process.kill(-child.pid, "SIGINT");
+  } catch {
+    child.kill("SIGINT");
+  }
   await new Promise((resolveStop, rejectStop) => {
     const timeout = setTimeout(() => {
       child.kill("SIGKILL");
