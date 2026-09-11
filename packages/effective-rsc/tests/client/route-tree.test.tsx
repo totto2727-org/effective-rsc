@@ -1,15 +1,15 @@
-import { describe, expect, it } from '@effect/vitest';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from "@effect/vitest";
+import { renderToStaticMarkup } from "react-dom/server";
 
-import { RouteOutlet, RouteTree } from '../../src/client/route-tree';
-import type { RouteTreeModel } from '../../src/rsc/route-tree';
+import { RouteOutlet, RouteTree } from "../../src/client/route-tree";
+import type { RouteTreeModel } from "../../src/rsc/route-tree";
 
-describe('RouteTree', () => {
-  it('recursively renders a unary Layout ancestry', () => {
+describe("RouteTree", () => {
+  it("recursively renders a unary Layout ancestry", () => {
     const page: RouteTreeModel = {
       child: null,
       content: <h1>Schedule</h1>,
-      id: '/schedule/day-two',
+      id: "/schedule/day-two",
     };
     const schedule: RouteTreeModel = {
       child: page,
@@ -19,7 +19,7 @@ describe('RouteTree', () => {
           <RouteOutlet />
         </section>
       ),
-      id: '/schedule',
+      id: "/schedule",
     };
     const root: RouteTreeModel = {
       child: schedule,
@@ -29,15 +29,15 @@ describe('RouteTree', () => {
           <RouteOutlet />
         </main>
       ),
-      id: '/',
+      id: "/",
     };
 
     expect(renderToStaticMarkup(<RouteTree root={root} />)).toBe(
-      '<main><header>Conference</header><section><aside>Schedule navigation</aside><h1>Schedule</h1></section></main>',
+      "<main><header>Conference</header><section><aside>Schedule navigation</aside><h1>Schedule</h1></section></main>",
     );
   });
 
-  it('renders an intentionally empty child as null', () => {
+  it("renders an intentionally empty child as null", () => {
     const root: RouteTreeModel = {
       child: null,
       content: (
@@ -45,15 +45,15 @@ describe('RouteTree', () => {
           <RouteOutlet />
         </main>
       ),
-      id: '/',
+      id: "/",
     };
 
-    expect(renderToStaticMarkup(<RouteTree root={root} />)).toBe('<main></main>');
+    expect(renderToStaticMarkup(<RouteTree root={root} />)).toBe("<main></main>");
   });
 
-  it('rejects an outlet rendered outside a route node', () => {
+  it("rejects an outlet rendered outside a route node", () => {
     expect(() => renderToStaticMarkup(<RouteOutlet />)).toThrowError(
-      new TypeError('RouteOutlet rendered outside its route node.'),
+      new TypeError("RouteOutlet rendered outside its route node."),
     );
   });
 });

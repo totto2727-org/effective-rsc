@@ -1,9 +1,9 @@
-import { Context, Effect, FileSystem, Layer } from 'effect';
+import { Context, Effect, FileSystem, Layer } from "effect";
 
-import type { BuildContext, BuildHook } from '../../src/build/hook';
+import type { BuildContext, BuildHook } from "../../src/build/hook";
 
 class Packaging extends Context.Service<Packaging, { readonly run: Effect.Effect<void> }>()(
-  'ersc/tests/types/build-hook/Packaging',
+  "ersc/tests/types/build-hook/Packaging",
 ) {
   static readonly layer = Layer.succeed(Packaging, { run: Effect.void });
 }
@@ -18,13 +18,13 @@ const build: BuildHook = () =>
 void build;
 
 const customDependencyCheck: typeof packageApplication extends ReturnType<BuildHook>
-  ? 'Accepted'
-  : 'Rejected' = 'Rejected';
+  ? "Accepted"
+  : "Rejected" = "Rejected";
 void customDependencyCheck;
 
 const requiresFileSystem = ({ root }: BuildContext) =>
   Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeDirectory(root));
 const fileSystemCheck: ReturnType<typeof requiresFileSystem> extends ReturnType<BuildHook>
-  ? 'Accepted'
-  : 'Rejected' = 'Rejected';
+  ? "Accepted"
+  : "Rejected" = "Rejected";
 void fileSystemCheck;

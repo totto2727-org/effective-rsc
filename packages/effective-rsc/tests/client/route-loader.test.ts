@@ -1,9 +1,9 @@
-import { expect, it } from '@effect/vitest';
-import { Deferred, Effect, Fiber, Layer } from 'effect';
-import { HttpClient, HttpClientResponse } from 'effect/unstable/http';
-import { vi } from 'vitest';
+import { expect, it } from "@effect/vitest";
+import { Deferred, Effect, Fiber, Layer } from "effect";
+import { HttpClient, HttpClientResponse } from "effect/unstable/http";
+import { vi } from "vitest";
 
-import type { RouteTreeModel } from '../../src/rsc/route-tree';
+import type { RouteTreeModel } from "../../src/rsc/route-tree";
 
 const decodedFlights = vi.hoisted<
   Array<{
@@ -13,14 +13,14 @@ const decodedFlights = vi.hoisted<
   }>
 >(() => []);
 
-vi.mock('react-server-dom-rspack/client.browser', () => ({
+vi.mock("react-server-dom-rspack/client.browser", () => ({
   createFromReadableStream: vi.fn(() => Promise.resolve(decodedFlights.shift())),
 }));
 
-import { FlightClient } from '../../src/client/flight-client';
-import { InitialFlightStream } from '../../src/client/initial-flight-stream';
-import { NavigationApi } from '../../src/client/navigation-api';
-import { RouteLoader } from '../../src/client/route-loader';
+import { FlightClient } from "../../src/client/flight-client";
+import { InitialFlightStream } from "../../src/client/initial-flight-stream";
+import { NavigationApi } from "../../src/client/navigation-api";
+import { RouteLoader } from "../../src/client/route-loader";
 
 const FlightClientLayer = FlightClient.layer.pipe(Layer.provide(InitialFlightStream.layer));
 
@@ -57,7 +57,7 @@ const makeHttpClient = (requestedUrls: Array<string>) =>
         request,
         new Response(new Uint8Array(), {
           headers: {
-            'content-type': 'text/x-component',
+            "content-type": "text/x-component",
           },
         }),
       );
@@ -70,7 +70,7 @@ const makeNavigationApiLayer = (navigationHistory: TestNavigationHistory) =>
     getCurrentUrl: () => navigationHistory.currentEntry.url,
     getTransition: () => null,
     navigate: () => {
-      throw new TypeError('Unexpected navigation.');
+      throw new TypeError("Unexpected navigation.");
     },
     reloadDocument: () => undefined,
     replaceDocument: () => undefined,
@@ -82,7 +82,7 @@ const makeRouteLoader = Effect.fnUntraced(function* (
   initialRouteTree: RouteTreeModel,
   initialFlightCompleted: Effect.Effect<void> = Effect.void,
 ) {
-  const initialized = yield* Deferred.make<RouteLoader['Service']>();
+  const initialized = yield* Deferred.make<RouteLoader["Service"]>();
   const flightClientLayer = Layer.effect(
     FlightClient,
     Effect.gen(function* () {
@@ -116,180 +116,180 @@ const makeRouteLoader = Effect.fnUntraced(function* (
 });
 
 const load = (
-  routeLoader: RouteLoader['Service'],
+  routeLoader: RouteLoader["Service"],
   entry: ReturnType<typeof makeNavigationEntry>,
   navigationType: NavigationType,
 ) => routeLoader.load({ destination: entry, navigationType });
 
-it.effect('does not let initial Flight completion overwrite a refreshed cache generation', () => {
+it.effect("does not let initial Flight completion overwrite a refreshed cache generation", () => {
   decodedFlights.length = 0;
   const initialFlight = Promise.withResolvers<void>();
   const requestedUrls: Array<string> = [];
   return Effect.scoped(
     Effect.gen(function* () {
       const initialEntry = makeNavigationEntry(
-        'entry-one',
-        'slot-one',
-        'https://effective-rsc.test/schedule/day-one',
+        "entry-one",
+        "slot-one",
+        "https://effective-rsc.test/schedule/day-one",
       );
       const navigationHistory = new TestNavigationHistory(initialEntry);
       const routeLoader = yield* makeRouteLoader(
         navigationHistory,
-        makeRouteTree('initial'),
+        makeRouteTree("initial"),
         Effect.promise(() => initialFlight.promise),
       );
 
-      routeLoader.prepareRefresh(makeRouteTree('refreshed'))();
+      routeLoader.prepareRefresh(makeRouteTree("refreshed"))();
       initialFlight.resolve();
       yield* Effect.promise(() => Promise.resolve());
       yield* Effect.yieldNow;
 
-      const resource = yield* load(routeLoader, initialEntry, 'traverse');
+      const resource = yield* load(routeLoader, initialEntry, "traverse");
 
-      expect(resource._tag).toBe('Route');
-      if (resource._tag === 'Route') {
-        expect(resource.routeTree.id).toBe('refreshed');
+      expect(resource._tag).toBe("Route");
+      if (resource._tag === "Route") {
+        expect(resource.routeTree.id).toBe("refreshed");
       }
       expect(requestedUrls).toEqual([]);
     }).pipe(Effect.provideService(HttpClient.HttpClient, makeHttpClient(requestedUrls))),
   );
 });
 
-it.effect('invalidates cached history entries before a development refresh', () => {
+it.effect("invalidates cached history entries before a development refresh", () => {
   decodedFlights.length = 0;
   const requestedUrls: Array<string> = [];
   return Effect.scoped(
     Effect.gen(function* () {
       const initialEntry = makeNavigationEntry(
-        'entry-one',
-        'slot-one',
-        'https://effective-rsc.test/schedule/day-one',
+        "entry-one",
+        "slot-one",
+        "https://effective-rsc.test/schedule/day-one",
       );
       const navigationHistory = new TestNavigationHistory(initialEntry);
-      const routeLoader = yield* makeRouteLoader(navigationHistory, makeRouteTree('initial'));
+      const routeLoader = yield* makeRouteLoader(navigationHistory, makeRouteTree("initial"));
       yield* Effect.yieldNow;
       routeLoader.invalidate();
       decodedFlights.push({
         formState: null,
-        routeTree: makeRouteTree('reloaded'),
+        routeTree: makeRouteTree("reloaded"),
         serverFnResult: null,
       });
 
-      const resource = yield* load(routeLoader, initialEntry, 'traverse');
+      const resource = yield* load(routeLoader, initialEntry, "traverse");
 
-      expect(resource._tag === 'Route' && resource.routeTree.id).toBe('reloaded');
+      expect(resource._tag === "Route" && resource.routeTree.id).toBe("reloaded");
       expect(requestedUrls).toEqual([initialEntry.url]);
     }).pipe(Effect.provideService(HttpClient.HttpClient, makeHttpClient(requestedUrls))),
   );
 });
 
-it.effect('fences an in-flight navigation cache write when a refresh invalidates it', () => {
+it.effect("fences an in-flight navigation cache write when a refresh invalidates it", () => {
   decodedFlights.length = 0;
   const requestedUrls: Array<string> = [];
   return Effect.scoped(
     Effect.gen(function* () {
       const initialEntry = makeNavigationEntry(
-        'entry-one',
-        'slot-one',
-        'https://effective-rsc.test/schedule/day-one',
+        "entry-one",
+        "slot-one",
+        "https://effective-rsc.test/schedule/day-one",
       );
       const navigationHistory = new TestNavigationHistory(initialEntry);
-      const routeLoader = yield* makeRouteLoader(navigationHistory, makeRouteTree('initial'));
+      const routeLoader = yield* makeRouteLoader(navigationHistory, makeRouteTree("initial"));
       decodedFlights.push({
         formState: null,
-        routeTree: makeRouteTree('navigation'),
+        routeTree: makeRouteTree("navigation"),
         serverFnResult: null,
       });
 
-      const routeLoad = yield* load(routeLoader, initialEntry, 'push');
-      routeLoader.prepareRefresh(makeRouteTree('refreshed'))();
-      if (routeLoad._tag === 'Route') {
+      const routeLoad = yield* load(routeLoader, initialEntry, "push");
+      routeLoader.prepareRefresh(makeRouteTree("refreshed"))();
+      if (routeLoad._tag === "Route") {
         routeLoad.cache(initialEntry);
       }
 
-      const cached = yield* load(routeLoader, initialEntry, 'traverse');
+      const cached = yield* load(routeLoader, initialEntry, "traverse");
 
-      expect(cached._tag).toBe('Route');
-      if (cached._tag === 'Route') {
-        expect(cached.routeTree.id).toBe('refreshed');
+      expect(cached._tag).toBe("Route");
+      if (cached._tag === "Route") {
+        expect(cached.routeTree.id).toBe("refreshed");
       }
       expect(requestedUrls).toEqual([initialEntry.url]);
     }).pipe(Effect.provideService(HttpClient.HttpClient, makeHttpClient(requestedUrls))),
   );
 });
 
-it.effect('attributes a refresh to the history entry where it started', () => {
+it.effect("attributes a refresh to the history entry where it started", () => {
   decodedFlights.length = 0;
   const requestedUrls: Array<string> = [];
   return Effect.scoped(
     Effect.gen(function* () {
       const firstEntry = makeNavigationEntry(
-        'entry-one',
-        'slot-one',
-        'https://effective-rsc.test/schedule/day-one',
+        "entry-one",
+        "slot-one",
+        "https://effective-rsc.test/schedule/day-one",
       );
       const secondEntry = makeNavigationEntry(
-        'entry-two',
-        'slot-two',
-        'https://effective-rsc.test/schedule/day-two',
+        "entry-two",
+        "slot-two",
+        "https://effective-rsc.test/schedule/day-two",
       );
       const navigationHistory = new TestNavigationHistory(firstEntry);
-      const routeLoader = yield* makeRouteLoader(navigationHistory, makeRouteTree('initial'));
+      const routeLoader = yield* makeRouteLoader(navigationHistory, makeRouteTree("initial"));
 
-      const commitRefresh = routeLoader.prepareRefresh(makeRouteTree('refreshed'));
+      const commitRefresh = routeLoader.prepareRefresh(makeRouteTree("refreshed"));
       navigationHistory.currentEntry = secondEntry;
       commitRefresh();
-      const firstCached = yield* load(routeLoader, firstEntry, 'traverse');
+      const firstCached = yield* load(routeLoader, firstEntry, "traverse");
 
-      expect(firstCached._tag === 'Route' && firstCached.routeTree.id).toBe('refreshed');
+      expect(firstCached._tag === "Route" && firstCached.routeTree.id).toBe("refreshed");
       expect(requestedUrls).toEqual([]);
     }).pipe(Effect.provideService(HttpClient.HttpClient, makeHttpClient(requestedUrls))),
   );
 });
 
-it.effect('caches the supplied entry and evicts it on disposal', () => {
+it.effect("caches the supplied entry and evicts it on disposal", () => {
   decodedFlights.length = 0;
   const requestedUrls: Array<string> = [];
   return Effect.scoped(
     Effect.gen(function* () {
       const firstEntry = makeNavigationEntry(
-        'entry-one',
-        'shared-slot',
-        'https://effective-rsc.test/schedule/day-one',
+        "entry-one",
+        "shared-slot",
+        "https://effective-rsc.test/schedule/day-one",
       );
       const secondEntry = makeNavigationEntry(
-        'entry-two',
-        'shared-slot',
-        'https://effective-rsc.test/schedule/day-two',
+        "entry-two",
+        "shared-slot",
+        "https://effective-rsc.test/schedule/day-two",
       );
       const navigationHistory = new TestNavigationHistory(firstEntry);
-      const routeLoader = yield* makeRouteLoader(navigationHistory, makeRouteTree('first'));
+      const routeLoader = yield* makeRouteLoader(navigationHistory, makeRouteTree("first"));
       yield* Effect.yieldNow;
       decodedFlights.push({
         formState: null,
-        routeTree: makeRouteTree('second'),
+        routeTree: makeRouteTree("second"),
         serverFnResult: null,
       });
 
-      const secondResource = yield* load(routeLoader, secondEntry, 'push');
-      if (secondResource._tag === 'Route') {
+      const secondResource = yield* load(routeLoader, secondEntry, "push");
+      if (secondResource._tag === "Route") {
         secondResource.cache(secondEntry);
       }
 
-      const firstCached = yield* load(routeLoader, firstEntry, 'traverse');
-      const secondCached = yield* load(routeLoader, secondEntry, 'traverse');
-      expect(firstCached._tag === 'Route' && firstCached.routeTree.id).toBe('first');
-      expect(secondCached._tag === 'Route' && secondCached.routeTree.id).toBe('second');
+      const firstCached = yield* load(routeLoader, firstEntry, "traverse");
+      const secondCached = yield* load(routeLoader, secondEntry, "traverse");
+      expect(firstCached._tag === "Route" && firstCached.routeTree.id).toBe("first");
+      expect(secondCached._tag === "Route" && secondCached.routeTree.id).toBe("second");
 
-      secondEntry.dispatchEvent(new Event('dispose'));
+      secondEntry.dispatchEvent(new Event("dispose"));
       decodedFlights.push({
         formState: null,
-        routeTree: makeRouteTree('second-reloaded'),
+        routeTree: makeRouteTree("second-reloaded"),
         serverFnResult: null,
       });
-      const reloaded = yield* load(routeLoader, secondEntry, 'traverse');
+      const reloaded = yield* load(routeLoader, secondEntry, "traverse");
 
-      expect(reloaded._tag === 'Route' && reloaded.routeTree.id).toBe('second-reloaded');
+      expect(reloaded._tag === "Route" && reloaded.routeTree.id).toBe("second-reloaded");
       expect(requestedUrls).toEqual([secondEntry.url, secondEntry.url]);
     }).pipe(Effect.provideService(HttpClient.HttpClient, makeHttpClient(requestedUrls))),
   );

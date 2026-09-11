@@ -1,15 +1,15 @@
-import * as BunFileSystem from '@effect/platform-bun/BunFileSystem';
-import * as BunHttpPlatform from '@effect/platform-bun/BunHttpPlatform';
-import * as BunPath from '@effect/platform-bun/BunPath';
-import { describe, expect, it, vi } from '@effect/vitest';
-import { Context, Deferred, Effect, Fiber, Layer, Schema, SchemaTransformation } from 'effect';
-import { HttpRouter, HttpServerResponse } from 'effect/unstable/http';
-import { isValidElement } from 'react';
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+import * as BunHttpPlatform from "@effect/platform-bun/BunHttpPlatform";
+import * as BunPath from "@effect/platform-bun/BunPath";
+import { describe, expect, it, vi } from "@effect/vitest";
+import { Context, Deferred, Effect, Fiber, Layer, Schema, SchemaTransformation } from "effect";
+import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
+import { isValidElement } from "react";
 
-import { Application } from '../../src/application/ersc';
-import type { PageComponent, PageRuntimeProps } from '../../src/application/page';
-import { type FlightPayload, FlightMediaType, ServerFnIdHeader } from '../../src/rsc/flight';
-import { ServerConfig } from '../../src/server/server-config';
+import { Application } from "../../src/application/ersc";
+import type { PageComponent, PageRuntimeProps } from "../../src/application/page";
+import { type FlightPayload, FlightMediaType, ServerFnIdHeader } from "../../src/rsc/flight";
+import { ServerConfig } from "../../src/server/server-config";
 
 let action: () => Promise<string>;
 const renderFlight = vi.fn((payload: FlightPayload) => {
@@ -18,7 +18,7 @@ const renderFlight = vi.fn((payload: FlightPayload) => {
     leaf = leaf.child;
   }
   if (!isValidElement<PageRuntimeProps>(leaf.content)) {
-    throw new TypeError('Expected the Page element.');
+    throw new TypeError("Expected the Page element.");
   }
   const Page = leaf.content.type as PageComponent;
   const rendered = Page(leaf.content.props);
@@ -27,7 +27,7 @@ const renderFlight = vi.fn((payload: FlightPayload) => {
       return rendered
         .then(
           (value) => value,
-          () => 'render-error',
+          () => "render-error",
         )
         .then((page) => {
           controller.enqueue(
@@ -39,7 +39,7 @@ const renderFlight = vi.fn((payload: FlightPayload) => {
   });
 });
 
-vi.doMock('react-server-dom-rspack/server.node', () => ({
+vi.doMock("react-server-dom-rspack/server.node", () => ({
   createTemporaryReferenceSet: () => ({}),
   decodeAction: () => Promise.resolve(action),
   decodeFormState: () => Promise.resolve(null),
@@ -48,16 +48,16 @@ vi.doMock('react-server-dom-rspack/server.node', () => ({
   renderToReadableStream: renderFlight,
 }));
 
-const { ServerApplication } = await import('../../src/server/application');
+const { ServerApplication } = await import("../../src/server/application");
 
 class DecoderService extends Context.Service<
   DecoderService,
   {
     readonly decode: (value: string) => Effect.Effect<string>;
   }
->()('ersc/tests/server/page-params/DecoderService') {}
+>()("ersc/tests/server/page-params/DecoderService") {}
 
-class RenderFailure extends Schema.TaggedError<RenderFailure>()('RenderFailure', {}) {}
+class RenderFailure extends Schema.TaggedError<RenderFailure>()("RenderFailure", {}) {}
 
 const withHarness = <A, E, R>(
   decode: (value: string) => Effect.Effect<string>,
@@ -68,12 +68,12 @@ const withHarness = <A, E, R>(
   const Middleware = ERSC.Middleware.make<{ provides: DecoderService }>((httpEffect) =>
     httpEffect.pipe(
       Effect.provideService(DecoderService, { decode }),
-      Effect.map(HttpServerResponse.setHeader('x-page-middleware', 'applied')),
+      Effect.map(HttpServerResponse.setHeader("x-page-middleware", "applied")),
     ),
   );
   const Scoped = ERSC.withMiddleware(Middleware);
   const Page = Scoped.Page.make({
-    params: Schema.Struct({ slug: Schema.Literals(['valid', 'render-error', 'wait']) }).pipe(
+    params: Schema.Struct({ slug: Schema.Literals(["valid", "render-error", "wait"]) }).pipe(
       Schema.decodeTo(
         Schema.Struct({ id: Schema.String }),
         SchemaTransformation.transformEffect({
@@ -81,33 +81,33 @@ const withHarness = <A, E, R>(
             Effect.flatMap(DecoderService, (service) =>
               Effect.map(service.decode(slug), (id) => ({ id })),
             ),
-          encode: (): Effect.Effect<{ slug: 'valid' | 'render-error' | 'wait' }> =>
-            Effect.succeed({ slug: 'valid' }),
+          encode: (): Effect.Effect<{ slug: "valid" | "render-error" | "wait" }> =>
+            Effect.succeed({ slug: "valid" }),
         }),
       ),
     ),
     render: ({ params }) =>
-      params.id === 'render-error' ? Effect.fail(new RenderFailure()) : Effect.succeed(params.id),
+      params.id === "render-error" ? Effect.fail(new RenderFailure()) : Effect.succeed(params.id),
   });
-  action = ERSC.ServerFn.make({ input: [], handler: () => Effect.succeed('action-completed') });
+  action = ERSC.ServerFn.make({ input: [], handler: () => Effect.succeed("action-completed") });
   const RootLayout = ERSC.Layout.make({ render: ({ children }) => Effect.succeed(children) });
   const Loading = ERSC.Loading.make({ render: () => <p>Loading</p> });
   const app = ERSC.make({
     routes: Scoped.Routes.make({ layout: RootLayout, loading: Loading }).page(
-      '/params/:slug',
+      "/params/:slug",
       Page,
     ),
   });
   const config = Layer.succeed(
     ServerConfig,
     ServerConfig.of({
-      clientAssetsCacheControl: 'no-store',
-      clientAssetsRoot: '/tmp/ersc-test-assets',
-      clientBootstrapScripts: ['/_ersc/assets/main.js'],
+      clientAssetsCacheControl: "no-store",
+      clientAssetsRoot: "/tmp/ersc-test-assets",
+      clientBootstrapScripts: ["/_ersc/assets/main.js"],
       clientStylesheets: [],
-      hostname: 'localhost',
+      hostname: "localhost",
       port: 18193,
-      publicAssetsRoot: '/tmp/ersc-test-public-assets',
+      publicAssetsRoot: "/tmp/ersc-test-public-assets",
     }),
   );
   const layer = ServerApplication.httpLayer(app).pipe(
@@ -121,32 +121,32 @@ const withHarness = <A, E, R>(
   );
 };
 
-const request = (slug: string, method: 'GET' | 'HEAD' | 'POST', accept: string) =>
+const request = (slug: string, method: "GET" | "HEAD" | "POST", accept: string) =>
   new Request(`http://effective-rsc.test/params/${slug}`, {
     method,
     headers: {
       accept,
-      host: 'effective-rsc.test',
-      origin: 'http://effective-rsc.test',
-      [ServerFnIdHeader]: 'action',
+      host: "effective-rsc.test",
+      origin: "http://effective-rsc.test",
+      [ServerFnIdHeader]: "action",
     },
   });
 
-describe('Page parameter request boundary', () => {
+describe("Page parameter request boundary", () => {
   it.effect(
-    'rejects invalid GET/HEAD captures before any renderer starts, including beneath Loading',
+    "rejects invalid GET/HEAD captures before any renderer starts, including beneath Loading",
     () =>
       withHarness(Effect.succeed, (call) =>
         Effect.gen(function* () {
-          for (const method of ['GET', 'HEAD'] as const) {
-            for (const accept of ['text/html', FlightMediaType]) {
-              const response = yield* call(request('invalid', method, accept));
+          for (const method of ["GET", "HEAD"] as const) {
+            for (const accept of ["text/html", FlightMediaType]) {
+              const response = yield* call(request("invalid", method, accept));
               expect(response.status).toBe(404);
               const body = yield* Effect.promise(() => response.text());
-              expect(body).toBe('');
-              expect(response.headers.get('vary')).toBe('Accept');
-              expect(response.headers.get('cache-control')).toBe('private, no-store');
-              expect(response.headers.get('x-page-middleware')).toBe('applied');
+              expect(body).toBe("");
+              expect(response.headers.get("vary")).toBe("Accept");
+              expect(response.headers.get("cache-control")).toBe("private, no-store");
+              expect(response.headers.get("x-page-middleware")).toBe("applied");
             }
           }
           expect(renderFlight).not.toHaveBeenCalled();
@@ -154,7 +154,7 @@ describe('Page parameter request boundary', () => {
       ),
   );
 
-  it.effect('decodes once with middleware services and passes transformed params to render', () => {
+  it.effect("decodes once with middleware services and passes transformed params to render", () => {
     let decodes = 0;
     return withHarness(
       (value) =>
@@ -164,11 +164,11 @@ describe('Page parameter request boundary', () => {
         }),
       (call) =>
         Effect.gen(function* () {
-          const response = yield* call(request('valid', 'GET', FlightMediaType));
+          const response = yield* call(request("valid", "GET", FlightMediaType));
           expect(response.status).toBe(200);
           const body = yield* Effect.promise(() => response.json());
           expect(body).toEqual({
-            page: 'valid-decoded',
+            page: "valid-decoded",
             result: null,
           });
           expect(decodes).toBe(1);
@@ -176,47 +176,47 @@ describe('Page parameter request boundary', () => {
     );
   });
 
-  it.effect('does not turn a decoder defect into a not-found response', () =>
+  it.effect("does not turn a decoder defect into a not-found response", () =>
     withHarness(
-      () => Effect.die(new Error('Decoder service unavailable')),
+      () => Effect.die(new Error("Decoder service unavailable")),
       (call) =>
         Effect.gen(function* () {
-          const response = yield* call(request('valid', 'GET', FlightMediaType));
+          const response = yield* call(request("valid", "GET", FlightMediaType));
           expect(response.status).toBe(500);
           expect(renderFlight).not.toHaveBeenCalled();
         }),
     ),
   );
 
-  it.effect('leaves application render failures in Flight', () =>
+  it.effect("leaves application render failures in Flight", () =>
     withHarness(Effect.succeed, (call) =>
       Effect.gen(function* () {
-        const response = yield* call(request('render-error', 'GET', FlightMediaType));
+        const response = yield* call(request("render-error", "GET", FlightMediaType));
         expect(response.status).toBe(200);
         const body = yield* Effect.promise(() => response.json());
         expect(body).toEqual({
-          page: 'render-error',
+          page: "render-error",
           result: null,
         });
       }),
     ),
   );
 
-  it.effect('preserves a completed POST action when refresh parameters are invalid', () =>
+  it.effect("preserves a completed POST action when refresh parameters are invalid", () =>
     withHarness(Effect.succeed, (call) =>
       Effect.gen(function* () {
-        const response = yield* call(request('invalid', 'POST', FlightMediaType));
+        const response = yield* call(request("invalid", "POST", FlightMediaType));
         expect(response.status).toBe(200);
         const body = yield* Effect.promise(() => response.json());
         expect(body).toEqual({
-          page: 'render-error',
-          result: { _tag: 'Success', value: 'action-completed' },
+          page: "render-error",
+          result: { _tag: "Success", value: "action-completed" },
         });
       }),
     ),
   );
 
-  it.effect('interrupts parameter decoding when the request is aborted', () =>
+  it.effect("interrupts parameter decoding when the request is aborted", () =>
     Effect.gen(function* () {
       const started = yield* Deferred.make<void>();
       const interrupted = yield* Deferred.make<void>();
@@ -230,7 +230,7 @@ describe('Page parameter request boundary', () => {
           Effect.gen(function* () {
             const pending = yield* Effect.gen(function* () {
               const signal = yield* Effect.abortSignal;
-              return yield* call(new Request(request('wait', 'GET', FlightMediaType), { signal }));
+              return yield* call(new Request(request("wait", "GET", FlightMediaType), { signal }));
             }).pipe(Effect.scoped, Effect.forkScoped);
             yield* Deferred.await(started);
             yield* Effect.yieldNow;

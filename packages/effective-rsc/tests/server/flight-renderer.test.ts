@@ -1,20 +1,20 @@
-import { expect, it, vi } from '@effect/vitest';
-import { Deferred, Effect } from 'effect';
+import { expect, it, vi } from "@effect/vitest";
+import { Deferred, Effect } from "effect";
 
-import type { RenderRuntimeContext } from '../../src/application/render-runtime';
+import type { RenderRuntimeContext } from "../../src/application/render-runtime";
 
 let renderSignal: AbortSignal | undefined;
 
-vi.doMock('react-server-dom-rspack/server.node', () => ({
+vi.doMock("react-server-dom-rspack/server.node", () => ({
   renderToReadableStream: (_model: unknown, options?: { readonly signal?: AbortSignal }) => {
     renderSignal = options?.signal;
     return new ReadableStream<Uint8Array>();
   },
 }));
 
-const { FlightRenderer } = await import('../../src/server/flight-renderer');
+const { FlightRenderer } = await import("../../src/server/flight-renderer");
 
-it.effect('interrupts application work when its Flight render is released', () =>
+it.effect("interrupts application work when its Flight render is released", () =>
   Effect.scoped(
     Effect.gen(function* () {
       let runApplicationWork: (() => Promise<never>) | undefined;
@@ -32,7 +32,7 @@ it.effect('interrupts application work when its Flight render is released', () =
           return evaluate();
         },
         run: () => {
-          throw new TypeError('Unexpected request runtime invocation.');
+          throw new TypeError("Unexpected request runtime invocation.");
         },
       };
       const renderer = yield* FlightRenderer;
@@ -43,18 +43,18 @@ it.effect('interrupts application work when its Flight render is released', () =
         routeTree: {
           child: null,
           content: null,
-          id: 'root',
+          id: "root",
         },
         serverFnResult: null,
       });
       if (runApplicationWork === undefined) {
-        return yield* Effect.die('Expected Flight rendering to bind its request runtime.');
+        return yield* Effect.die("Expected Flight rendering to bind its request runtime.");
       }
 
       const applicationWork = runApplicationWork();
       const applicationWorkOutcome = applicationWork.then(
-        () => 'completed' as const,
-        () => 'interrupted' as const,
+        () => "completed" as const,
+        () => "interrupted" as const,
       );
       yield* Deferred.await(started);
       expect(flight.signal).toBe(renderSignal);
@@ -64,7 +64,7 @@ it.effect('interrupts application work when its Flight render is released', () =
 
       yield* Deferred.await(interrupted);
       const applicationOutcome = yield* Effect.promise(() => applicationWorkOutcome);
-      expect(applicationOutcome).toBe('interrupted');
+      expect(applicationOutcome).toBe("interrupted");
       expect(renderSignal?.aborted).toBe(true);
     }).pipe(Effect.provide(FlightRenderer.layer)),
   ),

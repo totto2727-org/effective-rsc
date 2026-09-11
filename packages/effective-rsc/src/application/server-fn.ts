@@ -1,12 +1,12 @@
-import { Array, Effect, Predicate, Schema } from 'effect';
+import { Array, Effect, Predicate, Schema } from "effect";
 
-import { attachERSCMember, type ERSCIdentity, type ERSCMember } from './ersc-identity';
-import type { AnyMiddleware } from './middleware';
+import { attachERSCMember, type ERSCIdentity, type ERSCMember } from "./ersc-identity";
+import type { AnyMiddleware } from "./middleware";
 
-const ServerFnInvocationTypeId: unique symbol = Symbol.for('ersc/ServerFnInvocation');
+const ServerFnInvocationTypeId: unique symbol = Symbol.for("ersc/ServerFnInvocation");
 
 class ServerFnOperationError extends Schema.TaggedError<ServerFnOperationError>()(
-  'ServerFnOperationError',
+  "ServerFnOperationError",
   { cause: Schema.Defect() },
 ) {}
 
@@ -19,10 +19,10 @@ type ServerFnInvocation<ApplicationServices> = {
 };
 
 type ServerFnInvocationMatch<ApplicationServices> =
-  | { readonly _tag: 'Native' }
-  | { readonly _tag: 'IdentityMismatch' }
+  | { readonly _tag: "Native" }
+  | { readonly _tag: "IdentityMismatch" }
   | {
-      readonly _tag: 'Match';
+      readonly _tag: "Match";
       readonly effect: Effect.Effect<unknown, ServerFnOperationError, ApplicationServices>;
       readonly middleware: ReadonlyArray<AnyMiddleware<ApplicationServices>>;
     };
@@ -31,7 +31,7 @@ type ServerFnInput<Services> =
   | Schema.ConstraintDecoder<unknown, Services>
   | ReadonlyArray<Schema.ConstraintDecoder<unknown, Services>>;
 
-type ServerFnArguments<Input, Side extends 'Type' | 'Encoded'> =
+type ServerFnArguments<Input, Side extends "Type" | "Encoded"> =
   Input extends ReadonlyArray<Schema.Constraint>
     ? {
         -readonly [Key in keyof Input]: Input[Key] extends Schema.Constraint
@@ -46,26 +46,26 @@ interface ServerFunction<
   Args extends ReadonlyArray<unknown>,
   Output,
   ApplicationServices,
-> extends ERSCMember<ApplicationServices, 'ServerFn'> {
+> extends ERSCMember<ApplicationServices, "ServerFn"> {
   (...args: Args): Promise<Output>;
 }
 
 type ServerFnOptions<Input, Output, Error, Services> = {
   readonly input: Input;
   readonly handler: (
-    ...args: ServerFnArguments<Input, 'Type'>
+    ...args: ServerFnArguments<Input, "Type">
   ) => Effect.Effect<Output, Error, Services>;
 };
 
 export type ServerFnFactory<ApplicationServices, AvailableServices> = {
   readonly make: <const Input extends ServerFnInput<AvailableServices>, Output, Error>(
     options: ServerFnOptions<Input, Output, Error, AvailableServices>,
-  ) => ServerFunction<ServerFnArguments<Input, 'Encoded'>, Output, ApplicationServices>;
+  ) => ServerFunction<ServerFnArguments<Input, "Encoded">, Output, ApplicationServices>;
 };
 
 const directInvocationError = () =>
   new TypeError(
-    'An ERSC ServerFn is a framework intrinsic and cannot be invoked directly in the server graph.',
+    "An ERSC ServerFn is a framework intrinsic and cannot be invoked directly in the server graph.",
   );
 
 const isServerFnInvocation = <ApplicationServices>(
@@ -78,17 +78,17 @@ export const matchServerFnInvocation = <ApplicationServices>(
   identity: ERSCIdentity<ApplicationServices>,
 ): ServerFnInvocationMatch<ApplicationServices> => {
   if (!isServerFnInvocation<ApplicationServices>(value)) {
-    return { _tag: 'Native' };
+    return { _tag: "Native" };
   }
 
   // The framework-owned brand proves the state shape; matching the opaque identity proves the
   // application service universe erased by the native React invocation.
   const metadata = value[ServerFnInvocationTypeId];
   if (metadata.identity !== identity) {
-    return { _tag: 'IdentityMismatch' };
+    return { _tag: "IdentityMismatch" };
   }
 
-  return { _tag: 'Match', effect: metadata.effect, middleware: metadata.middleware };
+  return { _tag: "Match", effect: metadata.effect, middleware: metadata.middleware };
 };
 
 export const makeServerFnFactory = <ApplicationServices, AvailableServices>(
@@ -98,12 +98,12 @@ export const makeServerFnFactory = <ApplicationServices, AvailableServices>(
   make: ({ input, handler }) => {
     const schemas = Array.ensure<Schema.ConstraintDecoder<unknown, AvailableServices>>(input);
     const decode = Schema.decodeUnknownEffect(Schema.Tuple(schemas));
-    const serverFunction = (...untrustedArgs: ServerFnArguments<typeof input, 'Encoded'>) => {
+    const serverFunction = (...untrustedArgs: ServerFnArguments<typeof input, "Encoded">) => {
       // Unary functions still ignore extra native arguments and decode undefined when omitted.
       const effect = decode(Array.isArray(input) ? untrustedArgs : [untrustedArgs[0]]).pipe(
         // Normalization preserves the positional Type mapping, which the generic branch erases.
         Effect.flatMap((args: ReadonlyArray<unknown>) =>
-          handler(...(args as ServerFnArguments<typeof input, 'Type'>)),
+          handler(...(args as ServerFnArguments<typeof input, "Type">)),
         ),
         Effect.mapError((cause) => new ServerFnOperationError({ cause })),
       );
@@ -115,6 +115,6 @@ export const makeServerFnFactory = <ApplicationServices, AvailableServices>(
       });
     };
 
-    return attachERSCMember(serverFunction, identity, 'ServerFn');
+    return attachERSCMember(serverFunction, identity, "ServerFn");
   },
 });

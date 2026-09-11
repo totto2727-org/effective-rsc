@@ -1,21 +1,21 @@
-import { Context, Effect, Layer, Option, Schema, SchemaTransformation } from 'effect';
-import type { ReactNode } from 'react';
+import { Context, Effect, Layer, Option, Schema, SchemaTransformation } from "effect";
+import type { ReactNode } from "react";
 
-import type { ApplicationServices } from '../../src/application/definition';
-import { Application } from '../../src/application/ersc';
-import type { AnyPageDefinition } from '../../src/application/page';
-import type { AbsolutePath } from '../../src/application/route-path';
-import type { AnyRoutes, RoutesDefinition, RoutesPaths } from '../../src/application/routes';
+import type { ApplicationServices } from "../../src/application/definition";
+import { Application } from "../../src/application/ersc";
+import type { AnyPageDefinition } from "../../src/application/page";
+import type { AbsolutePath } from "../../src/application/route-path";
+import type { AnyRoutes, RoutesDefinition, RoutesPaths } from "../../src/application/routes";
 
 class LayoutService extends Context.Service<LayoutService, object>()(
-  'ersc/tests/types/LayoutService',
+  "ersc/tests/types/LayoutService",
 ) {}
-class PageService extends Context.Service<PageService, object>()('ersc/tests/types/PageService') {}
+class PageService extends Context.Service<PageService, object>()("ersc/tests/types/PageService") {}
 class NestedPageService extends Context.Service<NestedPageService, object>()(
-  'ersc/tests/types/NestedPageService',
+  "ersc/tests/types/NestedPageService",
 ) {}
 class LayerDependency extends Context.Service<LayerDependency, object>()(
-  'ersc/tests/types/LayerDependency',
+  "ersc/tests/types/LayerDependency",
 ) {}
 
 const ERSC = Application.ersc();
@@ -33,7 +33,7 @@ void Loading;
 const HomePage = ERSC.Page.make({ render: () => Effect.succeed(<h1>Home</h1>) });
 const HistoryPage = ERSC.Page.make({ render: () => Effect.succeed(<h1>History</h1>) });
 const DayPage = ERSC.Page.make({
-  params: Schema.Struct({ day: Schema.Literals(['saturday', 'sunday']) }),
+  params: Schema.Struct({ day: Schema.Literals(["saturday", "sunday"]) }),
   render: ({ params }) => Effect.succeed(<h1>{params.day}</h1>),
 });
 const SlugPage = ERSC.Page.make({
@@ -62,12 +62,12 @@ ERSC.withMiddleware(middleware).Routes.make();
 ERSC.Middleware.make(
   // @ts-expect-error Middleware must handle every typed failure it introduces.
   // oxlint-disable-next-line effecttsgo/missing-effect-context, effecttsgo/missing-effect-error -- intentional invalid Effect fixture
-  (httpEffect) => Effect.andThen(Effect.fail('failure'), httpEffect),
+  (httpEffect) => Effect.andThen(Effect.fail("failure"), httpEffect),
 );
 
-const notesRoutes = ERSC.Routes.make().page('/', HomePage).page('/history', HistoryPage);
-const mountedRoutes = ERSC.Routes.make().mount('/notes', notesRoutes);
-const knownNotesPath: RoutesPaths<typeof mountedRoutes> = '/notes/history';
+const notesRoutes = ERSC.Routes.make().page("/", HomePage).page("/history", HistoryPage);
+const mountedRoutes = ERSC.Routes.make().mount("/notes", notesRoutes);
+const knownNotesPath: RoutesPaths<typeof mountedRoutes> = "/notes/history";
 void knownNotesPath;
 // @ts-expect-error Runtime paths are private to the route compiler.
 void mountedRoutes.paths;
@@ -76,41 +76,41 @@ void mountedRoutes.pages;
 // @ts-expect-error Runtime mounts are private to the route compiler.
 void mountedRoutes.mounts;
 
-const dynamicRoutes = ERSC.Routes.make().page('/schedule/:day', DayPage);
-const knownDynamicPath: RoutesPaths<typeof dynamicRoutes> = '/schedule/:day';
+const dynamicRoutes = ERSC.Routes.make().page("/schedule/:day", DayPage);
+const knownDynamicPath: RoutesPaths<typeof dynamicRoutes> = "/schedule/:day";
 void knownDynamicPath;
 // @ts-expect-error A static Page cannot satisfy a dynamic route.
-ERSC.Routes.make().page('/schedule/:day', HomePage);
+ERSC.Routes.make().page("/schedule/:day", HomePage);
 // @ts-expect-error A dynamic Page cannot satisfy a static route.
-ERSC.Routes.make().page('/schedule/saturday', DayPage);
+ERSC.Routes.make().page("/schedule/saturday", DayPage);
 // @ts-expect-error The Page Schema key must match the path parameter name.
-ERSC.Routes.make().page('/schedule/:day', SlugPage);
+ERSC.Routes.make().page("/schedule/:day", SlugPage);
 // @ts-expect-error Page implementation details are not part of the authoring API.
 void DayPage.component;
 
-const nestedRoutes = ERSC.Routes.make().page('/a/:b/c/:d', NestedParamsPage);
-const knownNestedPath: RoutesPaths<typeof nestedRoutes> = '/a/:b/c/:d';
+const nestedRoutes = ERSC.Routes.make().page("/a/:b/c/:d", NestedParamsPage);
+const knownNestedPath: RoutesPaths<typeof nestedRoutes> = "/a/:b/c/:d";
 void knownNestedPath;
 // @ts-expect-error The Page Schema must contain both nested parameter names.
-ERSC.Routes.make().page('/a/:b/c/:d', DayPage);
+ERSC.Routes.make().page("/a/:b/c/:d", DayPage);
 // @ts-expect-error Parameter names must remain unique across the complete pattern.
-ERSC.Routes.make().page('/a/:b/c/:b', NestedParamsPage);
+ERSC.Routes.make().page("/a/:b/c/:b", NestedParamsPage);
 // @ts-expect-error Route parameters describe the Schema input, not its decoded output.
-ERSC.Routes.make().page('/:id', RenamedParamsPage);
+ERSC.Routes.make().page("/:id", RenamedParamsPage);
 
-declare const uncertainPath: '/first' | '/second';
-const widenedPath: AbsolutePath = '/schedule/:day';
+declare const uncertainPath: "/first" | "/second";
+const widenedPath: AbsolutePath = "/schedule/:day";
 const forgetPageContract = (page: AnyPageDefinition<never>) => page;
 const widenedPage = forgetPageContract(HomePage);
-const widenedRoutes: AnyRoutes<never> = ERSC.Routes.make().page('/', HomePage);
+const widenedRoutes: AnyRoutes<never> = ERSC.Routes.make().page("/", HomePage);
 // @ts-expect-error A widened path cannot provide exact parameter inference.
 ERSC.Routes.make().page(widenedPath, HomePage);
 // @ts-expect-error One route declaration must have one literal pattern.
 ERSC.Routes.make().page(uncertainPath, HomePage);
 // @ts-expect-error A widened Page no longer proves whether it owns parameters.
-ERSC.Routes.make().page('/', widenedPage);
+ERSC.Routes.make().page("/", widenedPage);
 // @ts-expect-error Widened Routes no longer carry their exact mounted paths.
-ERSC.Routes.make().mount('/nested', widenedRoutes);
+ERSC.Routes.make().mount("/nested", widenedRoutes);
 
 // @ts-expect-error An empty parameter Schema cannot match a parameterized path.
 ERSC.Page.make({ params: Schema.Struct({}), render: () => Effect.succeed(null) });
@@ -127,80 +127,80 @@ const nonStringParamsPageOptions = {
 // @ts-expect-error Effect HTTP captures path parameters as strings.
 ERSC.Page.make(nonStringParamsPageOptions);
 const invalidNameParamsPageOptions = {
-  params: Schema.Struct({ 'invalid-name': Schema.String }),
+  params: Schema.Struct({ "invalid-name": Schema.String }),
   render: () => Effect.succeed(null),
 };
 // @ts-expect-error Schema keys must be valid Effect HTTP parameter names.
 ERSC.Page.make(invalidNameParamsPageOptions);
 
 // @ts-expect-error Dynamic params must occupy a complete path segment.
-ERSC.Routes.make().page('/users/user:userId', HomePage);
+ERSC.Routes.make().page("/users/user:userId", HomePage);
 // @ts-expect-error Dynamic parameter names must be unique.
-ERSC.Routes.make().page('/users/:userId/:userId', HomePage);
+ERSC.Routes.make().page("/users/:userId/:userId", HomePage);
 // @ts-expect-error Route definitions must use canonical non-trailing slashes.
-ERSC.Routes.make().page('/users/', HomePage);
+ERSC.Routes.make().page("/users/", HomePage);
 // @ts-expect-error Route definitions cannot contain empty segments.
-ERSC.Routes.make().page('/users//history', HomePage);
+ERSC.Routes.make().page("/users//history", HomePage);
 // @ts-expect-error Route definitions cannot contain URL-normalized dot segments.
-ERSC.Routes.make().page('/users/../history', HomePage);
+ERSC.Routes.make().page("/users/../history", HomePage);
 // @ts-expect-error Route definitions use decoded path text, not percent escapes.
-ERSC.Routes.make().page('/users/%61', HomePage);
+ERSC.Routes.make().page("/users/%61", HomePage);
 // @ts-expect-error Dynamic mount prefixes are not supported.
-ERSC.Routes.make().mount('/:group', ERSC.Routes.make().page('/', HomePage));
+ERSC.Routes.make().mount("/:group", ERSC.Routes.make().page("/", HomePage));
 ERSC.make({
   // @ts-expect-error The final application path uses the framework namespace.
-  routes: ERSC.Routes.make({ layout: RootLayout }).page('/_ersc/dev', HomePage),
+  routes: ERSC.Routes.make({ layout: RootLayout }).page("/_ersc/dev", HomePage),
 });
 ERSC.make({
   // @ts-expect-error A parameterized pattern can match the framework namespace.
-  routes: ERSC.Routes.make({ layout: RootLayout }).page('/:slug/dev', SlugPage),
+  routes: ERSC.Routes.make({ layout: RootLayout }).page("/:slug/dev", SlugPage),
 });
 ERSC.make({
   // @ts-expect-error The framework namespace root is reserved.
-  routes: ERSC.Routes.make({ layout: RootLayout }).page('/_ersc', HomePage),
+  routes: ERSC.Routes.make({ layout: RootLayout }).page("/_ersc", HomePage),
 });
 
-const homeRoutes = ERSC.Routes.make().page('/', HomePage);
+const homeRoutes = ERSC.Routes.make().page("/", HomePage);
 // @ts-expect-error A local Page cannot replace an existing Page.
-homeRoutes.page('/', HistoryPage);
+homeRoutes.page("/", HistoryPage);
 // @ts-expect-error Mounted paths cannot collide with existing paths.
-homeRoutes.mount('/', ERSC.Routes.make().page('/', HistoryPage));
+homeRoutes.mount("/", ERSC.Routes.make().page("/", HistoryPage));
 
-const scheduleRoutes = ERSC.Routes.make().page('/', HomePage).page('/:day', DayPage);
+const scheduleRoutes = ERSC.Routes.make().page("/", HomePage).page("/:day", DayPage);
 const mountedSchedule = ERSC.Routes.make()
-  .page('/about', HomePage)
-  .mount('/Schedule', scheduleRoutes);
+  .page("/about", HomePage)
+  .mount("/Schedule", scheduleRoutes);
 // @ts-expect-error A mounted root still conflicts with a differently cased local path.
-mountedSchedule.page('/schedule', HomePage);
+mountedSchedule.page("/schedule", HomePage);
 // @ts-expect-error Renaming a parameter and changing case cannot hide a mounted collision.
-mountedSchedule.page('/schedule/:slug', SlugPage);
+mountedSchedule.page("/schedule/:slug", SlugPage);
 mountedSchedule.mount(
-  '/schedule',
+  "/schedule",
   // @ts-expect-error A collision in any member rejects the whole mount, even with a distinct root.
-  ERSC.Routes.make().page('/new', HomePage).page('/:slug', SlugPage),
+  ERSC.Routes.make().page("/new", HomePage).page("/:slug", SlugPage),
 );
 // @ts-expect-error A mount must also detect collisions with pages added before it.
-ERSC.Routes.make().page('/schedule/:slug', SlugPage).mount('/Schedule', scheduleRoutes);
+ERSC.Routes.make().page("/schedule/:slug", SlugPage).mount("/Schedule", scheduleRoutes);
 
 // A specific static route can coexist with a parameterized matcher.
-const extendedSchedule = mountedSchedule.page('/schedule/today', HomePage);
+const extendedSchedule = mountedSchedule.page("/schedule/today", HomePage);
 const annotatedSchedule: RoutesDefinition<
   never,
   false,
-  '/about' | '/Schedule' | '/Schedule/:day' | '/schedule/today'
+  "/about" | "/Schedule" | "/Schedule/:day" | "/schedule/today"
 > = extendedSchedule;
 void annotatedSchedule;
-const schedulePath: RoutesPaths<typeof extendedSchedule> = '/Schedule/:day';
+const schedulePath: RoutesPaths<typeof extendedSchedule> = "/Schedule/:day";
 void schedulePath;
 // @ts-expect-error Shape normalization must not replace the authored path or parameter name.
-const normalizedSchedulePath: RoutesPaths<typeof extendedSchedule> = '/schedule/:slug';
+const normalizedSchedulePath: RoutesPaths<typeof extendedSchedule> = "/schedule/:slug";
 void normalizedSchedulePath;
 
 const emptyRoutes = ERSC.Routes.make({ layout: RootLayout });
 // @ts-expect-error Empty Routes do not contribute an application destination.
-ERSC.Routes.make().mount('/empty', emptyRoutes);
+ERSC.Routes.make().mount("/empty", emptyRoutes);
 
-const App = ERSC.make({ routes: ERSC.Routes.make({ layout: RootLayout }).page('/', HomePage) });
+const App = ERSC.make({ routes: ERSC.Routes.make({ layout: RootLayout }).page("/", HomePage) });
 // @ts-expect-error Compiled routes are private to framework runtime modules.
 void App.routes;
 // @ts-expect-error The application Layer is private to framework runtime modules.
@@ -225,7 +225,7 @@ function DirectServerFnForm() {
 }
 void DirectServerFnForm;
 // @ts-expect-error A Server Function accepts the Schema's encoded input, not its decoded output.
-void CreateReport({ title: 'Incident report' });
+void CreateReport({ title: "Incident report" });
 
 const ServiceERSC = Application.ersc<PageService>();
 const ServiceRootLayout = ServiceERSC.Layout.make({
@@ -237,11 +237,11 @@ const ServicePage = ServiceERSC.Page.make({
     return null;
   }),
 });
-const serviceRoutes = ServiceERSC.Routes.make({ layout: ServiceRootLayout }).page('/', ServicePage);
+const serviceRoutes = ServiceERSC.Routes.make({ layout: ServiceRootLayout }).page("/", ServicePage);
 const incompleteLayer = Layer.effect(PageService, Effect.as(LayerDependency, PageService.of({})));
 ERSC.make({
   // @ts-expect-error The application root must define a Layout.
-  routes: ERSC.Routes.make().page('/', HomePage),
+  routes: ERSC.Routes.make().page("/", HomePage),
 });
 ERSC.make({
   // @ts-expect-error The application must contain at least one reachable Page.
@@ -257,7 +257,7 @@ ServiceERSC.make({
 
 const NarrowERSC = Application.ersc<PageService>();
 const ServiceSchema = Schema.String.pipe(
-  Schema.catchDecodingWithContext(() => Effect.map(LayoutService, () => Option.some('fallback'))),
+  Schema.catchDecodingWithContext(() => Effect.map(LayoutService, () => Option.some("fallback"))),
 );
 const layoutServicePageOptions = {
   render: Effect.fnUntraced(function* () {
@@ -347,7 +347,7 @@ NarrowERSC.Page.make(serviceSchemaPageOptions);
 const WideERSC = Application.ersc<PageService | LayoutService>();
 const NarrowPage = NarrowERSC.Page.make({ render: () => Effect.succeed(null) });
 // @ts-expect-error An ERSC member belongs to one exact service universe.
-WideERSC.Routes.make().page('/', NarrowPage);
+WideERSC.Routes.make().page("/", NarrowPage);
 
 function ArbitraryLayout({ children }: { readonly children: ReactNode }) {
   return <main>{children}</main>;
@@ -363,7 +363,7 @@ ERSC.Routes.make({ layout: ArbitraryLayout });
 // @ts-expect-error Loading concerns must be created with ERSC.Loading.make.
 ERSC.Routes.make({ loading: ArbitraryLoading });
 // @ts-expect-error Page concerns must be created with ERSC.Page.make.
-ERSC.Routes.make().page('/', ArbitraryPage);
+ERSC.Routes.make().page("/", ArbitraryPage);
 
 const ServiceUniverseERSC = Application.ersc<LayoutService | PageService | NestedPageService>();
 const ServiceUniverseLayout = ServiceUniverseERSC.Layout.make({
@@ -377,7 +377,7 @@ const ServiceUniverseApp = ServiceUniverseERSC.make({
     Layer.succeed(NestedPageService, NestedPageService.of({})),
   ),
   routes: ServiceUniverseERSC.Routes.make({ layout: ServiceUniverseLayout }).page(
-    '/',
+    "/",
     ServiceUniversePage,
   ),
 });

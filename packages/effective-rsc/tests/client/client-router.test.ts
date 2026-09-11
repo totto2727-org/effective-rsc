@@ -1,14 +1,14 @@
-import { afterEach, beforeEach, expect, it } from '@effect/vitest';
-import { Deferred, Effect, Exit, Fiber, Layer, Scope } from 'effect';
-import { HttpClient, HttpClientRequest, HttpClientResponse } from 'effect/unstable/http';
-import { vi } from 'vitest';
+import { afterEach, beforeEach, expect, it } from "@effect/vitest";
+import { Deferred, Effect, Exit, Fiber, Layer, Scope } from "effect";
+import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http";
+import { vi } from "vitest";
 
 const react = vi.hoisted(() => ({
   transitionTypes: [] as Array<string>,
 }));
 
-vi.mock('react', (importOriginal) =>
-  importOriginal<typeof import('react')>().then((original) => ({
+vi.mock("react", (importOriginal) =>
+  importOriginal<typeof import("react")>().then((original) => ({
     ...original,
     addTransitionType: (type: string) => {
       react.transitionTypes.push(type);
@@ -16,7 +16,7 @@ vi.mock('react', (importOriginal) =>
   })),
 );
 
-vi.mock('react-server-dom-rspack/client.browser', () => ({
+vi.mock("react-server-dom-rspack/client.browser", () => ({
   createFromReadableStream: vi.fn((stream: ReadableStream<Uint8Array>) => {
     const reader = stream.getReader();
     return reader.read().then(() => {
@@ -26,7 +26,7 @@ vi.mock('react-server-dom-rspack/client.browser', () => ({
         routeTree: {
           child: null,
           content: null,
-          id: 'root',
+          id: "root",
         },
         serverFnResult: null,
       };
@@ -34,14 +34,14 @@ vi.mock('react-server-dom-rspack/client.browser', () => ({
   }),
 }));
 
-import { BrowserEffectRunner } from '../../src/client/browser-effect-runner';
-import { type BrowserRender, BrowserRenderer } from '../../src/client/browser-renderer';
-import { installClientRouter } from '../../src/client/client-router';
-import { FlightClient } from '../../src/client/flight-client';
-import { InitialFlightStream } from '../../src/client/initial-flight-stream';
-import { NavigationApi } from '../../src/client/navigation-api';
-import { RouteLoader, type RouteLoad } from '../../src/client/route-loader';
-import type { RouteTreeModel } from '../../src/rsc/route-tree';
+import { BrowserEffectRunner } from "../../src/client/browser-effect-runner";
+import { type BrowserRender, BrowserRenderer } from "../../src/client/browser-renderer";
+import { installClientRouter } from "../../src/client/client-router";
+import { FlightClient } from "../../src/client/flight-client";
+import { InitialFlightStream } from "../../src/client/initial-flight-stream";
+import { NavigationApi } from "../../src/client/navigation-api";
+import { RouteLoader, type RouteLoad } from "../../src/client/route-loader";
+import type { RouteTreeModel } from "../../src/rsc/route-tree";
 
 const FlightClientLayer = FlightClient.layer.pipe(Layer.provide(InitialFlightStream.layer));
 
@@ -56,16 +56,16 @@ class TestAnchor {
 type TestNavigateEvent = Event &
   Pick<
     NavigateEvent,
-    | 'canIntercept'
-    | 'destination'
-    | 'downloadRequest'
-    | 'formData'
-    | 'hasUAVisualTransition'
-    | 'hashChange'
-    | 'info'
-    | 'intercept'
-    | 'navigationType'
-    | 'signal'
+    | "canIntercept"
+    | "destination"
+    | "downloadRequest"
+    | "formData"
+    | "hasUAVisualTransition"
+    | "hashChange"
+    | "info"
+    | "intercept"
+    | "navigationType"
+    | "signal"
   >;
 
 const makeNavigationEntry = (key: string, url: string, id = key) =>
@@ -82,28 +82,28 @@ const makeNavigationEntry = (key: string, url: string, id = key) =>
 class TestNavigationApi {
   private listener: EventListener | null = null;
   readonly initialEntry = makeNavigationEntry(
-    'day-one',
-    'https://effective-rsc.test/schedule/day-one',
+    "day-one",
+    "https://effective-rsc.test/schedule/day-one",
   );
   currentEntry = this.initialEntry;
   readonly nativeNavigations: Array<{
-    readonly options: { readonly history: 'push' | 'replace'; readonly info: unknown };
+    readonly options: { readonly history: "push" | "replace"; readonly info: unknown };
     readonly url: string;
   }> = [];
 
-  addEventListener(_type: 'navigate', listener: EventListener) {
+  addEventListener(_type: "navigate", listener: EventListener) {
     this.listener = listener;
   }
 
-  removeEventListener(_type: 'navigate', listener: EventListener) {
+  removeEventListener(_type: "navigate", listener: EventListener) {
     if (this.listener === listener) {
       this.listener = null;
     }
   }
 
   navigate(url: string | URL, options?: NavigationNavigateOptions): NavigationResult {
-    if (options?.history !== 'push' && options?.history !== 'replace') {
-      throw new TypeError('Expected an explicit push or replace navigation.');
+    if (options?.history !== "push" && options?.history !== "replace") {
+      throw new TypeError("Expected an explicit push or replace navigation.");
     }
     this.nativeNavigations.push({
       options: { history: options.history, info: options.info },
@@ -131,36 +131,36 @@ class TestNavigationApi {
 type TestNavigateEventOverrides = Partial<
   Pick<
     NavigateEvent,
-    | 'canIntercept'
-    | 'downloadRequest'
-    | 'formData'
-    | 'hasUAVisualTransition'
-    | 'hashChange'
-    | 'info'
-    | 'navigationType'
-    | 'signal'
+    | "canIntercept"
+    | "downloadRequest"
+    | "formData"
+    | "hasUAVisualTransition"
+    | "hashChange"
+    | "info"
+    | "navigationType"
+    | "signal"
   >
 > & {
   readonly cancelable?: boolean;
   readonly destination?: { readonly id?: string; readonly key?: string; readonly url: string };
-  readonly sourceElement?: Pick<HTMLAnchorElement, 'dataset'> | null;
+  readonly sourceElement?: Pick<HTMLAnchorElement, "dataset"> | null;
 };
 
 const makeNavigationEvent = (overrides: TestNavigateEventOverrides = {}) => {
   let interception: NavigationInterceptOptions | null = null;
   const {
     cancelable = true,
-    destination = { url: 'https://effective-rsc.test/schedule/day-two' },
+    destination = { url: "https://effective-rsc.test/schedule/day-two" },
     ...eventOverrides
   } = overrides;
-  const navigationType: NavigationType = 'push';
-  const event = Object.assign(new Event('navigate', { cancelable }), {
+  const navigationType: NavigationType = "push";
+  const event = Object.assign(new Event("navigate", { cancelable }), {
     canIntercept: true,
     destination: {
       getState: () => undefined,
-      id: destination.id ?? destination.key ?? '',
+      id: destination.id ?? destination.key ?? "",
       index: -1,
-      key: destination.key ?? '',
+      key: destination.key ?? "",
       sameDocument: false,
       url: destination.url,
     },
@@ -188,12 +188,12 @@ const makeNavigationEvent = (overrides: TestNavigateEventOverrides = {}) => {
 
 beforeEach(() => {
   react.transitionTypes.length = 0;
-  vi.stubGlobal('HTMLAnchorElement', TestAnchor);
+  vi.stubGlobal("HTMLAnchorElement", TestAnchor);
 });
 
 afterEach(() => vi.unstubAllGlobals());
 
-const makeHttpClient = (requestedUrls: Array<string> = [], contentType = 'text/x-component') =>
+const makeHttpClient = (requestedUrls: Array<string> = [], contentType = "text/x-component") =>
   HttpClient.make((request) =>
     Effect.sync(() => {
       requestedUrls.push(request.url);
@@ -201,12 +201,12 @@ const makeHttpClient = (requestedUrls: Array<string> = [], contentType = 'text/x
         request,
         new Response(new Uint8Array(), {
           headers: {
-            'content-type': contentType,
+            "content-type": contentType,
           },
         }),
       );
-      Object.defineProperty(response, 'url', {
-        value: 'https://effective-rsc.test/schedule/day-two',
+      Object.defineProperty(response, "url", {
+        value: "https://effective-rsc.test/schedule/day-two",
       });
       return response;
     }),
@@ -218,7 +218,7 @@ const makeInvalidFlightClient = () =>
       HttpClientResponse.fromWeb(
         HttpClientRequest.empty,
         new Response(new Uint8Array(), {
-          headers: { 'content-type': 'text/x-component' },
+          headers: { "content-type": "text/x-component" },
         }),
       ),
     ),
@@ -235,14 +235,14 @@ const makeStreamingHttpClient = () => {
           new ReadableStream<Uint8Array>({
             start(controller) {
               controller.enqueue(new Uint8Array([1]));
-              signal.addEventListener('abort', () => controller.error(signal.reason), {
+              signal.addEventListener("abort", () => controller.error(signal.reason), {
                 once: true,
               });
             },
           }),
           {
             headers: {
-              'content-type': 'text/x-component',
+              "content-type": "text/x-component",
             },
           },
         ),
@@ -253,14 +253,14 @@ const makeStreamingHttpClient = () => {
 };
 
 type BrowserRenderRequest = {
-  readonly _tag: 'Navigation' | 'ServerFunction';
+  readonly _tag: "Navigation" | "ServerFunction";
   readonly routeTree: RouteTreeModel;
 };
 
 const initialRouteTree: RouteTreeModel = {
   child: null,
   content: null,
-  id: 'day-one',
+  id: "day-one",
 };
 
 const makeBrowserRenderer = (renders: Array<BrowserRenderRequest> = []) => {
@@ -271,7 +271,7 @@ const makeBrowserRenderer = (renders: Array<BrowserRenderRequest> = []) => {
     navigate: (routeTree) => {
       const previousNavigation = visibleNavigation;
       visibleNavigation = Promise.withResolvers<void>();
-      renders.push({ _tag: 'Navigation', routeTree });
+      renders.push({ _tag: "Navigation", routeTree });
       return {
         committed: Promise.resolve().then(() => previousNavigation?.resolve()),
         discard: () => Promise.resolve(),
@@ -281,7 +281,7 @@ const makeBrowserRenderer = (renders: Array<BrowserRenderRequest> = []) => {
     refresh: (routeTree) => {
       const previousNavigation = visibleNavigation;
       visibleNavigation = null;
-      renders.push({ _tag: 'ServerFunction', routeTree });
+      renders.push({ _tag: "ServerFunction", routeTree });
       return {
         committed: Promise.resolve().then(() => previousNavigation?.resolve()),
         retired: Promise.withResolvers<void>().promise,
@@ -314,7 +314,7 @@ const prepareNavigation = Effect.fnUntraced(function* (navigation: TestNavigatio
   navigation.dispatch(pendingNavigation.event);
   const precommitHandler = pendingNavigation.interception()?.precommitHandler;
   if (precommitHandler === undefined) {
-    return yield* Effect.die('Expected a precommit handler.');
+    return yield* Effect.die("Expected a precommit handler.");
   }
   const handlers: Array<NavigationInterceptHandler> = [];
   yield* Effect.promise(() =>
@@ -322,7 +322,7 @@ const prepareNavigation = Effect.fnUntraced(function* (navigation: TestNavigatio
   );
   const handler = handlers[0];
   if (handler === undefined) {
-    return yield* Effect.die('Expected a post-commit handler.');
+    return yield* Effect.die("Expected a post-commit handler.");
   }
   return handler;
 });
@@ -336,7 +336,7 @@ const makeControlledRoute = Effect.fnUntraced(function* (url: string) {
     completed,
     released,
     resource: {
-      _tag: 'Route',
+      _tag: "Route",
       cache: (entry) => cachedEntries.push(entry),
       completed: Deferred.await(completed),
       release: Effect.sync(released.resolve),
@@ -359,14 +359,14 @@ const makeNavigationApiLayer = (
     reloadDocument,
     replaceDocument: (url) => documentReplacements.push(url),
     subscribe: (listener) => {
-      navigation.addEventListener('navigate', listener as EventListener);
-      return () => navigation.removeEventListener('navigate', listener as EventListener);
+      navigation.addEventListener("navigate", listener as EventListener);
+      return () => navigation.removeEventListener("navigate", listener as EventListener);
     },
   });
 
 const listen = (
   navigation: TestNavigationApi,
-  browserRenderer: BrowserRenderer['Service'] = makeBrowserRenderer(),
+  browserRenderer: BrowserRenderer["Service"] = makeBrowserRenderer(),
   httpClient = makeHttpClient(),
   documentReplacements: Array<string> = [],
   reloadDocument: () => void = () => undefined,
@@ -418,7 +418,7 @@ const listen = (
     yield* Effect.raceFirst(Deferred.await(installed), Fiber.join(running));
   });
 
-it.effect('splits a cancelable navigation between React commit and Flight completion', () =>
+it.effect("splits a cancelable navigation between React commit and Flight completion", () =>
   Effect.gen(function* () {
     const navigation = new TestNavigationApi();
     const requestedUrls: Array<string> = [];
@@ -432,10 +432,10 @@ it.effect('splits a cancelable navigation between React commit and Flight comple
 
         const interception = pendingNavigation.interception();
         expect(interception?.handler).toBeUndefined();
-        expect(interception?.precommitHandler).toBeTypeOf('function');
+        expect(interception?.precommitHandler).toBeTypeOf("function");
         const precommitHandler = interception?.precommitHandler;
         if (precommitHandler === undefined) {
-          return yield* Effect.die('Expected a precommit handler.');
+          return yield* Effect.die("Expected a precommit handler.");
         }
 
         const handlers: Array<NavigationInterceptHandler> = [];
@@ -445,120 +445,120 @@ it.effect('splits a cancelable navigation between React commit and Flight comple
         expect(handlers).toHaveLength(1);
         const handler = handlers[0];
         if (handler === undefined) {
-          return yield* Effect.die('Expected a post-commit handler.');
+          return yield* Effect.die("Expected a post-commit handler.");
         }
         yield* Effect.promise(() => invokeNavigationHandler(handler));
 
-        expect(requestedUrls).toEqual(['https://effective-rsc.test/schedule/day-two']);
+        expect(requestedUrls).toEqual(["https://effective-rsc.test/schedule/day-two"]);
         expect(renders).toHaveLength(1);
         const render = renders[0];
-        if (render?._tag !== 'Navigation') {
-          return yield* Effect.die('Expected a navigation render.');
+        if (render?._tag !== "Navigation") {
+          return yield* Effect.die("Expected a navigation render.");
         }
-        expect(render.routeTree.id).toBe('root');
+        expect(render.routeTree.id).toBe("root");
         expect(react.transitionTypes).toEqual([
-          'navigation',
-          'navigation-push',
-          'navigation-ua-visual-transition',
-          'navigation-forward',
+          "navigation",
+          "navigation-push",
+          "navigation-ua-visual-transition",
+          "navigation-forward",
         ]);
       }),
     );
   }),
 );
 
-it.effect('snapshots link types before loading and keeps them local to the navigation', () =>
+it.effect("snapshots link types before loading and keeps them local to the navigation", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
       yield* listen(navigation);
       const anchor = new TestAnchor({
-        erscTransitionTypes: ' docs-previous\tsection-change docs-previous\n',
+        erscTransitionTypes: " docs-previous\tsection-change docs-previous\n",
       });
       const pending = makeNavigationEvent({ sourceElement: anchor });
       navigation.dispatch(pending.event);
-      anchor.dataset['erscTransitionTypes'] = 'docs-next';
+      anchor.dataset["erscTransitionTypes"] = "docs-next";
       expect(react.transitionTypes).toEqual([]);
 
       const handler = pending.interception()?.precommitHandler;
       if (handler === undefined) {
-        return yield* Effect.die('Expected a precommit handler.');
+        return yield* Effect.die("Expected a precommit handler.");
       }
       yield* Effect.promise(() => invokePrecommitHandler(handler, makePrecommitController()));
       expect(react.transitionTypes).toEqual([
-        'navigation',
-        'navigation-push',
-        'navigation-forward',
-        'docs-previous',
-        'section-change',
+        "navigation",
+        "navigation-push",
+        "navigation-forward",
+        "docs-previous",
+        "section-change",
       ]);
 
       react.transitionTypes.length = 0;
-      yield* prepareNavigation(navigation, 'https://effective-rsc.test/schedule/day-two');
+      yield* prepareNavigation(navigation, "https://effective-rsc.test/schedule/day-two");
       expect(react.transitionTypes).toEqual([
-        'navigation',
-        'navigation-push',
-        'navigation-forward',
+        "navigation",
+        "navigation-push",
+        "navigation-forward",
       ]);
     }),
   ),
 );
 
-it.effect('reserves only ERSC-owned types and preserves application tokens unchanged', () =>
+it.effect("reserves only ERSC-owned types and preserves application tokens unchanged", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
       const renders: Array<BrowserRenderRequest> = [];
       yield* listen(navigation, makeBrowserRenderer(renders));
       const applicationTypes = [
-        'docs-jump',
-        'NAVIGATION-BACKWARD',
-        'none',
-        'initial',
-        'default',
-        'constructor',
-        'toString',
-        '1custom',
-        'custom/type',
-        'étape-suivante',
+        "docs-jump",
+        "NAVIGATION-BACKWARD",
+        "none",
+        "initial",
+        "default",
+        "constructor",
+        "toString",
+        "1custom",
+        "custom/type",
+        "étape-suivante",
       ];
       const pending = makeNavigationEvent({
-        navigationType: 'replace',
+        navigationType: "replace",
         sourceElement: new TestAnchor({
           erscTransitionTypes: [
-            'navigation',
-            'navigation-backward',
-            'navigation-custom',
-            'server-function',
-            'hmr-refresh',
+            "navigation",
+            "navigation-backward",
+            "navigation-custom",
+            "server-function",
+            "hmr-refresh",
             ...applicationTypes,
-          ].join(' '),
+          ].join(" "),
         }),
       });
       navigation.dispatch(pending.event);
       const handler = pending.interception()?.precommitHandler;
       if (handler === undefined) {
-        return yield* Effect.die('Expected a precommit handler.');
+        return yield* Effect.die("Expected a precommit handler.");
       }
       yield* Effect.promise(() => invokePrecommitHandler(handler, makePrecommitController()));
       expect(renders).toHaveLength(1);
       expect(react.transitionTypes).toEqual([
-        'navigation',
-        'navigation-replace',
+        "navigation",
+        "navigation-replace",
         ...applicationTypes,
       ]);
     }),
   ),
 );
 
-it.effect('does not read link types for a history traversal', () =>
+it.effect("does not read link types for a history traversal", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
       yield* listen(navigation);
-      const readTypes = vi.fn(() => 'docs-next');
+      const readTypes = vi.fn(() => "docs-next");
       const pending = makeNavigationEvent({
-        navigationType: 'traverse',
+        navigationType: "traverse",
         sourceElement: new TestAnchor({
           get erscTransitionTypes() {
             return readTypes();
@@ -568,20 +568,20 @@ it.effect('does not read link types for a history traversal', () =>
       navigation.dispatch(pending.event);
       const handler = pending.interception()?.precommitHandler;
       if (handler === undefined) {
-        return yield* Effect.die('Expected a precommit handler.');
+        return yield* Effect.die("Expected a precommit handler.");
       }
       yield* Effect.promise(() => invokePrecommitHandler(handler, makePrecommitController()));
       expect(readTypes).not.toHaveBeenCalled();
       expect(react.transitionTypes).toEqual([
-        'navigation',
-        'navigation-traverse',
-        'navigation-backward',
+        "navigation",
+        "navigation-traverse",
+        "navigation-backward",
       ]);
     }),
   ),
 );
 
-it.effect('settles the post-commit handler before the Flight stream reaches EOF', () =>
+it.effect("settles the post-commit handler before the Flight stream reaches EOF", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
@@ -599,7 +599,7 @@ it.effect('settles the post-commit handler before the Flight stream reaches EOF'
               }),
               {
                 headers: {
-                  'content-type': 'text/x-component',
+                  "content-type": "text/x-component",
                 },
               },
             ),
@@ -614,7 +614,7 @@ it.effect('settles the post-commit handler before the Flight stream reaches EOF'
       const interception = pendingNavigation.interception();
       const precommitHandler = interception?.precommitHandler;
       if (precommitHandler === undefined) {
-        return yield* Effect.die('Expected a precommit handler.');
+        return yield* Effect.die("Expected a precommit handler.");
       }
 
       const handlers: Array<NavigationInterceptHandler> = [];
@@ -623,7 +623,7 @@ it.effect('settles the post-commit handler before the Flight stream reaches EOF'
       );
       const handler = handlers[0];
       if (handler === undefined) {
-        return yield* Effect.die('Expected a post-commit handler.');
+        return yield* Effect.die("Expected a post-commit handler.");
       }
       let handlerSettled = false;
       const navigationFinished = invokeNavigationHandler(handler).then(() => {
@@ -633,7 +633,7 @@ it.effect('settles the post-commit handler before the Flight stream reaches EOF'
 
       expect(handlerSettled).toBe(true);
       if (responseController === undefined) {
-        return yield* Effect.die('Expected a streaming Flight response.');
+        return yield* Effect.die("Expected a streaming Flight response.");
       }
       responseController.close();
       yield* Effect.promise(() => navigationFinished);
@@ -642,7 +642,7 @@ it.effect('settles the post-commit handler before the Flight stream reaches EOF'
   ),
 );
 
-it.effect('uses a post-commit handler for a non-cancelable traversal', () =>
+it.effect("uses a post-commit handler for a non-cancelable traversal", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
@@ -650,27 +650,27 @@ it.effect('uses a post-commit handler for a non-cancelable traversal', () =>
       yield* listen(navigation, makeBrowserRenderer(), makeHttpClient(requestedUrls));
       const pendingNavigation = makeNavigationEvent({
         cancelable: false,
-        navigationType: 'traverse',
+        navigationType: "traverse",
       });
 
       navigation.dispatch(pendingNavigation.event);
 
       const interception = pendingNavigation.interception();
       expect(interception?.precommitHandler).toBeUndefined();
-      expect(interception?.handler).toBeTypeOf('function');
+      expect(interception?.handler).toBeTypeOf("function");
       const handler = interception?.handler;
       if (handler === undefined) {
-        return yield* Effect.die('Expected a post-commit handler.');
+        return yield* Effect.die("Expected a post-commit handler.");
       }
 
       yield* Effect.promise(() => invokeNavigationHandler(handler));
 
-      expect(requestedUrls).toEqual(['https://effective-rsc.test/schedule/day-two']);
+      expect(requestedUrls).toEqual(["https://effective-rsc.test/schedule/day-two"]);
     }),
   ),
 );
 
-it.effect('reloads after a non-cancelable traversal fails to load Flight', () =>
+it.effect("reloads after a non-cancelable traversal fails to load Flight", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
@@ -684,14 +684,14 @@ it.effect('reloads after a non-cancelable traversal fails to load Flight', () =>
       );
       const pendingNavigation = makeNavigationEvent({
         cancelable: false,
-        navigationType: 'traverse',
+        navigationType: "traverse",
       });
 
       navigation.dispatch(pendingNavigation.event);
 
       const handler = pendingNavigation.interception()?.handler;
       if (handler === undefined) {
-        return yield* Effect.die('Expected a post-commit handler.');
+        return yield* Effect.die("Expected a post-commit handler.");
       }
       yield* Effect.promise(() => invokeNavigationHandler(handler));
 
@@ -700,7 +700,7 @@ it.effect('reloads after a non-cancelable traversal fails to load Flight', () =>
   ),
 );
 
-it.effect('does not reload a superseded non-cancelable traversal', () => {
+it.effect("does not reload a superseded non-cancelable traversal", () => {
   const navigationAbort = new AbortController();
   navigationAbort.abort();
   return Effect.scoped(
@@ -716,7 +716,7 @@ it.effect('does not reload a superseded non-cancelable traversal', () => {
       );
       const pendingNavigation = makeNavigationEvent({
         cancelable: false,
-        navigationType: 'traverse',
+        navigationType: "traverse",
         signal: navigationAbort.signal,
       });
 
@@ -724,7 +724,7 @@ it.effect('does not reload a superseded non-cancelable traversal', () => {
 
       const handler = pendingNavigation.interception()?.handler;
       if (handler === undefined) {
-        return yield* Effect.die('Expected a post-commit handler.');
+        return yield* Effect.die("Expected a post-commit handler.");
       }
       yield* Effect.promise(() => invokeNavigationHandler(handler));
 
@@ -733,14 +733,14 @@ it.effect('does not reload a superseded non-cancelable traversal', () => {
   );
 });
 
-it.effect('coordinates cache identity across Flight and history commit ordering', () =>
+it.effect("coordinates cache identity across Flight and history commit ordering", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
-      const dayTwoUrl = 'https://effective-rsc.test/schedule/day-two';
-      const dayThreeUrl = 'https://effective-rsc.test/schedule/day-three';
-      const dayFourUrl = 'https://effective-rsc.test/schedule/day-four';
-      const dayFiveUrl = 'https://effective-rsc.test/schedule/day-five';
+      const dayTwoUrl = "https://effective-rsc.test/schedule/day-two";
+      const dayThreeUrl = "https://effective-rsc.test/schedule/day-three";
+      const dayFourUrl = "https://effective-rsc.test/schedule/day-four";
+      const dayFiveUrl = "https://effective-rsc.test/schedule/day-five";
       const dayTwo = yield* makeControlledRoute(dayTwoUrl);
       const dayThree = yield* makeControlledRoute(dayThreeUrl);
       const dayFour = yield* makeControlledRoute(dayFourUrl);
@@ -764,7 +764,7 @@ it.effect('coordinates cache identity across Flight and history commit ordering'
               ? Effect.die(new TypeError(`Unexpected route ${destination.url}.`))
               : Effect.succeed(resource);
           },
-          loadInitial: Effect.die(new TypeError('Unexpected initial route load.')),
+          loadInitial: Effect.die(new TypeError("Unexpected initial route load.")),
           prepareRefresh: () => () => undefined,
         }),
       ).pipe(Layer.provideMerge(Layer.succeed(HttpClient.HttpClient, makeHttpClient())));
@@ -779,24 +779,24 @@ it.effect('coordinates cache identity across Flight and history commit ordering'
       yield* Effect.promise(() => dayTwo.released.promise);
       expect(dayTwo.cachedEntries).toEqual([]);
 
-      const dayTwoEntry = makeNavigationEntry('day-two', dayTwoUrl);
+      const dayTwoEntry = makeNavigationEntry("day-two", dayTwoUrl);
       navigation.currentEntry = dayTwoEntry;
       yield* Effect.promise(() => invokeNavigationHandler(dayTwoHistory));
       expect(dayTwo.cachedEntries).toEqual([dayTwoEntry]);
 
       const dayThreeHistory = yield* prepareNavigation(navigation, dayThreeUrl);
-      const dayThreeEntry = makeNavigationEntry('day-three', dayThreeUrl);
+      const dayThreeEntry = makeNavigationEntry("day-three", dayThreeUrl);
       navigation.currentEntry = dayThreeEntry;
       yield* Effect.promise(() => invokeNavigationHandler(dayThreeHistory));
       expect(dayThree.cachedEntries).toEqual([]);
 
-      navigation.currentEntry = makeNavigationEntry('unrelated', dayFiveUrl);
+      navigation.currentEntry = makeNavigationEntry("unrelated", dayFiveUrl);
       yield* Deferred.succeed(dayThree.completed, undefined);
       yield* Effect.promise(() => dayThree.released.promise);
       expect(dayThree.cachedEntries).toEqual([dayThreeEntry]);
 
       const dayFourHistory = yield* prepareNavigation(navigation, dayFourUrl);
-      const dayFourEntry = makeNavigationEntry('day-four', dayFourUrl);
+      const dayFourEntry = makeNavigationEntry("day-four", dayFourUrl);
       navigation.currentEntry = dayFourEntry;
       yield* Effect.promise(() => invokeNavigationHandler(dayFourHistory));
 
@@ -809,14 +809,14 @@ it.effect('coordinates cache identity across Flight and history commit ordering'
   ),
 );
 
-it.effect('reuses completed route trees for back and forward traversals', () =>
+it.effect("reuses completed route trees for back and forward traversals", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
       const dayOneEntry = navigation.currentEntry;
       const dayTwoEntry = makeNavigationEntry(
-        'day-two',
-        'https://effective-rsc.test/schedule/day-two',
+        "day-two",
+        "https://effective-rsc.test/schedule/day-two",
       );
       const requestedUrls: Array<string> = [];
       const renders: Array<BrowserRenderRequest> = [];
@@ -827,7 +827,7 @@ it.effect('reuses completed route trees for back and forward traversals', () =>
       navigation.dispatch(push.event);
       const pushPrecommit = push.interception()?.precommitHandler;
       if (pushPrecommit === undefined) {
-        return yield* Effect.die('Expected a push precommit handler.');
+        return yield* Effect.die("Expected a push precommit handler.");
       }
       const pushHandlers: Array<NavigationInterceptHandler> = [];
       yield* Effect.promise(() =>
@@ -836,18 +836,18 @@ it.effect('reuses completed route trees for back and forward traversals', () =>
       navigation.currentEntry = dayTwoEntry;
       const pushHandler = pushHandlers[0];
       if (pushHandler === undefined) {
-        return yield* Effect.die('Expected a push post-commit handler.');
+        return yield* Effect.die("Expected a push post-commit handler.");
       }
       yield* Effect.promise(() => invokeNavigationHandler(pushHandler));
 
       const back = makeNavigationEvent({
         destination: { key: dayOneEntry.key, url: dayOneEntry.url },
-        navigationType: 'traverse',
+        navigationType: "traverse",
       });
       navigation.dispatch(back.event);
       const backPrecommit = back.interception()?.precommitHandler;
       if (backPrecommit === undefined) {
-        return yield* Effect.die('Expected a back precommit handler.');
+        return yield* Effect.die("Expected a back precommit handler.");
       }
       const backHandlers: Array<NavigationInterceptHandler> = [];
       yield* Effect.promise(() =>
@@ -856,18 +856,18 @@ it.effect('reuses completed route trees for back and forward traversals', () =>
       navigation.currentEntry = dayOneEntry;
       const backHandler = backHandlers[0];
       if (backHandler === undefined) {
-        return yield* Effect.die('Expected a back post-commit handler.');
+        return yield* Effect.die("Expected a back post-commit handler.");
       }
       yield* Effect.promise(() => invokeNavigationHandler(backHandler));
 
       const forward = makeNavigationEvent({
         destination: { key: dayTwoEntry.key, url: dayTwoEntry.url },
-        navigationType: 'traverse',
+        navigationType: "traverse",
       });
       navigation.dispatch(forward.event);
       const forwardPrecommit = forward.interception()?.precommitHandler;
       if (forwardPrecommit === undefined) {
-        return yield* Effect.die('Expected a forward precommit handler.');
+        return yield* Effect.die("Expected a forward precommit handler.");
       }
       const forwardHandlers: Array<NavigationInterceptHandler> = [];
       yield* Effect.promise(() =>
@@ -876,21 +876,21 @@ it.effect('reuses completed route trees for back and forward traversals', () =>
       navigation.currentEntry = dayTwoEntry;
       const forwardHandler = forwardHandlers[0];
       if (forwardHandler === undefined) {
-        return yield* Effect.die('Expected a forward post-commit handler.');
+        return yield* Effect.die("Expected a forward post-commit handler.");
       }
       yield* Effect.promise(() => invokeNavigationHandler(forwardHandler));
 
-      expect(requestedUrls).toEqual(['https://effective-rsc.test/schedule/day-two']);
-      expect(renders.map((render) => render.routeTree.id)).toEqual(['root', 'day-one', 'root']);
+      expect(requestedUrls).toEqual(["https://effective-rsc.test/schedule/day-two"]);
+      expect(renders.map((render) => render.routeTree.id)).toEqual(["root", "day-one", "root"]);
     }),
   ),
 );
 
-it.effect('promotes a non-Flight response to native document navigation', () =>
+it.effect("promotes a non-Flight response to native document navigation", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
-      yield* listen(navigation, makeBrowserRenderer(), makeHttpClient([], 'text/html'));
+      yield* listen(navigation, makeBrowserRenderer(), makeHttpClient([], "text/html"));
       const pendingNavigation = makeNavigationEvent();
 
       navigation.dispatch(pendingNavigation.event);
@@ -898,7 +898,7 @@ it.effect('promotes a non-Flight response to native document navigation', () =>
       const interception = pendingNavigation.interception();
       const precommitHandler = interception?.precommitHandler;
       if (precommitHandler === undefined) {
-        return yield* Effect.die('Expected a precommit handler.');
+        return yield* Effect.die("Expected a precommit handler.");
       }
       yield* Effect.promise(() =>
         invokePrecommitHandler(precommitHandler, makePrecommitController()),
@@ -906,15 +906,15 @@ it.effect('promotes a non-Flight response to native document navigation', () =>
 
       expect(navigation.nativeNavigations).toEqual([
         {
-          options: { history: 'push', info: 'ersc-native-document' },
-          url: 'https://effective-rsc.test/schedule/day-two',
+          options: { history: "push", info: "ersc-native-document" },
+          url: "https://effective-rsc.test/schedule/day-two",
         },
       ]);
     }),
   ),
 );
 
-it.effect('redirects a cancelable navigation before committing its Flight tree', () =>
+it.effect("redirects a cancelable navigation before committing its Flight tree", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
@@ -926,7 +926,7 @@ it.effect('redirects a cancelable navigation before committing its Flight tree',
       const renders: Array<BrowserRenderRequest> = [];
       yield* listen(navigation, makeBrowserRenderer(renders));
       const pendingNavigation = makeNavigationEvent({
-        destination: { url: 'https://effective-rsc.test/schedule/day-one' },
+        destination: { url: "https://effective-rsc.test/schedule/day-one" },
       });
 
       navigation.dispatch(pendingNavigation.event);
@@ -934,7 +934,7 @@ it.effect('redirects a cancelable navigation before committing its Flight tree',
       const interception = pendingNavigation.interception();
       const precommitHandler = interception?.precommitHandler;
       if (precommitHandler === undefined) {
-        return yield* Effect.die('Expected a precommit handler.');
+        return yield* Effect.die("Expected a precommit handler.");
       }
       yield* Effect.promise(() =>
         invokePrecommitHandler(precommitHandler, makePrecommitController(redirects, handlers)),
@@ -942,8 +942,8 @@ it.effect('redirects a cancelable navigation before committing its Flight tree',
 
       expect(redirects).toEqual([
         {
-          options: { history: 'auto' },
-          url: 'https://effective-rsc.test/schedule/day-two',
+          options: { history: "auto" },
+          url: "https://effective-rsc.test/schedule/day-two",
         },
       ]);
       expect(renders).toHaveLength(1);
@@ -952,7 +952,7 @@ it.effect('redirects a cancelable navigation before committing its Flight tree',
   ),
 );
 
-it.effect('falls back to document replacement for a redirected traversal', () =>
+it.effect("falls back to document replacement for a redirected traversal", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
@@ -960,8 +960,8 @@ it.effect('falls back to document replacement for a redirected traversal', () =>
       yield* listen(navigation, makeBrowserRenderer(), makeHttpClient(), documentReplacements);
       const pendingNavigation = makeNavigationEvent({
         cancelable: false,
-        destination: { url: 'https://effective-rsc.test/schedule/day-one' },
-        navigationType: 'traverse',
+        destination: { url: "https://effective-rsc.test/schedule/day-one" },
+        navigationType: "traverse",
       });
 
       navigation.dispatch(pendingNavigation.event);
@@ -969,16 +969,16 @@ it.effect('falls back to document replacement for a redirected traversal', () =>
       const interception = pendingNavigation.interception();
       const handler = interception?.handler;
       if (handler === undefined) {
-        return yield* Effect.die('Expected a post-commit handler.');
+        return yield* Effect.die("Expected a post-commit handler.");
       }
       yield* Effect.promise(() => invokeNavigationHandler(handler));
 
-      expect(documentReplacements).toEqual(['https://effective-rsc.test/schedule/day-two']);
+      expect(documentReplacements).toEqual(["https://effective-rsc.test/schedule/day-two"]);
     }),
   ),
 );
 
-it.effect('cancels a streaming Flight response abandoned before React commits', () => {
+it.effect("cancels a streaming Flight response abandoned before React commits", () => {
   const navigationAbort = new AbortController();
   return Effect.scoped(
     Effect.gen(function* () {
@@ -1003,7 +1003,7 @@ it.effect('cancels a streaming Flight response abandoned before React commits', 
           };
         },
         refresh: () => {
-          throw new TypeError('Unexpected refresh.');
+          throw new TypeError("Unexpected refresh.");
         },
       });
       const httpClient = HttpClient.make((request, _url, signal) =>
@@ -1015,14 +1015,14 @@ it.effect('cancels a streaming Flight response abandoned before React commits', 
               new ReadableStream<Uint8Array>({
                 start(controller) {
                   controller.enqueue(new Uint8Array([1]));
-                  signal.addEventListener('abort', () => controller.error(signal.reason), {
+                  signal.addEventListener("abort", () => controller.error(signal.reason), {
                     once: true,
                   });
                 },
               }),
               {
                 headers: {
-                  'content-type': 'text/x-component',
+                  "content-type": "text/x-component",
                 },
               },
             ),
@@ -1036,7 +1036,7 @@ it.effect('cancels a streaming Flight response abandoned before React commits', 
 
       const interception = pendingNavigation.interception();
       if (interception?.precommitHandler === undefined) {
-        return yield* Effect.die('Expected a precommit handler.');
+        return yield* Effect.die("Expected a precommit handler.");
       }
       const navigationFinished = invokePrecommitHandler(
         interception.precommitHandler,
@@ -1060,7 +1060,7 @@ it.effect('cancels a streaming Flight response abandoned before React commits', 
   );
 });
 
-it.effect('interrupts a pending Flight load when a newer navigation starts', () => {
+it.effect("interrupts a pending Flight load when a newer navigation starts", () => {
   const navigationAbort = new AbortController();
   return Effect.scoped(
     Effect.gen(function* () {
@@ -1077,7 +1077,7 @@ it.effect('interrupts a pending Flight load when a newer navigation starts', () 
                 start(controller) {
                   requestStarted.resolve();
                   signal.addEventListener(
-                    'abort',
+                    "abort",
                     () => {
                       controller.error(signal.reason);
                       responseAborted.resolve();
@@ -1088,7 +1088,7 @@ it.effect('interrupts a pending Flight load when a newer navigation starts', () 
               }),
               {
                 headers: {
-                  'content-type': 'text/x-component',
+                  "content-type": "text/x-component",
                 },
               },
             ),
@@ -1102,7 +1102,7 @@ it.effect('interrupts a pending Flight load when a newer navigation starts', () 
 
       const precommitHandler = firstNavigation.interception()?.precommitHandler;
       if (precommitHandler === undefined) {
-        return yield* Effect.die('Expected a precommit handler.');
+        return yield* Effect.die("Expected a precommit handler.");
       }
       const firstNavigationFinished = invokePrecommitHandler(
         precommitHandler,
@@ -1112,7 +1112,7 @@ it.effect('interrupts a pending Flight load when a newer navigation starts', () 
 
       navigation.dispatch(
         makeNavigationEvent({
-          destination: { url: 'https://effective-rsc.test/schedule/day-three' },
+          destination: { url: "https://effective-rsc.test/schedule/day-three" },
         }).event,
       );
       yield* Effect.promise(() => responseAborted.promise);
@@ -1124,7 +1124,7 @@ it.effect('interrupts a pending Flight load when a newer navigation starts', () 
   );
 });
 
-it.effect('discards and releases a scheduled candidate when a newer navigation starts', () => {
+it.effect("discards and releases a scheduled candidate when a newer navigation starts", () => {
   const navigationAbort = new AbortController();
   return Effect.scoped(
     Effect.gen(function* () {
@@ -1150,7 +1150,7 @@ it.effect('discards and releases a scheduled candidate when a newer navigation s
           };
         },
         refresh: () => {
-          throw new TypeError('Unexpected refresh.');
+          throw new TypeError("Unexpected refresh.");
         },
       });
       const httpClient = HttpClient.make((request, _url, signal) =>
@@ -1163,7 +1163,7 @@ it.effect('discards and releases a scheduled candidate when a newer navigation s
                 start(controller) {
                   controller.enqueue(new Uint8Array([1]));
                   signal.addEventListener(
-                    'abort',
+                    "abort",
                     () => {
                       controller.error(signal.reason);
                       responseAborted.resolve();
@@ -1174,7 +1174,7 @@ it.effect('discards and releases a scheduled candidate when a newer navigation s
               }),
               {
                 headers: {
-                  'content-type': 'text/x-component',
+                  "content-type": "text/x-component",
                 },
               },
             ),
@@ -1188,7 +1188,7 @@ it.effect('discards and releases a scheduled candidate when a newer navigation s
 
       const precommitHandler = firstNavigation.interception()?.precommitHandler;
       if (precommitHandler === undefined) {
-        return yield* Effect.die('Expected a precommit handler.');
+        return yield* Effect.die("Expected a precommit handler.");
       }
       const firstNavigationFinished = invokePrecommitHandler(
         precommitHandler,
@@ -1198,7 +1198,7 @@ it.effect('discards and releases a scheduled candidate when a newer navigation s
 
       navigation.dispatch(
         makeNavigationEvent({
-          destination: { url: 'https://effective-rsc.test/schedule/day-three' },
+          destination: { url: "https://effective-rsc.test/schedule/day-three" },
         }).event,
       );
       yield* Effect.promise(() => discardStarted.promise);
@@ -1216,7 +1216,7 @@ it.effect('discards and releases a scheduled candidate when a newer navigation s
   );
 });
 
-it.effect('retains a committed Flight response until its render retires', () => {
+it.effect("retains a committed Flight response until its render retires", () => {
   const navigationAbort = new AbortController();
   return Effect.scoped(
     Effect.gen(function* () {
@@ -1226,18 +1226,18 @@ it.effect('retains a committed Flight response until its render retires', () => 
       let responseSignal: AbortSignal | undefined;
       const httpClient = HttpClient.make((request, _url, signal) =>
         Effect.sync(() => {
-          if (new URL(request.url).pathname === '/schedule/day-three') {
+          if (new URL(request.url).pathname === "/schedule/day-three") {
             return HttpClientResponse.fromWeb(
               request,
               new Response(
                 new ReadableStream<Uint8Array>({
                   start(controller) {
-                    controller.error(new Error('Failed to load the successor.'));
+                    controller.error(new Error("Failed to load the successor."));
                   },
                 }),
                 {
                   headers: {
-                    'content-type': 'text/x-component',
+                    "content-type": "text/x-component",
                   },
                 },
               ),
@@ -1251,7 +1251,7 @@ it.effect('retains a committed Flight response until its render retires', () => 
                 start(controller) {
                   controller.enqueue(new Uint8Array([1]));
                   signal.addEventListener(
-                    'abort',
+                    "abort",
                     () => {
                       controller.error(signal.reason);
                       responseAborted.resolve();
@@ -1262,7 +1262,7 @@ it.effect('retains a committed Flight response until its render retires', () => 
               }),
               {
                 headers: {
-                  'content-type': 'text/x-component',
+                  "content-type": "text/x-component",
                 },
               },
             ),
@@ -1278,7 +1278,7 @@ it.effect('retains a committed Flight response until its render retires', () => 
           retired: renderRetired.promise,
         }),
         refresh: () => {
-          throw new TypeError('Unexpected refresh.');
+          throw new TypeError("Unexpected refresh.");
         },
       });
       yield* listen(navigation, browserRenderer, httpClient);
@@ -1289,19 +1289,19 @@ it.effect('retains a committed Flight response until its render retires', () => 
       const interception = pendingNavigation.interception();
       const precommitHandler = interception?.precommitHandler;
       if (precommitHandler === undefined) {
-        return yield* Effect.die('Expected a precommit handler.');
+        return yield* Effect.die("Expected a precommit handler.");
       }
       const handlers: Array<NavigationInterceptHandler> = [];
       yield* Effect.promise(() =>
         invokePrecommitHandler(precommitHandler, makePrecommitController([], handlers)),
       );
       navigation.currentEntry = makeNavigationEntry(
-        'day-two',
-        'https://effective-rsc.test/schedule/day-two',
+        "day-two",
+        "https://effective-rsc.test/schedule/day-two",
       );
       const handler = handlers[0];
       if (handler === undefined) {
-        return yield* Effect.die('Expected a post-commit handler.');
+        return yield* Effect.die("Expected a post-commit handler.");
       }
       yield* Effect.promise(() => invokeNavigationHandler(handler));
 
@@ -1313,12 +1313,12 @@ it.effect('retains a committed Flight response until its render retires', () => 
       expect(responseSignal?.aborted).toBe(false);
 
       const failedNavigation = makeNavigationEvent({
-        destination: { url: 'https://effective-rsc.test/schedule/day-three' },
+        destination: { url: "https://effective-rsc.test/schedule/day-three" },
       });
       navigation.dispatch(failedNavigation.event);
       const failedPrecommitHandler = failedNavigation.interception()?.precommitHandler;
       if (failedPrecommitHandler === undefined) {
-        return yield* Effect.die('Expected a precommit handler for the failed successor.');
+        return yield* Effect.die("Expected a precommit handler for the failed successor.");
       }
       const failed = yield* Effect.exit(
         Effect.promise(() =>
@@ -1337,7 +1337,7 @@ it.effect('retains a committed Flight response until its render retires', () => 
   );
 });
 
-it.effect('leaves navigations outside the router boundary to the browser', () =>
+it.effect("leaves navigations outside the router boundary to the browser", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
@@ -1346,11 +1346,11 @@ it.effect('leaves navigations outside the router boundary to the browser', () =>
       const nativeNavigations = [
         makeNavigationEvent({ canIntercept: false }),
         makeNavigationEvent({ hashChange: true }),
-        makeNavigationEvent({ downloadRequest: '' }),
+        makeNavigationEvent({ downloadRequest: "" }),
         makeNavigationEvent({ formData: new FormData() }),
-        makeNavigationEvent({ info: 'react-transition' }),
-        makeNavigationEvent({ info: 'ersc-native-document' }),
-        makeNavigationEvent({ navigationType: 'reload' }),
+        makeNavigationEvent({ info: "react-transition" }),
+        makeNavigationEvent({ info: "ersc-native-document" }),
+        makeNavigationEvent({ navigationType: "reload" }),
       ];
 
       for (const navigationEvent of nativeNavigations) {
@@ -1362,7 +1362,7 @@ it.effect('leaves navigations outside the router boundary to the browser', () =>
   ),
 );
 
-it.effect('removes the listener when its Effect scope closes', () =>
+it.effect("removes the listener when its Effect scope closes", () =>
   Effect.gen(function* () {
     const navigation = new TestNavigationApi();
     const scope = yield* Scope.make();
@@ -1377,7 +1377,7 @@ it.effect('removes the listener when its Effect scope closes', () =>
 );
 
 it.effect(
-  'releases the previous navigation stream when the real renderer commits its successor',
+  "releases the previous navigation stream when the real renderer commits its successor",
   () =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -1388,7 +1388,7 @@ it.effect(
         const { httpClient, responseSignals } = makeStreamingHttpClient();
         yield* listen(navigation, renderer, httpClient);
 
-        const firstUrl = 'https://effective-rsc.test/schedule/day-two';
+        const firstUrl = "https://effective-rsc.test/schedule/day-two";
         const firstPreparation = yield* prepareNavigation(navigation, firstUrl).pipe(
           Effect.forkChild,
         );
@@ -1396,13 +1396,13 @@ it.effect(
         yield* Effect.yieldNow;
         renderer.commit(firstRender);
         const firstHistory = yield* Fiber.join(firstPreparation);
-        navigation.currentEntry = makeNavigationEntry('day-two', firstUrl);
+        navigation.currentEntry = makeNavigationEntry("day-two", firstUrl);
         yield* Effect.promise(() => invokeNavigationHandler(firstHistory));
 
         published = Promise.withResolvers<BrowserRender>();
         const secondPreparation = yield* prepareNavigation(
           navigation,
-          'https://effective-rsc.test/schedule/day-three',
+          "https://effective-rsc.test/schedule/day-three",
         ).pipe(Effect.forkChild);
         const secondRender = yield* Effect.promise(() => published.promise);
         yield* Effect.yieldNow;
@@ -1420,7 +1420,7 @@ it.effect(
 );
 
 it.effect(
-  'keeps a committed navigation stream alive when superseded before its commit notification',
+  "keeps a committed navigation stream alive when superseded before its commit notification",
   () =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -1435,7 +1435,7 @@ it.effect(
         navigation.dispatch(first.event);
         const firstHandler = first.interception()?.precommitHandler;
         if (firstHandler === undefined) {
-          return yield* Effect.die('Expected a precommit handler for the first navigation.');
+          return yield* Effect.die("Expected a precommit handler for the first navigation.");
         }
         const firstPreparation = yield* Effect.promise(() =>
           invokePrecommitHandler(firstHandler, makePrecommitController()),
@@ -1444,7 +1444,7 @@ it.effect(
         yield* Effect.yieldNow;
 
         const successor = makeNavigationEvent({
-          destination: { url: 'https://effective-rsc.test/schedule/day-three' },
+          destination: { url: "https://effective-rsc.test/schedule/day-three" },
         });
         // A child layout effect can queue navigation before the root resolves committed.
         // That microtask then runs before the router processes the commit notification.
@@ -1458,7 +1458,7 @@ it.effect(
 
         const successorHandler = successor.interception()?.precommitHandler;
         if (successorHandler === undefined) {
-          return yield* Effect.die('Expected a precommit handler for the successor.');
+          return yield* Effect.die("Expected a precommit handler for the successor.");
         }
         published = Promise.withResolvers<BrowserRender>();
         const successorPreparation = yield* Effect.promise(() =>
@@ -1476,7 +1476,7 @@ it.effect(
     ),
 );
 
-it.effect('keeps an older navigation stream while a queued discard can restore it', () =>
+it.effect("keeps an older navigation stream while a queued discard can restore it", () =>
   Effect.scoped(
     Effect.gen(function* () {
       const navigation = new TestNavigationApi();
@@ -1486,7 +1486,7 @@ it.effect('keeps an older navigation stream while a queued discard can restore i
       const { httpClient, responseSignals } = makeStreamingHttpClient();
       yield* listen(navigation, renderer, httpClient);
 
-      const firstUrl = 'https://effective-rsc.test/schedule/day-two';
+      const firstUrl = "https://effective-rsc.test/schedule/day-two";
       const firstPreparation = yield* prepareNavigation(navigation, firstUrl).pipe(
         Effect.forkChild,
       );
@@ -1494,11 +1494,11 @@ it.effect('keeps an older navigation stream while a queued discard can restore i
       yield* Effect.yieldNow;
       renderer.commit(firstRender);
       const firstHistory = yield* Fiber.join(firstPreparation);
-      navigation.currentEntry = makeNavigationEntry('day-two', firstUrl);
+      navigation.currentEntry = makeNavigationEntry("day-two", firstUrl);
       yield* Effect.promise(() => invokeNavigationHandler(firstHistory));
 
       published = Promise.withResolvers<BrowserRender>();
-      const secondUrl = 'https://effective-rsc.test/schedule/day-three';
+      const secondUrl = "https://effective-rsc.test/schedule/day-three";
       const secondPreparation = yield* prepareNavigation(navigation, secondUrl).pipe(
         Effect.forkChild,
       );
@@ -1512,7 +1512,7 @@ it.effect('keeps an older navigation stream while a queued discard can restore i
       const discardRender = yield* Effect.promise(() => published.promise);
       renderer.commit(secondRender);
       const secondHistory = yield* Fiber.join(secondPreparation);
-      navigation.currentEntry = makeNavigationEntry('day-three', secondUrl);
+      navigation.currentEntry = makeNavigationEntry("day-three", secondUrl);
       yield* Effect.promise(() => invokeNavigationHandler(secondHistory));
       expect(responseSignals[0]?.aborted).toBe(false);
       expect(responseSignals[1]?.aborted).toBe(false);

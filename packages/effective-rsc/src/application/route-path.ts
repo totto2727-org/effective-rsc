@@ -2,12 +2,12 @@ export type AbsolutePath = `/${string}`;
 
 // Compile-time and runtime route grammars are deliberately paired. Any grammar change must update
 // both ValidRoutePath/ValidRouteParamName and analyzeRoutePath, with one paired type/runtime test.
-type InvalidRouteCharacter = '*' | '?' | '#' | '%' | ';' | '\\';
-type InvalidParameterCharacter = InvalidRouteCharacter | '/' | ':' | '(' | ')' | '.' | '-';
+type InvalidRouteCharacter = "*" | "?" | "#" | "%" | ";" | "\\";
+type InvalidParameterCharacter = InvalidRouteCharacter | "/" | ":" | "(" | ")" | "." | "-";
 
 export type ValidRouteParamName<Name extends string> = string extends Name
   ? never
-  : Name extends ''
+  : Name extends ""
     ? never
     : Name extends `${string}${InvalidParameterCharacter}${string}`
       ? never
@@ -25,10 +25,10 @@ type ValidRouteSegments<
 > = string extends Segments
   ? false
   : Segments extends `${infer Segment}/${infer Rest}`
-    ? Segment extends '' | '.' | '..'
+    ? Segment extends "" | "." | ".."
       ? false
       : Segment extends `:${infer Parameter}`
-        ? Parameter extends ''
+        ? Parameter extends ""
           ? false
           : Parameter extends `${string}${InvalidParameterCharacter}${string}`
             ? false
@@ -38,10 +38,10 @@ type ValidRouteSegments<
         : Segment extends `${string}:${string}`
           ? false
           : ValidRouteSegments<Rest, Seen>
-    : Segments extends '' | '.' | '..'
+    : Segments extends "" | "." | ".."
       ? false
       : Segments extends `:${infer Parameter}`
-        ? Parameter extends ''
+        ? Parameter extends ""
           ? false
           : Parameter extends `${string}${InvalidParameterCharacter}${string}`
             ? false
@@ -55,7 +55,7 @@ type ValidRouteSegments<
 export type ValidRoutePath<Path extends AbsolutePath> =
   true extends IsUnion<Path>
     ? never
-    : Path extends '/'
+    : Path extends "/"
       ? Path
       : Path extends `${string}${InvalidRouteCharacter}${string}`
         ? never
@@ -79,22 +79,22 @@ export type RouteParamNames<Path extends AbsolutePath> = Path extends `/${infer 
   : never;
 
 type RouteShapeSegments<Segments extends string> = Segments extends `${infer Segment}/${infer Rest}`
-  ? `${Segment extends `:${string}` ? ':' : Segment}/${RouteShapeSegments<Rest>}`
+  ? `${Segment extends `:${string}` ? ":" : Segment}/${RouteShapeSegments<Rest>}`
   : Segments extends `:${string}`
-    ? ':'
+    ? ":"
     : Segments;
 
 export type RouteShape<Path extends AbsolutePath> = Path extends `/${infer Segments}`
   ? Lowercase<`/${RouteShapeSegments<Segments>}`>
   : never;
 
-export type JoinPath<Prefix extends AbsolutePath, Path extends AbsolutePath> = Prefix extends '/'
+export type JoinPath<Prefix extends AbsolutePath, Path extends AbsolutePath> = Prefix extends "/"
   ? Path
-  : Path extends '/'
+  : Path extends "/"
     ? Prefix
     : `${Prefix}${Path}`;
 
-export const FrameworkNamespace = '/_ersc';
+export const FrameworkNamespace = "/_ersc";
 
 export const FrameworkAssetNamespace = `${FrameworkNamespace}/assets`;
 
@@ -107,8 +107,8 @@ type SegmentCanMatch<Segment extends string, Expected extends string> = Segment 
     : false;
 
 type MatchesReservedSegments<Segments extends string> = Segments extends `${infer First}/${string}`
-  ? SegmentCanMatch<First, '_ersc'>
-  : SegmentCanMatch<Segments, '_ersc'>;
+  ? SegmentCanMatch<First, "_ersc">
+  : SegmentCanMatch<Segments, "_ersc">;
 
 export type ReservedRoutePath<Path extends AbsolutePath> = Path extends `/${infer Segments}`
   ? MatchesReservedSegments<Segments> extends true
@@ -121,24 +121,24 @@ const DynamicSegment = /^:([^:().-]+)$/u;
 
 type RouteAnalysis =
   | {
-      readonly _tag: 'ParameterFree';
+      readonly _tag: "ParameterFree";
       readonly shape: string;
     }
   | {
-      readonly _tag: 'Parameterized';
+      readonly _tag: "Parameterized";
       readonly parameterNames: readonly [string, ...Array<string>];
       readonly shape: string;
     };
 
 export const analyzeRoutePath = (path: string): RouteAnalysis => {
-  if (!path.startsWith('/') || InvalidRoutePath.test(path)) {
+  if (!path.startsWith("/") || InvalidRoutePath.test(path)) {
     throw new TypeError(
       `Invalid route path "${path}". Route paths must start with "/" and cannot contain "*", "?", "#", "%", ";", or "\\".`,
     );
   }
 
-  const segments = path === '/' ? [] : path.slice(1).split('/');
-  if (segments.some((segment) => segment === '' || segment === '.' || segment === '..')) {
+  const segments = path === "/" ? [] : path.slice(1).split("/");
+  if (segments.some((segment) => segment === "" || segment === "." || segment === "..")) {
     throw new TypeError(
       `Invalid route path "${path}". Route paths cannot contain empty, ".", or ".." segments or end with "/".`,
     );
@@ -147,7 +147,7 @@ export const analyzeRoutePath = (path: string): RouteAnalysis => {
   const parameterNames = new Set<string>();
   const shapeSegments: Array<string> = [];
   for (const segment of segments) {
-    if (!segment.includes(':')) {
+    if (!segment.includes(":")) {
       shapeSegments.push(segment.toLowerCase());
       continue;
     }
@@ -167,26 +167,26 @@ export const analyzeRoutePath = (path: string): RouteAnalysis => {
     }
 
     parameterNames.add(parameterName);
-    shapeSegments.push(':');
+    shapeSegments.push(":");
   }
 
-  const shape = `/${shapeSegments.join('/')}`;
+  const shape = `/${shapeSegments.join("/")}`;
   const parameters = parameterNames.values();
   const firstParameter = parameters.next();
   return firstParameter.done
-    ? { _tag: 'ParameterFree', shape }
+    ? { _tag: "ParameterFree", shape }
     : {
-        _tag: 'Parameterized',
+        _tag: "Parameterized",
         parameterNames: Object.freeze([firstParameter.value, ...parameters]),
         shape,
       };
 };
 
 export const validateUnreservedPath = (path: string) => {
-  const segments = path.slice(1).split('/');
+  const segments = path.slice(1).split("/");
   const canMatch = (segment: string | undefined, expected: string) =>
-    segment?.startsWith(':') === true || segment?.toLowerCase() === expected;
-  if (canMatch(segments[0], '_ersc')) {
+    segment?.startsWith(":") === true || segment?.toLowerCase() === expected;
+  if (canMatch(segments[0], "_ersc")) {
     throw new TypeError(
       `Route "${path}" uses the framework-reserved "${FrameworkNamespace}" namespace.`,
     );
@@ -194,13 +194,13 @@ export const validateUnreservedPath = (path: string) => {
 };
 
 export const joinRoutePaths = (prefix: AbsolutePath, path: AbsolutePath): AbsolutePath => {
-  if (prefix === '/') {
+  if (prefix === "/") {
     return path;
   }
-  if (path === '/') {
+  if (path === "/") {
     return prefix;
   }
   return `${prefix}${path}`;
 };
 
-export const isAbsolutePath = (value: string): value is AbsolutePath => value.startsWith('/');
+export const isAbsolutePath = (value: string): value is AbsolutePath => value.startsWith("/");

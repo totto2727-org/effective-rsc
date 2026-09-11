@@ -1,8 +1,8 @@
-import { Effect } from 'effect';
-import type { ReactNode } from 'react';
+import { Effect } from "effect";
+import type { ReactNode } from "react";
 
-import { attachERSCMember, type ERSCIdentity, type ERSCMember } from './ersc-identity';
-import type { AnyMiddleware } from './middleware';
+import { attachERSCMember, type ERSCIdentity, type ERSCMember } from "./ersc-identity";
+import type { AnyMiddleware } from "./middleware";
 
 type LayoutProps = {
   readonly children: Awaited<ReactNode>;
@@ -10,7 +10,7 @@ type LayoutProps = {
 
 export interface LayoutComponent<ApplicationServices> extends ERSCMember<
   ApplicationServices,
-  'Layout'
+  "Layout"
 > {
   (props: LayoutProps): Promise<Awaited<ReactNode>>;
 }
@@ -34,11 +34,11 @@ export const makeLayoutFactory = <ApplicationServices, AvailableServices>(
   make: ({ render }) => {
     const LayoutComponent = (props: LayoutProps) =>
       identity.renderRuntime.run(
-        'Layout',
+        "Layout",
         Effect.suspend(() => render(props)),
         middleware,
       );
 
-    return attachERSCMember(LayoutComponent, identity, 'Layout');
+    return attachERSCMember(LayoutComponent, identity, "Layout");
   },
 });

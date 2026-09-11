@@ -1,57 +1,57 @@
 /* oxlint-disable effecttsgo/node-builtin-import -- This test measures the installed TypeScript compiler in a separate process. */
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { expect, it } from 'vitest';
+import { expect, it } from "vitest";
 
-const repository = fileURLToPath(new URL('../../../../', import.meta.url));
+const repository = fileURLToPath(new URL("../../../../", import.meta.url));
 const compiler = join(
-  dirname(fileURLToPath(import.meta.resolve('typescript/package.json'))),
-  'bin/tsc',
+  dirname(fileURLToPath(import.meta.resolve("typescript/package.json"))),
+  "bin/tsc",
 );
 
-it('quadrupling a route chain uses less than six times the type instantiations', () => {
-  const workspace = mkdtempSync(join(tmpdir(), 'ersc-route-scaling-'));
+it("quadrupling a route chain uses less than six times the type instantiations", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "ersc-route-scaling-"));
   try {
     writeFileSync(
-      join(workspace, 'tsconfig.json'),
+      join(workspace, "tsconfig.json"),
       JSON.stringify({
-        extends: resolve(repository, 'tsconfig.json'),
+        extends: resolve(repository, "tsconfig.json"),
         compilerOptions: {
-          types: ['bun'],
-          typeRoots: [resolve(repository, 'node_modules/@types')],
+          types: ["bun"],
+          typeRoots: [resolve(repository, "node_modules/@types")],
         },
-        files: ['routes.ts'],
+        files: ["routes.ts"],
         include: [],
       }),
     );
 
     const measure = (count: number) => {
-      const source = resolve(repository, 'packages/effective-rsc/src/application');
+      const source = resolve(repository, "packages/effective-rsc/src/application");
       writeFileSync(
-        join(workspace, 'routes.ts'),
+        join(workspace, "routes.ts"),
         [
-          `import type { RoutesFactory } from ${JSON.stringify(join(source, 'routes'))};`,
-          `import type { StaticPageDefinition, ParameterizedPageDefinition } from ${JSON.stringify(join(source, 'page'))};`,
-          'declare const Routes: RoutesFactory<never>;',
-          'declare const staticPage: StaticPageDefinition<never>;',
+          `import type { RoutesFactory } from ${JSON.stringify(join(source, "routes"))};`,
+          `import type { StaticPageDefinition, ParameterizedPageDefinition } from ${JSON.stringify(join(source, "page"))};`,
+          "declare const Routes: RoutesFactory<never>;",
+          "declare const staticPage: StaticPageDefinition<never>;",
           "declare const dynamicPage: ParameterizedPageDefinition<never, 'id'>;",
-          'export const routes = Routes.make()',
+          "export const routes = Routes.make()",
           ...Array.from({ length: count }, (_, index) =>
             index % 2 === 0
               ? `.page('/route${index}', staticPage)`
               : `.page('/route${index}/:id', dynamicPage)`,
           ),
-          ';',
-        ].join('\n'),
+          ";",
+        ].join("\n"),
       );
       const diagnostics = execFileSync(
         process.execPath,
-        [compiler, '--project', join(workspace, 'tsconfig.json'), '--extendedDiagnostics'],
-        { encoding: 'utf8', timeout: 30_000 },
+        [compiler, "--project", join(workspace, "tsconfig.json"), "--extendedDiagnostics"],
+        { encoding: "utf8", timeout: 30_000 },
       );
       const match = diagnostics.match(/^Instantiations:\s+(\d+)/m);
       expect(match, diagnostics).not.toBeNull();

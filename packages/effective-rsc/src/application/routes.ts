@@ -1,4 +1,4 @@
-import { type Types } from 'effect';
+import { type Types } from "effect";
 
 import {
   type ERSCIdentity,
@@ -8,11 +8,11 @@ import {
   ERSCStateTypeId,
   getERSCIdentity,
   isERSCMember,
-} from './ersc-identity';
-import type { LayoutComponent } from './layout';
-import type { LoadingComponent } from './loading';
-import type { AnyMiddleware } from './middleware';
-import { type AnyPageDefinition, getPageState, type PageConcern } from './page';
+} from "./ersc-identity";
+import type { LayoutComponent } from "./layout";
+import type { LoadingComponent } from "./loading";
+import type { AnyMiddleware } from "./middleware";
+import { type AnyPageDefinition, getPageState, type PageConcern } from "./page";
 import {
   type AbsolutePath,
   analyzeRoutePath,
@@ -21,7 +21,7 @@ import {
   type RouteParamNames,
   type RouteShape,
   type ValidRoutePath,
-} from './route-path';
+} from "./route-path";
 
 declare const RoutesContractTypeId: unique symbol;
 
@@ -58,11 +58,11 @@ type ExactPageParamNames<Path extends AbsolutePath, Page> = [RouteParamNames<Pat
   : never;
 
 type MatchingPageParams<Path extends AbsolutePath, Page> =
-  PageMode<Page> extends 'Static'
+  PageMode<Page> extends "Static"
     ? [RouteParamNames<Path>] extends [never]
       ? unknown
       : never
-    : PageMode<Page> extends 'Parameterized'
+    : PageMode<Page> extends "Parameterized"
       ? [RouteParamNames<Path>] extends [never]
         ? never
         : ExactPageParamNames<Path, Page>
@@ -85,7 +85,7 @@ export interface RoutesDefinition<
   out Paths extends AbsolutePath,
   // Retain each matcher shape so additions do not recompute every earlier path's shape.
   out Shapes extends AbsolutePath = RouteShape<Paths>,
-> extends ERSCStatefulMember<Services, 'Routes', RoutesImplementationState<Services>> {
+> extends ERSCStatefulMember<Services, "Routes", RoutesImplementationState<Services>> {
   readonly [RoutesContractTypeId]: RoutesState<HasLayout, Paths, Shapes>;
 
   page<const Path extends AbsolutePath, const Page extends AnyPageDefinition<Services>>(
@@ -157,7 +157,7 @@ class RoutesDefinitionImpl<
 > implements RoutesDefinition<Services, HasLayout, Paths, Shapes> {
   declare readonly [RoutesContractTypeId]: RoutesState<HasLayout, Paths, Shapes>;
   readonly [ERSCIdentityTypeId]: ERSCIdentity<Services>;
-  readonly [ERSCMemberKindTypeId] = 'Routes' as const;
+  readonly [ERSCMemberKindTypeId] = "Routes" as const;
   get [ERSCStateTypeId](): RoutesImplementationState<Services> {
     return this;
   }
@@ -209,10 +209,10 @@ class RoutesDefinitionImpl<
       throw new TypeError(`Page for "${path}" was created by a different ERSC module.`);
     }
 
-    if (route._tag === 'ParameterFree' && pageState.paramsSchema !== null) {
+    if (route._tag === "ParameterFree" && pageState.paramsSchema !== null) {
       throw new TypeError(`Parameterized Page for "${path}" requires route parameters.`);
     }
-    if (route._tag === 'Parameterized' && pageState.paramsSchema === null) {
+    if (route._tag === "Parameterized" && pageState.paramsSchema === null) {
       throw new TypeError(`Page for "${path}" must declare a parameter Schema.`);
     }
 
@@ -243,7 +243,7 @@ class RoutesDefinitionImpl<
     Shapes | RouteShape<MountedPaths<Prefix, Child>>
   > {
     const route = analyzeRoutePath(path);
-    if (route._tag === 'Parameterized') {
+    if (route._tag === "Parameterized") {
       throw new TypeError(`Routes cannot be mounted beneath parameterized path "${path}".`);
     }
     const routesState = getRoutesState(routes);
@@ -280,8 +280,8 @@ class RoutesDefinitionImpl<
 export const getRoutesState = <Services>(
   routes: AnyRoutes<Services>,
 ): RoutesImplementationState<Services> => {
-  if (!isERSCMember(routes, 'Routes')) {
-    throw new TypeError('Routes must be created with ERSC.Routes.make.');
+  if (!isERSCMember(routes, "Routes")) {
+    throw new TypeError("Routes must be created with ERSC.Routes.make.");
   }
   return routes[ERSCStateTypeId];
 };
@@ -306,19 +306,19 @@ export const makeRoutesFactory = <Services>(
   ): RoutesDefinition<Services, HasLayoutFromOptions<Options>, never>;
   function make(options: RoutesOptions<Services> = {}): AnyRoutes<Services> {
     if (options.layout !== undefined) {
-      if (!isERSCMember(options.layout, 'Layout')) {
-        throw new TypeError('Layout must be created with ERSC.Layout.make.');
+      if (!isERSCMember(options.layout, "Layout")) {
+        throw new TypeError("Layout must be created with ERSC.Layout.make.");
       }
       if (getERSCIdentity(options.layout) !== identity) {
-        throw new TypeError('Layout was created by a different ERSC module.');
+        throw new TypeError("Layout was created by a different ERSC module.");
       }
     }
     if (options.loading !== undefined) {
-      if (!isERSCMember(options.loading, 'Loading')) {
-        throw new TypeError('Loading must be created with ERSC.Loading.make.');
+      if (!isERSCMember(options.loading, "Loading")) {
+        throw new TypeError("Loading must be created with ERSC.Loading.make.");
       }
       if (getERSCIdentity(options.loading) !== identity) {
-        throw new TypeError('Loading was created by a different ERSC module.');
+        throw new TypeError("Loading was created by a different ERSC module.");
       }
     }
     const scopeId = allocateScopeId();

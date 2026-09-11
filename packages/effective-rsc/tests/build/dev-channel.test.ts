@@ -1,18 +1,18 @@
-import { expect, it } from '@effect/vitest';
-import { Deferred, Effect, Fiber, Stream } from 'effect';
-import { HttpServerRequest } from 'effect/unstable/http';
+import { expect, it } from "@effect/vitest";
+import { Deferred, Effect, Fiber, Stream } from "effect";
+import { HttpServerRequest } from "effect/unstable/http";
 
-import { makeDevChannel } from '../../src/build/dev-channel';
-import type { DevUpdate } from '../../src/dev/channel';
+import { makeDevChannel } from "../../src/build/dev-channel";
+import type { DevUpdate } from "../../src/dev/channel";
 
-const ClientUpdate: DevUpdate = { _tag: 'ClientUpdate', clientHash: 'client-one' };
-const RscUpdate: DevUpdate = { _tag: 'RscUpdate', clientHash: 'client-two' };
+const ClientUpdate: DevUpdate = { _tag: "ClientUpdate", clientHash: "client-one" };
+const RscUpdate: DevUpdate = { _tag: "RscUpdate", clientHash: "client-two" };
 const BuildFailed: DevUpdate = {
-  _tag: 'BuildFailed',
-  diagnostics: 'Module build failed',
+  _tag: "BuildFailed",
+  diagnostics: "Module build failed",
 };
 
-it.effect('replays the latest update and streams later updates to each subscriber', () =>
+it.effect("replays the latest update and streams later updates to each subscriber", () =>
   Effect.gen(function* () {
     const channel = yield* makeDevChannel;
     yield* channel.publishCompilation(ClientUpdate.clientHash);
@@ -36,7 +36,7 @@ it.effect('replays the latest update and streams later updates to each subscribe
   }).pipe(Effect.scoped),
 );
 
-it.effect('rejects development channel requests without a matching Origin', () =>
+it.effect("rejects development channel requests without a matching Origin", () =>
   Effect.gen(function* () {
     const channel = yield* makeDevChannel;
     const call = (request: Request) =>
@@ -47,10 +47,10 @@ it.effect('rejects development channel requests without a matching Origin', () =
         ),
       );
 
-    const missingOrigin = yield* call(new Request('http://localhost/_ersc/dev'));
+    const missingOrigin = yield* call(new Request("http://localhost/_ersc/dev"));
     const crossOrigin = yield* call(
-      new Request('http://localhost/_ersc/dev', {
-        headers: { origin: 'https://example.com' },
+      new Request("http://localhost/_ersc/dev", {
+        headers: { origin: "https://example.com" },
       }),
     );
 

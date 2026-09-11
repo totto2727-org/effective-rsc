@@ -1,9 +1,9 @@
-import { type Effect } from 'effect';
-import type { ReactNode } from 'react';
+import { type Effect } from "effect";
+import type { ReactNode } from "react";
 
-import { attachERSCMember, type ERSCIdentity, type ERSCMember } from './ersc-identity';
+import { attachERSCMember, type ERSCIdentity, type ERSCMember } from "./ersc-identity";
 
-export interface LoadingComponent<Services> extends ERSCMember<Services, 'Loading'> {
+export interface LoadingComponent<Services> extends ERSCMember<Services, "Loading"> {
   (): Awaited<ReactNode>;
 }
 
@@ -28,6 +28,6 @@ export const makeLoadingFactory = <Services>(
 ): LoadingFactory<Services> => ({
   make: ({ render }) => {
     const LoadingComponent = () => render();
-    return attachERSCMember(LoadingComponent, identity, 'Loading');
+    return attachERSCMember(LoadingComponent, identity, "Loading");
   },
 });

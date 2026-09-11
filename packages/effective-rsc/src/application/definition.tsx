@@ -1,5 +1,5 @@
-import { Layer, type Types } from 'effect';
-import type { HttpRouter } from 'effect/unstable/http';
+import { Layer, type Types } from "effect";
+import type { HttpRouter } from "effect/unstable/http";
 
 import {
   type ERSCIdentity,
@@ -9,10 +9,10 @@ import {
   ERSCStateTypeId,
   getERSCIdentity,
   isERSCMember,
-} from './ersc-identity';
-import { type CompiledRouteGraph, compileRouteGraph } from './route-graph';
-import type { AbsolutePath, ReservedRoutePath } from './route-path';
-import { type AnyRoutes, type RoutesHasLayout, type RoutesPaths } from './routes';
+} from "./ersc-identity";
+import { type CompiledRouteGraph, compileRouteGraph } from "./route-graph";
+import type { AbsolutePath, ReservedRoutePath } from "./route-path";
+import { type AnyRoutes, type RoutesHasLayout, type RoutesPaths } from "./routes";
 
 declare const ApplicationContractTypeId: unique symbol;
 
@@ -21,7 +21,7 @@ export interface ApplicationDefinition<
   out ApplicationError = never,
 > extends ERSCStatefulMember<
   Services,
-  'Application',
+  "Application",
   ApplicationImplementationState<Services, ApplicationError>
 > {
   readonly [ApplicationContractTypeId]: {
@@ -42,7 +42,7 @@ class ApplicationDefinitionImpl<Services, ApplicationError> implements Applicati
     readonly error: Types.Covariant<ApplicationError>;
   };
   readonly [ERSCIdentityTypeId]: ERSCIdentity<Services>;
-  readonly [ERSCMemberKindTypeId] = 'Application' as const;
+  readonly [ERSCMemberKindTypeId] = "Application" as const;
   get [ERSCStateTypeId](): ApplicationImplementationState<Services, ApplicationError> {
     return this;
   }
@@ -68,8 +68,8 @@ class ApplicationDefinitionImpl<Services, ApplicationError> implements Applicati
 export const getApplicationState = <Services, ApplicationError>(
   application: ApplicationDefinition<Services, ApplicationError>,
 ): ApplicationImplementationState<Services, ApplicationError> => {
-  if (!isERSCMember(application, 'Application')) {
-    throw new TypeError('Application must be created with ERSC.make.');
+  if (!isERSCMember(application, "Application")) {
+    throw new TypeError("Application must be created with ERSC.make.");
   }
   return application[ERSCStateTypeId];
 };
@@ -126,7 +126,7 @@ export const makeApplication = <
   { layer, routes }: ERSCApplicationOptions<Services, Definition, ApplicationError>,
 ): ApplicationDefinition<Services, ApplicationError> => {
   if (getERSCIdentity(routes) !== identity) {
-    throw new TypeError('Root Routes were created by a different ERSC module.');
+    throw new TypeError("Root Routes were created by a different ERSC module.");
   }
 
   return new ApplicationDefinitionImpl(

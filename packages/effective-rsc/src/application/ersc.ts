@@ -1,17 +1,17 @@
-import type { ComponentFactory } from './component';
-import { makeComponentFactory } from './component';
-import { type ERSCMake, makeApplication } from './definition';
+import type { ComponentFactory } from "./component";
+import { makeComponentFactory } from "./component";
+import { type ERSCMake, makeApplication } from "./definition";
 import {
   attachERSCMember,
   type ERSCIdentity,
   type ERSCMember,
   getERSCIdentity,
   makeERSCIdentity,
-} from './ersc-identity';
-import type { LayoutFactory } from './layout';
-import { makeLayoutFactory } from './layout';
-import type { LoadingFactory } from './loading';
-import { makeLoadingFactory } from './loading';
+} from "./ersc-identity";
+import type { LayoutFactory } from "./layout";
+import { makeLayoutFactory } from "./layout";
+import type { LoadingFactory } from "./loading";
+import { makeLoadingFactory } from "./loading";
 import {
   type AnyMiddleware,
   getMiddlewareState,
@@ -19,13 +19,13 @@ import {
   type MiddlewareProvidedServices,
   type MiddlewareRequiredServices,
   makeMiddlewareFactory,
-} from './middleware';
-import type { PageFactory } from './page';
-import { makePageFactory } from './page';
-import type { RoutesFactory } from './routes';
-import { makeRoutesFactory } from './routes';
-import type { ServerFnFactory } from './server-fn';
-import { makeServerFnFactory } from './server-fn';
+} from "./middleware";
+import type { PageFactory } from "./page";
+import { makePageFactory } from "./page";
+import type { RoutesFactory } from "./routes";
+import { makeRoutesFactory } from "./routes";
+import type { ServerFnFactory } from "./server-fn";
+import { makeServerFnFactory } from "./server-fn";
 
 type ApplicableMiddleware<AvailableServices, Value> = [
   Exclude<MiddlewareRequiredServices<Value>, AvailableServices>,
@@ -35,7 +35,7 @@ type ApplicableMiddleware<AvailableServices, Value> = [
 
 export type ERSC<ApplicationServices, AvailableServices = ApplicationServices> = ERSCMember<
   ApplicationServices,
-  'ERSC'
+  "ERSC"
 > & {
   readonly Component: ComponentFactory<ApplicationServices, AvailableServices>;
   readonly Layout: LayoutFactory<ApplicationServices, AvailableServices>;
@@ -61,10 +61,10 @@ const makeERSC = <ApplicationServices, AvailableServices>(
   ): ERSC<ApplicationServices, AvailableServices | MiddlewareProvidedServices<Value>> => {
     getMiddlewareState(value);
     if (getERSCIdentity(value) !== identity) {
-      throw new TypeError('Middleware was created by a different ERSC module.');
+      throw new TypeError("Middleware was created by a different ERSC module.");
     }
     if (middleware.includes(value)) {
-      throw new TypeError('Middleware cannot appear twice in the same scope.');
+      throw new TypeError("Middleware cannot appear twice in the same scope.");
     }
 
     return makeERSC(identity, Object.freeze([...middleware, value]), allocateRouteScopeId, make);
@@ -87,7 +87,7 @@ const makeERSC = <ApplicationServices, AvailableServices>(
         withMiddleware,
       },
       identity,
-      'ERSC',
+      "ERSC",
     ),
   );
 };

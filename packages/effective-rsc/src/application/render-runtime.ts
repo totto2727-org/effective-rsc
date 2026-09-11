@@ -1,12 +1,12 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
+import { AsyncLocalStorage } from "node:async_hooks";
 
-import type { Effect } from 'effect';
+import type { Effect } from "effect";
 
 export type RenderRuntime<Services> = <Output, Error>(
   effect: Effect.Effect<Output, Error, Services>,
 ) => Promise<Output>;
 
-type RenderConcern = 'Component' | 'Layout' | 'Page';
+type RenderConcern = "Component" | "Layout" | "Page";
 
 type BoundRenderRuntime = {
   readonly activeMiddleware: ReadonlyArray<object>;

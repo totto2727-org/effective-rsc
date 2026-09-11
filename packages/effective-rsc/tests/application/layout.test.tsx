@@ -1,29 +1,29 @@
-import { describe, expect, it } from '@effect/vitest';
-import { Context, Deferred, Effect, Exit, FiberSet, Layer, Ref, Scope } from 'effect';
-import type { ReactNode } from 'react';
+import { describe, expect, it } from "@effect/vitest";
+import { Context, Deferred, Effect, Exit, FiberSet, Layer, Ref, Scope } from "effect";
+import type { ReactNode } from "react";
 
-import { Application } from '../../src/application/ersc';
-import { getERSCIdentity } from '../../src/application/ersc-identity';
+import { Application } from "../../src/application/ersc";
+import { getERSCIdentity } from "../../src/application/ersc-identity";
 
 class ShellTitle extends Context.Service<ShellTitle, { readonly value: string }>()(
-  'ersc/tests/application/layout/ShellTitle',
+  "ersc/tests/application/layout/ShellTitle",
 ) {}
 
 const ERSC = Application.ersc<ShellTitle>();
 
-describe('ERSC.Layout.make', () => {
-  it('rejects rendering outside its application request runtime', () => {
+describe("ERSC.Layout.make", () => {
+  it("rejects rendering outside its application request runtime", () => {
     const ServiceFreeERSC = Application.ersc();
     const Layout = ServiceFreeERSC.Layout.make({
       render: ({ children }) => Effect.succeed(children),
     });
 
     expect(() => Layout({ children: null })).toThrow(
-      new TypeError('ERSC Layout rendered outside its application request runtime.'),
+      new TypeError("ERSC Layout rendered outside its application request runtime."),
     );
   });
 
-  it.effect('infers children as an immediately renderable node', () =>
+  it.effect("infers children as an immediately renderable node", () =>
     Effect.gen(function* () {
       const runtime = yield* FiberSet.makeRuntimePromise<never>();
       const ServiceFreeERSC = Application.ersc();
@@ -32,7 +32,7 @@ describe('ERSC.Layout.make', () => {
       });
       const Page = ServiceFreeERSC.Page.make({ render: () => Effect.succeed(null) });
       const App = ServiceFreeERSC.make({
-        routes: ServiceFreeERSC.Routes.make({ layout: PassthroughLayout }).page('/', Page),
+        routes: ServiceFreeERSC.Routes.make({ layout: PassthroughLayout }).page("/", Page),
       });
       const child = <main>Home</main>;
 
@@ -46,7 +46,7 @@ describe('ERSC.Layout.make', () => {
     }),
   );
 
-  it.effect('runs an Effect operation with children and request services', () =>
+  it.effect("runs an Effect operation with children and request services", () =>
     Effect.gen(function* () {
       const runtime = yield* FiberSet.makeRuntimePromise<ShellTitle>();
       const LayoutComponent = ERSC.Layout.make({
@@ -54,7 +54,7 @@ describe('ERSC.Layout.make', () => {
           const inferredChildren: ReactNode = children;
           const title = yield* ShellTitle;
           return (
-            <html lang='en'>
+            <html lang="en">
               <head>
                 <title>{title.value}</title>
               </head>
@@ -65,8 +65,8 @@ describe('ERSC.Layout.make', () => {
       });
       const Page = ERSC.Page.make({ render: () => Effect.succeed(null) });
       const App = ERSC.make({
-        routes: ERSC.Routes.make({ layout: LayoutComponent }).page('/', Page),
-        layer: Layer.succeed(ShellTitle, { value: 'application title' }),
+        routes: ERSC.Routes.make({ layout: LayoutComponent }).page("/", Page),
+        layer: Layer.succeed(ShellTitle, { value: "application title" }),
       });
 
       const rendered = yield* Effect.promise(() =>
@@ -76,7 +76,7 @@ describe('ERSC.Layout.make', () => {
       );
 
       expect(rendered).toEqual(
-        <html lang='en'>
+        <html lang="en">
           <head>
             <title>Request title</title>
           </head>
@@ -85,10 +85,10 @@ describe('ERSC.Layout.make', () => {
           </body>
         </html>,
       );
-    }).pipe(Effect.provideService(ShellTitle, { value: 'Request title' })),
+    }).pipe(Effect.provideService(ShellTitle, { value: "Request title" })),
   );
 
-  it.effect('interrupts the layout operation when its request scope closes', () =>
+  it.effect("interrupts the layout operation when its request scope closes", () =>
     Effect.gen(function* () {
       const scope = yield* Scope.make();
       const started = yield* Deferred.make<void>();
@@ -103,13 +103,13 @@ describe('ERSC.Layout.make', () => {
       });
       const Page = InterruptERSC.Page.make({ render: () => Effect.succeed(null) });
       const App = InterruptERSC.make({
-        routes: InterruptERSC.Routes.make({ layout: LayoutComponent }).page('/', Page),
+        routes: InterruptERSC.Routes.make({ layout: LayoutComponent }).page("/", Page),
       });
       const execution = getERSCIdentity(App)
         .renderRuntime.bind(runtime, [], () => LayoutComponent({ children: null }))
         .then(
-          () => 'completed' as const,
-          () => 'interrupted' as const,
+          () => "completed" as const,
+          () => "interrupted" as const,
         );
 
       yield* Deferred.await(started);
@@ -117,7 +117,7 @@ describe('ERSC.Layout.make', () => {
 
       const result = yield* Effect.promise(() => execution);
       const wasInterrupted = yield* Ref.get(interrupted);
-      expect(result).toBe('interrupted');
+      expect(result).toBe("interrupted");
       expect(wasInterrupted).toBe(true);
     }),
   );

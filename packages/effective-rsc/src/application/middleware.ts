@@ -1,5 +1,5 @@
-import { type Effect, type Types } from 'effect';
-import { HttpRouter, type HttpServerResponse } from 'effect/unstable/http';
+import { type Effect, type Types } from "effect";
+import { HttpRouter, type HttpServerResponse } from "effect/unstable/http";
 
 import {
   type ERSCIdentity,
@@ -8,7 +8,7 @@ import {
   ERSCMemberKindTypeId,
   type ERSCStatefulMember,
   ERSCStateTypeId,
-} from './ersc-identity';
+} from "./ersc-identity";
 
 type MiddlewareConfig = {
   readonly provides?: unknown;
@@ -38,7 +38,7 @@ export interface Middleware<
   out ProvidedServices,
 > extends ERSCStatefulMember<
   ApplicationServices,
-  'Middleware',
+  "Middleware",
   MiddlewareImplementationState<RequiredServices, ProvidedServices>
 > {}
 
@@ -67,7 +67,7 @@ class MiddlewareImpl<ApplicationServices, RequiredServices, ProvidedServices>
     MiddlewareImplementationState<RequiredServices, ProvidedServices>
 {
   readonly [ERSCIdentityTypeId]: ERSCIdentity<ApplicationServices>;
-  readonly [ERSCMemberKindTypeId] = 'Middleware' as const;
+  readonly [ERSCMemberKindTypeId] = "Middleware" as const;
   get [ERSCStateTypeId](): MiddlewareImplementationState<RequiredServices, ProvidedServices> {
     return this;
   }
@@ -89,8 +89,8 @@ class MiddlewareImpl<ApplicationServices, RequiredServices, ProvidedServices>
 export const getMiddlewareState = <ApplicationServices, RequiredServices, ProvidedServices>(
   middleware: Middleware<ApplicationServices, RequiredServices, ProvidedServices>,
 ): MiddlewareImplementationState<RequiredServices, ProvidedServices> => {
-  if (!isERSCMember(middleware, 'Middleware')) {
-    throw new TypeError('Middleware must be created with ERSC.Middleware.make.');
+  if (!isERSCMember(middleware, "Middleware")) {
+    throw new TypeError("Middleware must be created with ERSC.Middleware.make.");
   }
   return middleware[ERSCStateTypeId];
 };

@@ -1,19 +1,19 @@
-import { expect, it } from '@effect/vitest';
-import type { Configuration } from '@rspack/core';
-import rspack from '@rspack/core';
-import { ReactRefreshRspackPlugin } from '@rspack/plugin-react-refresh';
-import { Effect, Path } from 'effect';
+import { expect, it } from "@effect/vitest";
+import type { Configuration } from "@rspack/core";
+import rspack from "@rspack/core";
+import { ReactRefreshRspackPlugin } from "@rspack/plugin-react-refresh";
+import { Effect, Path } from "effect";
 
-import { resolveApplicationBuild } from '../../src/build/build';
-import { BuildServerBundlePath } from '../../src/build/contract';
+import { resolveApplicationBuild } from "../../src/build/build";
+import { BuildServerBundlePath } from "../../src/build/contract";
 import {
   externalizeServerModule,
   makeRspackBuildConfig,
   makeRspackDevConfig,
   guardBrowserModule,
-} from '../../src/build/rspack-config';
+} from "../../src/build/rspack-config";
 
-const BuildModuleUrl = new URL('file:///framework/dist/build/build.js');
+const BuildModuleUrl = new URL("file:///framework/dist/build/build.js");
 
 const resolveFixtureBuild = (root: string) =>
   resolveApplicationBuild({ buildModuleUrl: BuildModuleUrl, root });
@@ -28,16 +28,16 @@ const configNamed = (configs: ReadonlyArray<Configuration>, name: string) => {
 
 const tailwindUseNamed = (config: Configuration) => {
   for (const rule of config.module?.rules ?? []) {
-    if (typeof rule !== 'object' || rule === null || !Array.isArray(rule.use)) {
+    if (typeof rule !== "object" || rule === null || !Array.isArray(rule.use)) {
       continue;
     }
 
     const tailwindUse = rule.use.find(
       (use) =>
-        typeof use === 'object' &&
+        typeof use === "object" &&
         use !== null &&
-        typeof use.loader === 'string' &&
-        use.loader.includes('@tailwindcss/webpack'),
+        typeof use.loader === "string" &&
+        use.loader.includes("@tailwindcss/webpack"),
     );
 
     if (tailwindUse !== undefined) {
@@ -51,73 +51,73 @@ const tailwindUseNamed = (config: Configuration) => {
   return undefined;
 };
 
-it.effect('uses real framework entries and private aliases for application source', () =>
+it.effect("uses real framework entries and private aliases for application source", () =>
   Effect.gen(function* () {
-    const { applicationRoot, entries } = yield* resolveFixtureBuild('/workspace');
+    const { applicationRoot, entries } = yield* resolveFixtureBuild("/workspace");
     const configs = makeRspackBuildConfig(applicationRoot, entries);
-    const client = configNamed(configs, 'client');
-    const server = configNamed(configs, 'server');
+    const client = configNamed(configs, "client");
+    const server = configNamed(configs, "server");
 
-    expect(entries.application).toBe('/workspace/src/application.tsx');
-    expect(entries.client).toBe('/framework/dist/client/entry.js');
-    expect(entries.rsc).toBe('/framework/dist/build/rsc-entry.js');
-    expect(entries.ssr).toBe('/framework/dist/server/html-renderer.js');
-    expect(entries.rsc).not.toContain('/.ersc/');
+    expect(entries.application).toBe("/workspace/src/application.tsx");
+    expect(entries.client).toBe("/framework/dist/client/entry.js");
+    expect(entries.rsc).toBe("/framework/dist/build/rsc-entry.js");
+    expect(entries.ssr).toBe("/framework/dist/server/html-renderer.js");
+    expect(entries.rsc).not.toContain("/.ersc/");
     expect(server.entry).toEqual({ main: entries.rsc });
-    expect(client.target).toBe('browserslist:chrome >= 141, edge >= 141, firefox >= 147');
-    expect(server.target).toBe('node26');
+    expect(client.target).toBe("browserslist:chrome >= 141, edge >= 141, firefox >= 147");
+    expect(server.target).toBe("node26");
     expect(server.module?.rules).toContainEqual(
       expect.objectContaining({
         layer: rspack.experiments.rsc.Layers.rsc,
-        resolve: { conditionNames: ['react-server', '...'] },
+        resolve: { conditionNames: ["react-server", "..."] },
         resource: entries.rsc,
       }),
     );
     expect(server.resolve?.alias).toEqual({
-      'effective-rsc/application-entry': entries.application,
+      "effective-rsc/application-entry": entries.application,
     });
     expect(client.resolve?.alias).toBeUndefined();
-    expect(client.output?.path).toBe('/workspace/.ersc/client');
-    expect(server.output?.path).toBe('/workspace/.ersc/server');
+    expect(client.output?.path).toBe("/workspace/.ersc/client");
+    expect(server.output?.path).toBe("/workspace/.ersc/server");
     expect(client.devtool).toBe(false);
-    expect(server.devtool).toBe('source-map');
+    expect(server.devtool).toBe("source-map");
   }).pipe(Effect.provide(Path.layer)),
 );
 
-it.effect('resolves the server bundle where Rspack emits it', () =>
+it.effect("resolves the server bundle where Rspack emits it", () =>
   Effect.gen(function* () {
     const path = yield* Path.Path;
-    const { applicationRoot, entries } = yield* resolveFixtureBuild('/workspace');
-    const server = configNamed(makeRspackBuildConfig(applicationRoot, entries), 'server');
+    const { applicationRoot, entries } = yield* resolveFixtureBuild("/workspace");
+    const server = configNamed(makeRspackBuildConfig(applicationRoot, entries), "server");
     const serverEntries = server.entry as Record<string, unknown>;
     const serverEntryName = Object.keys(serverEntries)[0];
     const jsFilenameTemplate = server.output?.filename;
 
     expect(serverEntryName).toBeDefined();
-    expect(typeof jsFilenameTemplate).toBe('string');
-    expect(typeof server.output?.path).toBe('string');
+    expect(typeof jsFilenameTemplate).toBe("string");
+    expect(typeof server.output?.path).toBe("string");
 
     const emittedBundlePath = `${String(server.output?.path)}/${String(jsFilenameTemplate).replace(
-      '[name]',
+      "[name]",
       String(serverEntryName),
     )}`;
 
-    expect(emittedBundlePath).toBe('/workspace/.ersc/server/main.js');
-    expect(path.resolve('/workspace', BuildServerBundlePath)).toBe(
-      '/workspace/.ersc/server/main.js',
+    expect(emittedBundlePath).toBe("/workspace/.ersc/server/main.js");
+    expect(path.resolve("/workspace", BuildServerBundlePath)).toBe(
+      "/workspace/.ersc/server/main.js",
     );
   }).pipe(Effect.provide(Path.layer)),
 );
 
-it.effect('content-addresses every compiled client asset in both modes', () =>
+it.effect("content-addresses every compiled client asset in both modes", () =>
   Effect.gen(function* () {
-    const { applicationRoot, entries } = yield* resolveFixtureBuild('/workspace');
+    const { applicationRoot, entries } = yield* resolveFixtureBuild("/workspace");
 
     for (const configs of [
       makeRspackBuildConfig(applicationRoot, entries),
       makeRspackDevConfig(applicationRoot, entries),
     ]) {
-      const { output } = configNamed(configs, 'client');
+      const { output } = configNamed(configs, "client");
 
       for (const template of [
         output?.filename,
@@ -125,55 +125,55 @@ it.effect('content-addresses every compiled client asset in both modes', () =>
         output?.cssFilename,
         output?.cssChunkFilename,
       ]) {
-        expect(template).toContain('[contenthash]');
+        expect(template).toContain("[contenthash]");
       }
     }
   }).pipe(Effect.provide(Path.layer)),
 );
 
-it.effect('compiles Tailwind CSS against the application root in both runtime graphs', () =>
+it.effect("compiles Tailwind CSS against the application root in both runtime graphs", () =>
   Effect.gen(function* () {
-    const { applicationRoot, entries } = yield* resolveFixtureBuild('/workspace');
+    const { applicationRoot, entries } = yield* resolveFixtureBuild("/workspace");
     const configs = makeRspackBuildConfig(applicationRoot, entries);
 
-    for (const name of ['client', 'server']) {
+    for (const name of ["client", "server"]) {
       const tailwindUse = tailwindUseNamed(configNamed(configs, name));
 
       expect(tailwindUse).toBeDefined();
       expect(tailwindUse?.options).toEqual({
-        base: '/workspace',
+        base: "/workspace",
         optimize: { minify: true },
       });
     }
   }).pipe(Effect.provide(Path.layer)),
 );
 
-it.effect('keeps development candidates immutable until they are published', () =>
+it.effect("keeps development candidates immutable until they are published", () =>
   Effect.gen(function* () {
-    const { applicationRoot, entries } = yield* resolveFixtureBuild('/workspace');
+    const { applicationRoot, entries } = yield* resolveFixtureBuild("/workspace");
     const configs = makeRspackDevConfig(applicationRoot, entries);
-    const client = configNamed(configs, 'client');
-    const server = configNamed(configs, 'server');
+    const client = configNamed(configs, "client");
+    const server = configNamed(configs, "server");
 
     for (const config of [client, server]) {
-      expect(config.mode).toBe('development');
+      expect(config.mode).toBe("development");
       expect(config.optimization?.emitOnErrors).toBe(false);
       expect(config.output?.clean).toBe(false);
-      expect(config.output?.filename).toBe('[name].[contenthash].js');
+      expect(config.output?.filename).toBe("[name].[contenthash].js");
       expect(tailwindUseNamed(config)?.options).toEqual({
-        base: '/workspace',
+        base: "/workspace",
         optimize: false,
       });
     }
 
     // Only the browser compilation emits stylesheets.
-    expect(client.output?.cssFilename).toBe('[name].[contenthash].css');
+    expect(client.output?.cssFilename).toBe("[name].[contenthash].css");
     expect(server.output?.cssFilename).toBeUndefined();
 
-    expect(client.devtool).toBe('cheap-module-source-map');
-    expect(server.devtool).toBe('source-map');
-    expect(client.output?.path).toBe('/workspace/.ersc/dev/client');
-    expect(server.output?.path).toBe('/workspace/.ersc/dev/server');
+    expect(client.devtool).toBe("cheap-module-source-map");
+    expect(server.devtool).toBe("source-map");
+    expect(client.output?.path).toBe("/workspace/.ersc/dev/client");
+    expect(server.output?.path).toBe("/workspace/.ersc/dev/server");
   }).pipe(Effect.provide(Path.layer)),
 );
 
@@ -196,7 +196,7 @@ const reactTransformOptions = (config: Configuration) => {
 
   for (const rule of rules ?? []) {
     for (const use of rule.use ?? []) {
-      if (use.loader === 'builtin:swc-loader') {
+      if (use.loader === "builtin:swc-loader") {
         return use.options?.jsc?.transform;
       }
     }
@@ -205,25 +205,25 @@ const reactTransformOptions = (config: Configuration) => {
   return undefined;
 };
 
-it.effect('keeps the React Compiler out of the server compilation', () =>
+it.effect("keeps the React Compiler out of the server compilation", () =>
   Effect.gen(function* () {
-    const { applicationRoot, entries } = yield* resolveFixtureBuild('/workspace');
+    const { applicationRoot, entries } = yield* resolveFixtureBuild("/workspace");
     const configs = makeRspackBuildConfig(applicationRoot, entries);
 
-    expect(reactTransformOptions(configNamed(configs, 'client'))?.reactCompiler).toBe(true);
-    expect(reactTransformOptions(configNamed(configs, 'server'))?.reactCompiler).toBeUndefined();
+    expect(reactTransformOptions(configNamed(configs, "client"))?.reactCompiler).toBe(true);
+    expect(reactTransformOptions(configNamed(configs, "server"))?.reactCompiler).toBeUndefined();
   }).pipe(Effect.provide(Path.layer)),
 );
 
-it.effect('enables HMR and React Refresh only in the development browser graph', () =>
+it.effect("enables HMR and React Refresh only in the development browser graph", () =>
   Effect.gen(function* () {
-    const { applicationRoot, entries } = yield* resolveFixtureBuild('/workspace');
+    const { applicationRoot, entries } = yield* resolveFixtureBuild("/workspace");
     const buildConfigs = makeRspackBuildConfig(applicationRoot, entries);
     const devConfigs = makeRspackDevConfig(applicationRoot, entries);
-    const buildClient = configNamed(buildConfigs, 'client');
-    const buildServer = configNamed(buildConfigs, 'server');
-    const devClient = configNamed(devConfigs, 'client');
-    const devServer = configNamed(devConfigs, 'server');
+    const buildClient = configNamed(buildConfigs, "client");
+    const buildServer = configNamed(buildConfigs, "server");
+    const devClient = configNamed(devConfigs, "client");
+    const devServer = configNamed(devConfigs, "server");
 
     expect(reactTransformOptions(devClient)?.react?.refresh).toBe(true);
     expect(reactTransformOptions(devServer)?.react?.refresh).toBe(false);
@@ -252,46 +252,46 @@ it.effect('enables HMR and React Refresh only in the development browser graph',
   }).pipe(Effect.provide(Path.layer)),
 );
 
-it('externalizes Bun and Effect modules for the server graph', () => {
-  expect(externalizeServerModule({ request: 'bun:sqlite' })).toBe('module bun:sqlite');
-  expect(externalizeServerModule({ request: 'bun:test' })).toBe('module bun:test');
-  expect(externalizeServerModule({ request: 'effect' })).toBe('module effect');
-  expect(externalizeServerModule({ request: 'effect/Schema' })).toBe('module effect/Schema');
-  expect(externalizeServerModule({ request: '@effect/platform-bun/BunHttpServer' })).toBe(
-    'module @effect/platform-bun/BunHttpServer',
+it("externalizes Bun and Effect modules for the server graph", () => {
+  expect(externalizeServerModule({ request: "bun:sqlite" })).toBe("module bun:sqlite");
+  expect(externalizeServerModule({ request: "bun:test" })).toBe("module bun:test");
+  expect(externalizeServerModule({ request: "effect" })).toBe("module effect");
+  expect(externalizeServerModule({ request: "effect/Schema" })).toBe("module effect/Schema");
+  expect(externalizeServerModule({ request: "@effect/platform-bun/BunHttpServer" })).toBe(
+    "module @effect/platform-bun/BunHttpServer",
   );
-  expect(externalizeServerModule({ request: 'effective-rsc' })).toBe(false);
-  expect(externalizeServerModule({ request: '@effectual/core' })).toBe(false);
-  expect(externalizeServerModule({ request: 'node:path' })).toBe(false);
+  expect(externalizeServerModule({ request: "effective-rsc" })).toBe(false);
+  expect(externalizeServerModule({ request: "@effectual/core" })).toBe(false);
+  expect(externalizeServerModule({ request: "node:path" })).toBe(false);
   expect(externalizeServerModule({})).toBe(false);
 });
 
-it('rejects Bun-only modules reaching the browser graph and points at the boundary', () => {
-  expect(() => guardBrowserModule({ request: 'bun:sqlite' })).toThrowError(TypeError);
-  expect(() => guardBrowserModule({ request: 'bun:sqlite' })).toThrow(
+it("rejects Bun-only modules reaching the browser graph and points at the boundary", () => {
+  expect(() => guardBrowserModule({ request: "bun:sqlite" })).toThrowError(TypeError);
+  expect(() => guardBrowserModule({ request: "bun:sqlite" })).toThrow(
     '"bun:sqlite" runs only on Bun and cannot enter the browser module graph.',
   );
-  expect(() => guardBrowserModule({ request: '@effect/platform-bun' })).toThrow(
+  expect(() => guardBrowserModule({ request: "@effect/platform-bun" })).toThrow(
     '"@effect/platform-bun" runs only on Bun and cannot enter the browser module graph.',
   );
-  expect(() => guardBrowserModule({ request: '@effect/platform-bun/BunHttpServer' })).toThrow(
+  expect(() => guardBrowserModule({ request: "@effect/platform-bun/BunHttpServer" })).toThrow(
     '"@effect/platform-bun/BunHttpServer" runs only on Bun and cannot enter the browser module graph.',
   );
-  expect(() => guardBrowserModule({ request: 'bun:sqlite' })).toThrow(
+  expect(() => guardBrowserModule({ request: "bun:sqlite" })).toThrow(
     /Move the import behind a Server Component, Layout, Page, or ServerFn boundary/,
   );
-  expect(guardBrowserModule({ request: 'effect' })).toBe(false);
-  expect(guardBrowserModule({ request: '@effect/platform-browser' })).toBe(false);
-  expect(guardBrowserModule({ request: 'node:path' })).toBe(false);
+  expect(guardBrowserModule({ request: "effect" })).toBe(false);
+  expect(guardBrowserModule({ request: "@effect/platform-browser" })).toBe(false);
+  expect(guardBrowserModule({ request: "node:path" })).toBe(false);
   expect(guardBrowserModule({})).toBe(false);
 });
 
-it.effect('wires the browser rejection and server externalization into their owning graphs', () =>
+it.effect("wires the browser rejection and server externalization into their owning graphs", () =>
   Effect.gen(function* () {
-    const { applicationRoot, entries } = yield* resolveFixtureBuild('/workspace');
+    const { applicationRoot, entries } = yield* resolveFixtureBuild("/workspace");
     const configs = makeRspackBuildConfig(applicationRoot, entries);
 
-    expect(configNamed(configs, 'client').externals).toEqual([guardBrowserModule]);
-    expect(configNamed(configs, 'server').externals).toEqual([externalizeServerModule]);
+    expect(configNamed(configs, "client").externals).toEqual([guardBrowserModule]);
+    expect(configNamed(configs, "server").externals).toEqual([externalizeServerModule]);
   }).pipe(Effect.provide(Path.layer)),
 );

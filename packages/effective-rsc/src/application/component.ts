@@ -1,12 +1,12 @@
-import { Effect } from 'effect';
-import type { ReactNode } from 'react';
+import { Effect } from "effect";
+import type { ReactNode } from "react";
 
-import { attachERSCMember, type ERSCIdentity, type ERSCMember } from './ersc-identity';
-import type { AnyMiddleware } from './middleware';
+import { attachERSCMember, type ERSCIdentity, type ERSCMember } from "./ersc-identity";
+import type { AnyMiddleware } from "./middleware";
 
 export interface EffectComponent<Props, ApplicationServices> extends ERSCMember<
   ApplicationServices,
-  'Component'
+  "Component"
 > {
   (props: Props): Promise<Awaited<ReactNode>>;
 }
@@ -33,12 +33,12 @@ export const makeComponentFactory = <ApplicationServices, AvailableServices>(
   > => {
     const EffectComponent = (props: Props): Promise<Awaited<ReactNode>> =>
       identity.renderRuntime.run(
-        'Component',
+        "Component",
         Effect.suspend(() => render(props)),
         middleware,
       );
 
-    return attachERSCMember(EffectComponent, identity, 'Component');
+    return attachERSCMember(EffectComponent, identity, "Component");
   };
 
   return { make };

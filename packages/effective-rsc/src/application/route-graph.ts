@@ -1,9 +1,9 @@
-import type { LayoutComponent } from './layout';
-import type { LoadingComponent } from './loading';
-import type { AnyMiddleware } from './middleware';
-import { getPageState, type PageImplementationState } from './page';
-import { type AbsolutePath, joinRoutePaths, validateUnreservedPath } from './route-path';
-import { type AnyRoutes, getRoutesState } from './routes';
+import type { LayoutComponent } from "./layout";
+import type { LoadingComponent } from "./loading";
+import type { AnyMiddleware } from "./middleware";
+import { getPageState, type PageImplementationState } from "./page";
+import { type AbsolutePath, joinRoutePaths, validateUnreservedPath } from "./route-path";
+import { type AnyRoutes, getRoutesState } from "./routes";
 
 export type RouteScope<Services> = {
   readonly id: string;
@@ -42,7 +42,7 @@ export const compileRouteGraph = <Services>(
 ): CompiledRouteGraph<Services> => {
   const rootState = getRoutesState(routes);
   if (rootState.layout === null) {
-    throw new TypeError('The root Routes passed to ERSC.make must define a Layout.');
+    throw new TypeError("The root Routes passed to ERSC.make must define a Layout.");
   }
 
   const destinations: Array<CompiledDestination<Services>> = [];
@@ -84,10 +84,10 @@ export const compileRouteGraph = <Services>(
     }
   };
 
-  visit(routes, '/', [], []);
+  visit(routes, "/", [], []);
   const [firstDestination, ...remainingDestinations] = destinations;
   if (firstDestination === undefined) {
-    throw new TypeError('The root Routes passed to ERSC.make must contain a Page.');
+    throw new TypeError("The root Routes passed to ERSC.make must contain a Page.");
   }
 
   return Object.freeze([firstDestination, ...remainingDestinations]);

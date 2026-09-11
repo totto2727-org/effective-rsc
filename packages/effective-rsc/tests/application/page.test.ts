@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@effect/vitest';
+import { describe, expect, it } from "@effect/vitest";
 import {
   Context,
   Deferred,
@@ -10,35 +10,35 @@ import {
   Schema,
   SchemaTransformation,
   Scope,
-} from 'effect';
+} from "effect";
 
-import { Application } from '../../src/application/ersc';
-import { getERSCIdentity } from '../../src/application/ersc-identity';
-import { getPageState } from '../../src/application/page';
+import { Application } from "../../src/application/ersc";
+import { getERSCIdentity } from "../../src/application/ersc-identity";
+import { getPageState } from "../../src/application/page";
 
 class Greeting extends Context.Service<Greeting, { readonly value: string }>()(
-  'ersc/tests/application/page/Greeting',
+  "ersc/tests/application/page/Greeting",
 ) {}
 
 const ERSC = Application.ersc<Greeting>();
 const RootLayout = ERSC.Layout.make({ render: ({ children }) => Effect.succeed(children) });
 
-describe('ERSC.Page.make', () => {
-  it('rejects rendering outside its application request runtime', () => {
+describe("ERSC.Page.make", () => {
+  it("rejects rendering outside its application request runtime", () => {
     const ServiceFreeERSC = Application.ersc();
     const Page = ServiceFreeERSC.Page.make({ render: () => Effect.succeed(null) });
 
-    expect(() => getPageState(Page).component({ params: { _tag: 'Encoded', value: {} } })).toThrow(
-      new TypeError('ERSC Page rendered outside its application request runtime.'),
+    expect(() => getPageState(Page).component({ params: { _tag: "Encoded", value: {} } })).toThrow(
+      new TypeError("ERSC Page rendered outside its application request runtime."),
     );
   });
 
-  it.effect('decodes dynamic route params before invoking the render operation', () =>
+  it.effect("decodes dynamic route params before invoking the render operation", () =>
     Effect.gen(function* () {
       const runtime = yield* FiberSet.makeRuntimePromise<Greeting>();
       const PageComponent = ERSC.Page.make({
         params: Schema.Struct({
-          day: Schema.Literals(['saturday', 'sunday']),
+          day: Schema.Literals(["saturday", "sunday"]),
         }),
         render: Effect.fnUntraced(function* ({ params }) {
           const greeting = yield* Greeting;
@@ -48,18 +48,18 @@ describe('ERSC.Page.make', () => {
       const rendered = yield* Effect.promise(() =>
         getERSCIdentity(PageComponent).renderRuntime.bind(runtime, [], () =>
           getPageState(PageComponent).component({
-            params: { _tag: 'Encoded', value: { day: 'sunday' } },
+            params: { _tag: "Encoded", value: { day: "sunday" } },
           }),
         ),
       );
 
-      expect(rendered).toBe('hello sunday');
+      expect(rendered).toBe("hello sunday");
       expect(getPageState(PageComponent).paramsSchema).not.toBeNull();
       expect(Object.isFrozen(PageComponent)).toBe(true);
-    }).pipe(Effect.provideService(Greeting, { value: 'hello' })),
+    }).pipe(Effect.provideService(Greeting, { value: "hello" })),
   );
 
-  it.effect('runs an Effect.fnUntraced operation with request services', () =>
+  it.effect("runs an Effect.fnUntraced operation with request services", () =>
     Effect.gen(function* () {
       const runtime = yield* FiberSet.makeRuntimePromise<Greeting>();
       const PageComponent = ERSC.Page.make({
@@ -69,22 +69,22 @@ describe('ERSC.Page.make', () => {
         }),
       });
       const App = ERSC.make({
-        routes: ERSC.Routes.make({ layout: RootLayout }).page('/', PageComponent),
-        layer: Layer.succeed(Greeting, { value: 'application greeting' }),
+        routes: ERSC.Routes.make({ layout: RootLayout }).page("/", PageComponent),
+        layer: Layer.succeed(Greeting, { value: "application greeting" }),
       });
 
       const rendered = yield* Effect.promise(() =>
         getERSCIdentity(App).renderRuntime.bind(runtime, [], () =>
-          getPageState(PageComponent).component({ params: { _tag: 'Encoded', value: {} } }),
+          getPageState(PageComponent).component({ params: { _tag: "Encoded", value: {} } }),
         ),
       );
 
-      expect(rendered).toBe('hello from the request');
+      expect(rendered).toBe("hello from the request");
       expect(getPageState(PageComponent).paramsSchema).toBeNull();
-    }).pipe(Effect.provideService(Greeting, { value: 'hello from the request' })),
+    }).pipe(Effect.provideService(Greeting, { value: "hello from the request" })),
   );
 
-  it.effect('decodes encoded path keys into the Schema output consumed by render', () =>
+  it.effect("decodes encoded path keys into the Schema output consumed by render", () =>
     Effect.gen(function* () {
       const runtime = yield* FiberSet.makeRuntimePromise<never>();
       const TransformERSC = Application.ersc();
@@ -103,16 +103,16 @@ describe('ERSC.Page.make', () => {
       const rendered = yield* Effect.promise(() =>
         getERSCIdentity(PageComponent).renderRuntime.bind(runtime, [], () =>
           getPageState(PageComponent).component({
-            params: { _tag: 'Encoded', value: { slug: 'opening-keynote' } },
+            params: { _tag: "Encoded", value: { slug: "opening-keynote" } },
           }),
         ),
       );
 
-      expect(rendered).toBe('opening-keynote');
+      expect(rendered).toBe("opening-keynote");
     }),
   );
 
-  it.effect('interrupts the page operation when its request scope closes', () =>
+  it.effect("interrupts the page operation when its request scope closes", () =>
     Effect.gen(function* () {
       const scope = yield* Scope.make();
       const started = yield* Deferred.make<void>();
@@ -130,15 +130,15 @@ describe('ERSC.Page.make', () => {
           ),
       });
       const App = InterruptERSC.make({
-        routes: InterruptERSC.Routes.make({ layout: InterruptLayout }).page('/', InterruptPage),
+        routes: InterruptERSC.Routes.make({ layout: InterruptLayout }).page("/", InterruptPage),
       });
       const execution = getERSCIdentity(App)
         .renderRuntime.bind(runtime, [], () =>
-          getPageState(InterruptPage).component({ params: { _tag: 'Encoded', value: {} } }),
+          getPageState(InterruptPage).component({ params: { _tag: "Encoded", value: {} } }),
         )
         .then(
-          () => 'completed' as const,
-          () => 'interrupted' as const,
+          () => "completed" as const,
+          () => "interrupted" as const,
         );
 
       yield* Deferred.await(started);
@@ -146,7 +146,7 @@ describe('ERSC.Page.make', () => {
 
       const result = yield* Effect.promise(() => execution);
       const wasInterrupted = yield* Ref.get(interrupted);
-      expect(result).toBe('interrupted');
+      expect(result).toBe("interrupted");
       expect(wasInterrupted).toBe(true);
     }),
   );

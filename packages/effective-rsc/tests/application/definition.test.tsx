@@ -1,25 +1,25 @@
-import { describe, expect, it } from '@effect/vitest';
-import { Context, Effect, Layer, Schema } from 'effect';
-import { isValidElement, Suspense, type ReactElement, type ReactNode } from 'react';
+import { describe, expect, it } from "@effect/vitest";
+import { Context, Effect, Layer, Schema } from "effect";
+import { isValidElement, Suspense, type ReactElement, type ReactNode } from "react";
 
-import { type ApplicationDefinition, getApplicationState } from '../../src/application/definition';
-import { Application } from '../../src/application/ersc';
+import { type ApplicationDefinition, getApplicationState } from "../../src/application/definition";
+import { Application } from "../../src/application/ersc";
 import {
   type AnyPageDefinition,
   getPageState,
   type EncodedPageParams,
   type PageRuntimeProps,
-} from '../../src/application/page';
-import type { CompiledDestination } from '../../src/application/route-graph';
-import type { AbsolutePath } from '../../src/application/route-path';
-import { getRoutesState } from '../../src/application/routes';
-import { RouteOutlet } from '../../src/client/route-tree';
-import { renderRouteTree } from '../../src/rsc/render-route-tree';
-import type { RouteTreeModel } from '../../src/rsc/route-tree';
+} from "../../src/application/page";
+import type { CompiledDestination } from "../../src/application/route-graph";
+import type { AbsolutePath } from "../../src/application/route-path";
+import { getRoutesState } from "../../src/application/routes";
+import { RouteOutlet } from "../../src/client/route-tree";
+import { renderRouteTree } from "../../src/rsc/render-route-tree";
+import type { RouteTreeModel } from "../../src/rsc/route-tree";
 
 const asElement = <Props,>(node: ReactNode): ReactElement<Props> => {
   if (!isValidElement<Props>(node)) {
-    throw new Error('Expected a React element.');
+    throw new Error("Expected a React element.");
   }
   return node;
 };
@@ -51,7 +51,7 @@ const renderApplicationRoute = <Services,>(
   renderRouteTree({
     destination: findDestination(routes, pattern),
     pathname,
-    params: { _tag: 'Encoded', value: encodedParams },
+    params: { _tag: "Encoded", value: encodedParams },
   });
 
 const applicationRoutes = <Services, ApplicationError>(
@@ -66,7 +66,7 @@ const ERSC = Application.ersc();
 const RootLayout = ERSC.Layout.make({
   render: ({ children }) =>
     Effect.succeed(
-      <html lang='en'>
+      <html lang="en">
         <body>{children}</body>
       </html>,
     ),
@@ -86,23 +86,23 @@ const SaturdayPage = ERSC.Page.make({ render: () => Effect.succeed(<h1>Saturday<
 const SundayPage = ERSC.Page.make({ render: () => Effect.succeed(<h1>Sunday</h1>) });
 
 class LayoutService extends Context.Service<LayoutService, object>()(
-  'ersc/tests/application/LayoutService',
+  "ersc/tests/application/LayoutService",
 ) {}
 
 class PageService extends Context.Service<PageService, object>()(
-  'ersc/tests/application/PageService',
+  "ersc/tests/application/PageService",
 ) {}
 
 class NestedPageService extends Context.Service<NestedPageService, object>()(
-  'ersc/tests/application/NestedPageService',
+  "ersc/tests/application/NestedPageService",
 ) {}
 
-describe('ERSC.make', () => {
-  it('renders a root Layout around its exact Page', () => {
+describe("ERSC.make", () => {
+  it("renders a root Layout around its exact Page", () => {
     const App = ERSC.make({
-      routes: ERSC.Routes.make({ layout: RootLayout }).page('/', HomePage),
+      routes: ERSC.Routes.make({ layout: RootLayout }).page("/", HomePage),
     });
-    const rootNode = renderApplicationRoute(applicationRoutes(App), '/');
+    const rootNode = renderApplicationRoute(applicationRoutes(App), "/");
     const root = asElement<{ readonly children: ReactNode }>(rootNode.content);
     const pageNode = requiredChild(rootNode);
 
@@ -110,54 +110,54 @@ describe('ERSC.make', () => {
     expect(root.type).toBe(RootLayout);
     expect(asElement(root.props.children).type).toBe(RouteOutlet);
     expect(asElement(pageNode.content).type).toBe(pageComponent(HomePage));
-    expect(applicationRoutes(App).map(({ pattern }) => pattern)).toEqual(['/']);
-    expect(Object.getOwnPropertyDescriptor(App, 'routes')).toMatchObject({
+    expect(applicationRoutes(App).map(({ pattern }) => pattern)).toEqual(["/"]);
+    expect(Object.getOwnPropertyDescriptor(App, "routes")).toMatchObject({
       configurable: false,
       writable: false,
     });
     expect(Object.isExtensible(App)).toBe(true);
   });
 
-  it('renders a dynamic route pattern with its concrete pathname and captured params', () => {
+  it("renders a dynamic route pattern with its concrete pathname and captured params", () => {
     const DayPage = ERSC.Page.make({
-      params: Schema.Struct({ day: Schema.Literals(['saturday', 'sunday']) }),
+      params: Schema.Struct({ day: Schema.Literals(["saturday", "sunday"]) }),
       render: ({ params }) => Effect.succeed(<h1>{params.day}</h1>),
     });
     const App = ERSC.make({
-      routes: ERSC.Routes.make({ layout: RootLayout }).page('/schedule/:day', DayPage),
+      routes: ERSC.Routes.make({ layout: RootLayout }).page("/schedule/:day", DayPage),
     });
     const saturdayPage = requiredChild(
-      renderApplicationRoute(applicationRoutes(App), '/schedule/:day', '/schedule/saturday', {
-        day: 'saturday',
+      renderApplicationRoute(applicationRoutes(App), "/schedule/:day", "/schedule/saturday", {
+        day: "saturday",
       }),
     );
     const sundayPage = requiredChild(
-      renderApplicationRoute(applicationRoutes(App), '/schedule/:day', '/schedule/sunday', {
-        day: 'sunday',
+      renderApplicationRoute(applicationRoutes(App), "/schedule/:day", "/schedule/sunday", {
+        day: "sunday",
       }),
     );
     const saturdayElement = asElement<PageRuntimeProps>(saturdayPage.content);
 
-    expect(applicationRoutes(App).map(({ pattern }) => pattern)).toEqual(['/schedule/:day']);
+    expect(applicationRoutes(App).map(({ pattern }) => pattern)).toEqual(["/schedule/:day"]);
     expect(saturdayPage.id).not.toBe(sundayPage.id);
     expect(saturdayElement.type).toBe(pageComponent(DayPage));
-    expect(saturdayElement.props.params).toEqual({ _tag: 'Encoded', value: { day: 'saturday' } });
+    expect(saturdayElement.props.params).toEqual({ _tag: "Encoded", value: { day: "saturday" } });
   });
 
-  it('preserves Layout ancestry and places Loading below its owning Layout', () => {
+  it("preserves Layout ancestry and places Loading below its owning Layout", () => {
     const scheduleRoutes = ERSC.Routes.make({
       layout: ScheduleLayout,
       loading: ScheduleLoading,
     })
-      .page('/', SaturdayPage)
-      .page('/day-two', SundayPage);
+      .page("/", SaturdayPage)
+      .page("/day-two", SundayPage);
     const App = ERSC.make({
       routes: ERSC.Routes.make({ layout: RootLayout })
-        .page('/', HomePage)
-        .mount('/schedule', scheduleRoutes),
+        .page("/", HomePage)
+        .mount("/schedule", scheduleRoutes),
     });
-    const sundayRootNode = renderApplicationRoute(applicationRoutes(App), '/schedule/day-two');
-    const saturdayRootNode = renderApplicationRoute(applicationRoutes(App), '/schedule');
+    const sundayRootNode = renderApplicationRoute(applicationRoutes(App), "/schedule/day-two");
+    const saturdayRootNode = renderApplicationRoute(applicationRoutes(App), "/schedule");
     const scheduleLayoutNode = requiredChild(sundayRootNode);
     const saturdayScheduleLayoutNode = requiredChild(saturdayRootNode);
     const loadingNode = requiredChild(scheduleLayoutNode);
@@ -169,9 +169,9 @@ describe('ERSC.make', () => {
     }>(loadingNode.content);
 
     expect(applicationRoutes(App).map(({ pattern }) => pattern)).toEqual([
-      '/',
-      '/schedule',
-      '/schedule/day-two',
+      "/",
+      "/schedule",
+      "/schedule/day-two",
     ]);
     expect(asElement(sundayRootNode.content).type).toBe(RootLayout);
     expect(scheduleLayoutNode.id).toBe(saturdayScheduleLayoutNode.id);
@@ -184,23 +184,23 @@ describe('ERSC.make', () => {
     expect(asElement(pageNode.content).type).toBe(pageComponent(SundayPage));
   });
 
-  it('lets layoutless Routes group paths without adding a rendered node', () => {
-    const groupedRoutes = ERSC.Routes.make().page('/', SaturdayPage).page('/day-two', SundayPage);
+  it("lets layoutless Routes group paths without adding a rendered node", () => {
+    const groupedRoutes = ERSC.Routes.make().page("/", SaturdayPage).page("/day-two", SundayPage);
     const App = ERSC.make({
-      routes: ERSC.Routes.make({ layout: RootLayout }).mount('/schedule', groupedRoutes),
+      routes: ERSC.Routes.make({ layout: RootLayout }).mount("/schedule", groupedRoutes),
     });
-    const rootNode = renderApplicationRoute(applicationRoutes(App), '/schedule/day-two');
+    const rootNode = renderApplicationRoute(applicationRoutes(App), "/schedule/day-two");
     const pageNode = requiredChild(rootNode);
 
     expect(asElement(pageNode.content).type).toBe(pageComponent(SundayPage));
   });
 
-  it('supports a Loading scope without requiring a nested Layout', () => {
-    const groupedRoutes = ERSC.Routes.make({ loading: ScheduleLoading }).page('/', SaturdayPage);
+  it("supports a Loading scope without requiring a nested Layout", () => {
+    const groupedRoutes = ERSC.Routes.make({ loading: ScheduleLoading }).page("/", SaturdayPage);
     const App = ERSC.make({
-      routes: ERSC.Routes.make({ layout: RootLayout }).mount('/schedule', groupedRoutes),
+      routes: ERSC.Routes.make({ layout: RootLayout }).mount("/schedule", groupedRoutes),
     });
-    const rootNode = renderApplicationRoute(applicationRoutes(App), '/schedule');
+    const rootNode = renderApplicationRoute(applicationRoutes(App), "/schedule");
     const loadingNode = requiredChild(rootNode);
     const pageNode = requiredChild(loadingNode);
 
@@ -208,55 +208,55 @@ describe('ERSC.make', () => {
     expect(asElement(pageNode.content).type).toBe(pageComponent(SaturdayPage));
   });
 
-  it('compiles one Routes value mounted at more than one prefix', () => {
+  it("compiles one Routes value mounted at more than one prefix", () => {
     const sharedRoutes = ERSC.Routes.make({ layout: ScheduleLayout })
-      .page('/', SaturdayPage)
-      .page('/day-two', SundayPage);
+      .page("/", SaturdayPage)
+      .page("/day-two", SundayPage);
     const App = ERSC.make({
       routes: ERSC.Routes.make({ layout: RootLayout })
-        .page('/', HomePage)
-        .mount('/saturday', sharedRoutes)
-        .mount('/sunday', sharedRoutes),
+        .page("/", HomePage)
+        .mount("/saturday", sharedRoutes)
+        .mount("/sunday", sharedRoutes),
     });
     const saturdayLayoutNode = requiredChild(
-      renderApplicationRoute(applicationRoutes(App), '/saturday/day-two'),
+      renderApplicationRoute(applicationRoutes(App), "/saturday/day-two"),
     );
     const sundayLayoutNode = requiredChild(
-      renderApplicationRoute(applicationRoutes(App), '/sunday/day-two'),
+      renderApplicationRoute(applicationRoutes(App), "/sunday/day-two"),
     );
 
     expect(applicationRoutes(App).map(({ pattern }) => pattern)).toEqual([
-      '/',
-      '/saturday',
-      '/saturday/day-two',
-      '/sunday',
-      '/sunday/day-two',
+      "/",
+      "/saturday",
+      "/saturday/day-two",
+      "/sunday",
+      "/sunday/day-two",
     ]);
     expect(saturdayLayoutNode.id).not.toBe(sundayLayoutNode.id);
     expect(requiredChild(saturdayLayoutNode).id).not.toBe(requiredChild(sundayLayoutNode).id);
   });
 
-  it('compiles Pages into matcher-neutral destinations', () => {
+  it("compiles Pages into matcher-neutral destinations", () => {
     const App = ERSC.make({
       routes: ERSC.Routes.make({ layout: RootLayout })
-        .page('/', HomePage)
-        .mount('/schedule', ERSC.Routes.make().page('/', SaturdayPage)),
+        .page("/", HomePage)
+        .mount("/schedule", ERSC.Routes.make().page("/", SaturdayPage)),
     });
 
-    expect(applicationRoutes(App).map(({ pattern }) => pattern)).toEqual(['/', '/schedule']);
+    expect(applicationRoutes(App).map(({ pattern }) => pattern)).toEqual(["/", "/schedule"]);
     expect(applicationRoutes(App)[0]?.page.component).toBe(pageComponent(HomePage));
     expect(applicationRoutes(App)[1]?.page.component).toBe(pageComponent(SaturdayPage));
   });
 
-  it('compiles inherited middleware without adding React scopes', () => {
+  it("compiles inherited middleware without adding React scopes", () => {
     const RootMiddleware = ERSC.Middleware.make((httpEffect) => httpEffect);
     const NestedMiddleware = ERSC.Middleware.make((httpEffect) => httpEffect);
     const RootScope = ERSC.withMiddleware(RootMiddleware);
     const NestedScope = RootScope.withMiddleware(NestedMiddleware);
     const App = ERSC.make({
       routes: RootScope.Routes.make({ layout: RootLayout })
-        .page('/', HomePage)
-        .mount('/schedule', NestedScope.Routes.make().page('/', SaturdayPage)),
+        .page("/", HomePage)
+        .mount("/schedule", NestedScope.Routes.make().page("/", SaturdayPage)),
     });
     const [home, schedule] = applicationRoutes(App);
 
@@ -266,26 +266,26 @@ describe('ERSC.make', () => {
     expect(Object.isFrozen(schedule?.middleware)).toBe(true);
   });
 
-  it('does not duplicate inherited middleware across nested scopes', () => {
+  it("does not duplicate inherited middleware across nested scopes", () => {
     const RequireUser = ERSC.Middleware.make((httpEffect) => httpEffect);
     const Authenticated = ERSC.withMiddleware(RequireUser);
     const routes = Authenticated.Routes.make({ layout: RootLayout }).mount(
-      '/account',
-      Authenticated.Routes.make().page('/', HomePage),
+      "/account",
+      Authenticated.Routes.make().page("/", HomePage),
     );
     const App = ERSC.make({ routes });
 
     expect(applicationRoutes(App)[0]?.middleware).toEqual([RequireUser]);
   });
 
-  it('rejects repeated middleware in a divergent mounted scope without Pages', () => {
+  it("rejects repeated middleware in a divergent mounted scope without Pages", () => {
     const Shared = ERSC.Middleware.make((httpEffect) => httpEffect);
     const NestedOnly = ERSC.Middleware.make((httpEffect) => httpEffect);
     const ParentERSC = ERSC.withMiddleware(Shared);
     const DivergentERSC = ERSC.withMiddleware(NestedOnly).withMiddleware(Shared);
-    const leafRoutes = ERSC.Routes.make().page('/', HomePage);
-    const divergentRoutes = DivergentERSC.Routes.make().mount('/leaf', leafRoutes);
-    const routes = ParentERSC.Routes.make({ layout: RootLayout }).mount('/nested', divergentRoutes);
+    const leafRoutes = ERSC.Routes.make().page("/", HomePage);
+    const divergentRoutes = DivergentERSC.Routes.make().mount("/leaf", leafRoutes);
+    const routes = ParentERSC.Routes.make({ layout: RootLayout }).mount("/nested", divergentRoutes);
 
     expect(() => ERSC.make({ routes })).toThrow(
       new TypeError(
@@ -294,16 +294,16 @@ describe('ERSC.make', () => {
     );
   });
 
-  it('allocates route scope IDs across derived ERSC views', () => {
+  it("allocates route scope IDs across derived ERSC views", () => {
     const Middleware = ERSC.Middleware.make((httpEffect) => httpEffect);
     const ScopedERSC = ERSC.withMiddleware(Middleware);
-    const rootRoutes = ERSC.Routes.make({ layout: RootLayout }).page('/', HomePage);
-    const scopedRoutes = ScopedERSC.Routes.make({ layout: ScheduleLayout }).page('/', SaturdayPage);
+    const rootRoutes = ERSC.Routes.make({ layout: RootLayout }).page("/", HomePage);
+    const scopedRoutes = ScopedERSC.Routes.make({ layout: ScheduleLayout }).page("/", SaturdayPage);
 
     expect(getRoutesState(rootRoutes).scopeId).not.toBe(getRoutesState(scopedRoutes).scopeId);
   });
 
-  it('declares service contracts once and chooses their implementations at application assembly', () => {
+  it("declares service contracts once and chooses their implementations at application assembly", () => {
     type AppServices = LayoutService | PageService | NestedPageService;
     const ServiceERSC = Application.ersc<AppServices>();
     const ServiceLayout = ServiceERSC.Layout.make({
@@ -331,29 +331,29 @@ describe('ERSC.make', () => {
     );
     const App = ServiceERSC.make({
       routes: ServiceERSC.Routes.make({ layout: ServiceLayout })
-        .page('/', ServicePage)
-        .mount('/nested', ServiceERSC.Routes.make().page('/', ServiceNestedPage)),
+        .page("/", ServicePage)
+        .mount("/nested", ServiceERSC.Routes.make().page("/", ServiceNestedPage)),
       layer: ApplicationLayer,
     });
     expect(getApplicationState(App).layer).toBe(ApplicationLayer);
   });
 
-  it('requires a root Layout and a reachable Page at runtime', () => {
+  it("requires a root Layout and a reachable Page at runtime", () => {
     expect(() =>
       ERSC.make({
         // @ts-expect-error Exercise runtime validation for a root without a Layout.
-        routes: ERSC.Routes.make().page('/', HomePage),
+        routes: ERSC.Routes.make().page("/", HomePage),
       }),
-    ).toThrow('must define a Layout');
+    ).toThrow("must define a Layout");
     expect(() =>
       ERSC.make({
         // @ts-expect-error Exercise runtime validation for a root without a Page.
         routes: ERSC.Routes.make({ layout: RootLayout }),
       }),
-    ).toThrow('must contain a Page');
+    ).toThrow("must contain a Page");
   });
 
-  it('rejects route concerns created by a different ERSC module', () => {
+  it("rejects route concerns created by a different ERSC module", () => {
     const OtherERSC = Application.ersc();
     const OtherLayout = OtherERSC.Layout.make({
       render: ({ children }) => Effect.succeed(children),
@@ -361,31 +361,31 @@ describe('ERSC.make', () => {
     const OtherLoading = OtherERSC.Loading.make({ render: () => <p>Loading...</p> });
     const OtherPage = OtherERSC.Page.make({ render: () => Effect.succeed(<h1>Other</h1>) });
     const OtherMiddleware = OtherERSC.Middleware.make((httpEffect) => httpEffect);
-    const OtherRoutes = OtherERSC.Routes.make({ layout: OtherLayout }).page('/', OtherPage);
+    const OtherRoutes = OtherERSC.Routes.make({ layout: OtherLayout }).page("/", OtherPage);
 
     expect(() => ERSC.Routes.make({ layout: OtherLayout })).toThrow(
-      'Layout was created by a different ERSC module.',
+      "Layout was created by a different ERSC module.",
     );
     expect(() => ERSC.Routes.make({ loading: OtherLoading })).toThrow(
-      'Loading was created by a different ERSC module.',
+      "Loading was created by a different ERSC module.",
     );
     expect(() => ERSC.withMiddleware(OtherMiddleware)).toThrow(
-      'Middleware was created by a different ERSC module.',
+      "Middleware was created by a different ERSC module.",
     );
     expect(() =>
       ERSC.make({
-        routes: ERSC.Routes.make({ layout: RootLayout }).page('/', OtherPage),
+        routes: ERSC.Routes.make({ layout: RootLayout }).page("/", OtherPage),
       }),
-    ).toThrow('created by a different ERSC module');
+    ).toThrow("created by a different ERSC module");
     expect(() => ERSC.make({ routes: OtherRoutes })).toThrow(
-      'Root Routes were created by a different ERSC module.',
+      "Root Routes were created by a different ERSC module.",
     );
-    expect(() => ERSC.Routes.make().mount('/other', OtherRoutes)).toThrow(
+    expect(() => ERSC.Routes.make().mount("/other", OtherRoutes)).toThrow(
       'Routes mounted at "/other" were created by a different ERSC module.',
     );
   });
 
-  it('rejects same-ERSC members used as the wrong route concern', () => {
+  it("rejects same-ERSC members used as the wrong route concern", () => {
     const Leaf = ERSC.Component.make({ render: () => Effect.succeed(<p>Leaf</p>) });
 
     expect(() =>
@@ -393,19 +393,19 @@ describe('ERSC.make', () => {
         // @ts-expect-error Loading is not a Layout concern.
         layout: ScheduleLoading,
       }),
-    ).toThrow('Layout must be created with ERSC.Layout.make.');
+    ).toThrow("Layout must be created with ERSC.Layout.make.");
     expect(() =>
       ERSC.Routes.make({
         // @ts-expect-error Layout is not a Loading concern.
         loading: RootLayout,
       }),
-    ).toThrow('Loading must be created with ERSC.Loading.make.');
+    ).toThrow("Loading must be created with ERSC.Loading.make.");
     expect(() =>
       ERSC.Routes.make().page(
-        '/',
+        "/",
         // @ts-expect-error Component is not a Page concern.
         Leaf,
       ),
-    ).toThrow('Page must be created with ERSC.Page.make.');
+    ).toThrow("Page must be created with ERSC.Page.make.");
   });
 });

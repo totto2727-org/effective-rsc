@@ -1,23 +1,23 @@
-import { Predicate, type Types } from 'effect';
+import { Predicate, type Types } from "effect";
 
-import { makeRenderRuntimeContext, type RenderRuntimeContext } from './render-runtime';
+import { makeRenderRuntimeContext, type RenderRuntimeContext } from "./render-runtime";
 
 declare const ERSCServicesTypeId: unique symbol;
 
-export const ERSCIdentityTypeId: unique symbol = Symbol.for('ersc/ERSCIdentity');
-export const ERSCMemberKindTypeId: unique symbol = Symbol.for('ersc/ERSCMemberKind');
-export const ERSCStateTypeId: unique symbol = Symbol.for('ersc/ERSCState');
+export const ERSCIdentityTypeId: unique symbol = Symbol.for("ersc/ERSCIdentity");
+export const ERSCMemberKindTypeId: unique symbol = Symbol.for("ersc/ERSCMemberKind");
+export const ERSCStateTypeId: unique symbol = Symbol.for("ersc/ERSCState");
 
 export type ERSCMemberKind =
-  | 'Application'
-  | 'Component'
-  | 'ERSC'
-  | 'Layout'
-  | 'Loading'
-  | 'Middleware'
-  | 'Page'
-  | 'Routes'
-  | 'ServerFn';
+  | "Application"
+  | "Component"
+  | "ERSC"
+  | "Layout"
+  | "Loading"
+  | "Middleware"
+  | "Page"
+  | "Routes"
+  | "ServerFn";
 
 export type ERSCIdentity<Services> = {
   readonly [ERSCServicesTypeId]?: Types.Invariant<Services>;

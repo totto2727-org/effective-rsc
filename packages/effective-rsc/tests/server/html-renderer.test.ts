@@ -1,24 +1,24 @@
-import { beforeEach, describe, expect, it, vi } from '@effect/vitest';
-import { Effect, Exit, Layer, Logger, Scope } from 'effect';
-import { isValidElement, type ReactNode } from 'react';
-import type { ReactFormState } from 'react-dom/client';
-import type { RenderToReadableStreamOptions } from 'react-dom/server';
+import { beforeEach, describe, expect, it, vi } from "@effect/vitest";
+import { Effect, Exit, Layer, Logger, Scope } from "effect";
+import { isValidElement, type ReactNode } from "react";
+import type { ReactFormState } from "react-dom/client";
+import type { RenderToReadableStreamOptions } from "react-dom/server";
 
-import type { FlightPayload } from '../../src/rsc/flight';
-import { FlightHtmlInjector } from '../../src/server/flight-html-stream';
-import type { FlightRender } from '../../src/server/flight-renderer';
-import { ServerConfig } from '../../src/server/server-config';
+import type { FlightPayload } from "../../src/rsc/flight";
+import { FlightHtmlInjector } from "../../src/server/flight-html-stream";
+import type { FlightRender } from "../../src/server/flight-renderer";
+import { ServerConfig } from "../../src/server/server-config";
 
-const formState = Symbol('formState') as unknown as ReactFormState;
-const clientBootstrapScripts = ['/_ersc/assets/runtime.js', '/_ersc/assets/main.js'];
+const formState = Symbol("formState") as unknown as ReactFormState;
+const clientBootstrapScripts = ["/_ersc/assets/runtime.js", "/_ersc/assets/main.js"];
 const serverConfig = ServerConfig.of({
-  clientAssetsCacheControl: 'no-store',
-  clientAssetsRoot: '/tmp/ersc-client',
+  clientAssetsCacheControl: "no-store",
+  clientAssetsRoot: "/tmp/ersc-client",
   clientBootstrapScripts,
-  clientStylesheets: ['/_ersc/assets/main.css'],
-  hostname: 'localhost',
+  clientStylesheets: ["/_ersc/assets/main.css"],
+  hostname: "localhost",
   port: 18193,
-  publicAssetsRoot: '/tmp/ersc-public',
+  publicAssetsRoot: "/tmp/ersc-public",
 });
 let renderOptions: RenderToReadableStreamOptions | undefined;
 let renderedRoot: ReactNode;
@@ -34,7 +34,7 @@ const decodeFlight = vi.fn((_stream: ReadableStream<Uint8Array>) =>
     routeTree: {
       child: null,
       content: null,
-      id: 'root',
+      id: "root",
     },
     serverFnResult: null,
   } satisfies FlightPayload),
@@ -46,14 +46,14 @@ const renderDocument = vi.fn((root: ReactNode, options?: RenderToReadableStreamO
 });
 const injectPayload = vi.fn(() => new TransformStream<Uint8Array, Uint8Array>());
 
-vi.doMock('react-server-dom-rspack/client', () => ({
+vi.doMock("react-server-dom-rspack/client", () => ({
   createFromReadableStream: decodeFlight,
 }));
-vi.doMock('react-dom/server.bun', () => ({
+vi.doMock("react-dom/server.bun", () => ({
   renderToReadableStream: renderDocument,
 }));
-const { HtmlRenderError, HtmlRenderer } = await import('../../src/server/html-renderer');
-const fizz = await vi.importActual<typeof import('react-dom/server.bun')>('react-dom/server.bun');
+const { HtmlRenderError, HtmlRenderer } = await import("../../src/server/html-renderer");
+const fizz = await vi.importActual<typeof import("react-dom/server.bun")>("react-dom/server.bun");
 const FlightHtmlInjectorTestLayer = FlightHtmlInjector.layerTest({ inject: injectPayload });
 const HtmlRendererTestLayer = HtmlRenderer.layer.pipe(
   Layer.provide(FlightHtmlInjectorTestLayer),
@@ -68,8 +68,8 @@ beforeEach(() => {
   renderOptions = undefined;
 });
 
-describe('HtmlRenderer', () => {
-  it.effect('emits compiler stylesheets through the native Fizz resource API', () =>
+describe("HtmlRenderer", () => {
+  it.effect("emits compiler stylesheets through the native Fizz resource API", () =>
     Effect.gen(function* () {
       renderDocument.mockImplementationOnce((root, options) =>
         fizz.renderToReadableStream(root, options),
@@ -87,7 +87,7 @@ describe('HtmlRenderer', () => {
     }).pipe(Effect.provide(HtmlRendererTestLayer)),
   );
 
-  it.effect('passes the request form state to Fizz without eagerly decoding Flight', () => {
+  it.effect("passes the request form state to Fizz without eagerly decoding Flight", () => {
     const logs: Array<unknown> = [];
     const logged = Promise.withResolvers<void>();
     const logger = Logger.make<unknown, void>(({ message }) => {
@@ -116,20 +116,20 @@ describe('HtmlRenderer', () => {
         return;
       }
 
-      expect(typeof renderedRoot.type).toBe('function');
+      expect(typeof renderedRoot.type).toBe("function");
       expect(renderedRoot.props.children).toBeUndefined();
       expect(renderOptions?.bootstrapScripts).toEqual(clientBootstrapScripts);
       expect(renderOptions?.formState).toBe(formState);
       expect(injectPayload).toHaveBeenCalledWith(expect.any(ReadableStream));
-      const renderError = new Error('render failed');
-      renderOptions?.onError?.(renderError, { componentStack: '\n    at Page' });
+      const renderError = new Error("render failed");
+      renderOptions?.onError?.(renderError, { componentStack: "\n    at Page" });
       yield* Effect.promise(() => logged.promise);
-      expect(logs).toEqual([['HTML render failed.', renderError, '\n    at Page']]);
+      expect(logs).toEqual([["HTML render failed.", renderError, "\n    at Page"]]);
     }).pipe(Effect.withLogger(logger), Effect.provide(HtmlRendererTestLayer));
   });
 
-  it.effect('maps a pre-shell Fizz rejection to HtmlRenderError', () => {
-    const shellFailure = new Error('shell failed');
+  it.effect("maps a pre-shell Fizz rejection to HtmlRenderError", () => {
+    const shellFailure = new Error("shell failed");
     renderDocument.mockRejectedValueOnce(shellFailure);
 
     return Effect.gen(function* () {
@@ -148,7 +148,7 @@ describe('HtmlRenderer', () => {
     }).pipe(Effect.provide(HtmlRendererTestLayer));
   });
 
-  it.effect('does not log an expected render error after its request scope aborts', () => {
+  it.effect("does not log an expected render error after its request scope aborts", () => {
     const logs: Array<unknown> = [];
     const logger = Logger.make<unknown, void>(({ message }) => {
       logs.push(message);
@@ -167,13 +167,13 @@ describe('HtmlRenderer', () => {
       const onError = renderOptions?.onError;
 
       yield* Scope.close(scope, Exit.void);
-      onError?.(new Error('request aborted'), { componentStack: '\n    at Page' });
+      onError?.(new Error("request aborted"), { componentStack: "\n    at Page" });
 
       expect(logs).toEqual([]);
     }).pipe(Effect.withLogger(logger), Effect.provide(HtmlRendererTestLayer));
   });
 
-  it.effect('does not log an expected error from an aborted Flight render', () => {
+  it.effect("does not log an expected error from an aborted Flight render", () => {
     const logs: Array<unknown> = [];
     const logger = Logger.make<unknown, void>(({ message }) => {
       logs.push(message);
@@ -190,7 +190,7 @@ describe('HtmlRenderer', () => {
 
       yield* Scope.close(flightScope, Exit.void);
       renderOptions?.onError?.(flightSignal.reason, {
-        componentStack: '\n    at SuspendedPage',
+        componentStack: "\n    at SuspendedPage",
       });
 
       expect(logs).toEqual([]);

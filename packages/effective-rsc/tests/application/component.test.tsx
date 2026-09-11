@@ -1,25 +1,25 @@
-import { describe, expect, it } from '@effect/vitest';
-import { Context, Deferred, Effect, Exit, FiberSet, Ref, Scope } from 'effect';
+import { describe, expect, it } from "@effect/vitest";
+import { Context, Deferred, Effect, Exit, FiberSet, Ref, Scope } from "effect";
 
-import { Application } from '../../src/application/ersc';
-import { getERSCIdentity } from '../../src/application/ersc-identity';
-import type { RenderRuntime } from '../../src/application/render-runtime';
+import { Application } from "../../src/application/ersc";
+import { getERSCIdentity } from "../../src/application/ersc-identity";
+import type { RenderRuntime } from "../../src/application/render-runtime";
 
 class Greeting extends Context.Service<Greeting, { readonly prefix: string }>()(
-  'ersc/tests/application/component/Greeting',
+  "ersc/tests/application/component/Greeting",
 ) {}
 
-describe('ERSC.Component.make', () => {
-  it('rejects rendering outside its application request runtime', () => {
+describe("ERSC.Component.make", () => {
+  it("rejects rendering outside its application request runtime", () => {
     const ERSC = Application.ersc();
     const Component = ERSC.Component.make({ render: () => Effect.succeed(null) });
 
     expect(() => Component({})).toThrow(
-      new TypeError('ERSC Component rendered outside its application request runtime.'),
+      new TypeError("ERSC Component rendered outside its application request runtime."),
     );
   });
 
-  it.effect('runs props and services through the request runtime', () =>
+  it.effect("runs props and services through the request runtime", () =>
     Effect.gen(function* () {
       const ERSC = Application.ersc<Greeting>();
       const runtime = yield* FiberSet.makeRuntimePromise<Greeting>();
@@ -32,36 +32,36 @@ describe('ERSC.Component.make', () => {
 
       const rendered = yield* Effect.promise(() =>
         getERSCIdentity(ERSC).renderRuntime.bind(runtime, [], () =>
-          GreetingComponent({ name: 'Nikhil' }),
+          GreetingComponent({ name: "Nikhil" }),
         ),
       );
 
       expect(rendered).toEqual(<p>Hello, Nikhil</p>);
-    }).pipe(Effect.provideService(Greeting, { prefix: 'Hello' })),
+    }).pipe(Effect.provideService(Greeting, { prefix: "Hello" })),
   );
 
-  it.effect('rejects rendering outside its authored middleware scope', () =>
+  it.effect("rejects rendering outside its authored middleware scope", () =>
     Effect.gen(function* () {
       const ERSC = Application.ersc();
       const RequireScope = ERSC.Middleware.make((httpEffect) => httpEffect);
       const ScopedERSC = ERSC.withMiddleware(RequireScope);
-      const Component = ScopedERSC.Component.make({ render: () => Effect.succeed('scoped') });
+      const Component = ScopedERSC.Component.make({ render: () => Effect.succeed("scoped") });
       const runtime = yield* FiberSet.makeRuntimePromise<never>();
       const renderRuntime = getERSCIdentity(ERSC).renderRuntime;
 
       expect(() => renderRuntime.bind(runtime, [], () => Component({}))).toThrow(
         new TypeError(
-          'ERSC Component requires a middleware scope that is not active for this request.',
+          "ERSC Component requires a middleware scope that is not active for this request.",
         ),
       );
       const rendered = yield* Effect.promise(() =>
         renderRuntime.bind(runtime, [RequireScope], () => Component({})),
       );
-      expect(rendered).toBe('scoped');
+      expect(rendered).toBe("scoped");
     }),
   );
 
-  it.effect('invokes the authored renderer from inside Effect execution', () =>
+  it.effect("invokes the authored renderer from inside Effect execution", () =>
     Effect.gen(function* () {
       const ERSC = Application.ersc();
       let runtimeEntered = false;
@@ -88,7 +88,7 @@ describe('ERSC.Component.make', () => {
     }),
   );
 
-  it.effect('interrupts component work when its request scope closes', () =>
+  it.effect("interrupts component work when its request scope closes", () =>
     Effect.gen(function* () {
       const scope = yield* Scope.make();
       const started = yield* Deferred.make<void>();
@@ -104,15 +104,15 @@ describe('ERSC.Component.make', () => {
       const execution = getERSCIdentity(ERSC)
         .renderRuntime.bind(runtime, [], () => Component({}))
         .then(
-          () => 'completed' as const,
-          () => 'interrupted' as const,
+          () => "completed" as const,
+          () => "interrupted" as const,
         );
 
       yield* Deferred.await(started);
       yield* Scope.close(scope, Exit.void);
 
       const result = yield* Effect.promise(() => execution);
-      expect(result).toBe('interrupted');
+      expect(result).toBe("interrupted");
       const wasInterrupted = yield* Ref.get(interrupted);
       expect(wasInterrupted).toBe(true);
     }),
