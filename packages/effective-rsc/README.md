@@ -42,7 +42,8 @@ No Cloudflare account, deployment, or container is needed for these local comman
 Set ordinary local bindings in `examples/workers/wrangler.jsonc` under `vars`.
 For local secrets, copy `examples/workers/.dev.vars.example` to `.dev.vars` in that directory and change the example value.
 The `.dev.vars` file is ignored by Git.
-Wrangler's `--var` and `--env-file` options can also supply values when serving the generated configuration.
+For built-output hosting, supply runtime values with Wrangler's `--var` or an explicit `--env-file` path instead of relying on discovery relative to the generated configuration.
+For example, from the repository root: `vp exec wrangler dev --local --no-bundle --config examples/workers/dist/rsc/wrangler.json --env-file examples/workers/.dev.vars --port 8787`.
 Do not put secrets into Vite `define`, `import.meta.env`, Client Component props, or rendered output.
 
 The example reads `APP_LABEL` and reports whether `SERVER_TOKEN` is configured without displaying the token.
