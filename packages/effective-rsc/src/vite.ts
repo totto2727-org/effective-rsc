@@ -1,14 +1,11 @@
-import { createRequire } from "node:module";
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import react from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
 import type { Plugin, PluginOption, UserConfig } from "vite";
 
-const require = createRequire(import.meta.url);
 const browserEntry = fileURLToPath(new URL("./vite/browser.ts", import.meta.url));
-const rscPackageRoot = dirname(dirname(require.resolve("@vitejs/plugin-rsc")));
 
 export type ErscViteOptions = {
   /** RSC environment entry exporting the runtime's `{ fetch }` handler. */
@@ -30,16 +27,9 @@ export const ersc = (options: ErscViteOptions = {}): PluginOption[] => {
     name: "effective-rsc:application-entry",
     config: (config): UserConfig => ({
       resolve: {
-        alias: [
-          {
-            find: /^@vitejs\/plugin-rsc\/vendor\//,
-            replacement: `${rscPackageRoot}/dist/vendor/`,
-          },
-          {
-            find: "effective-rsc/application-entry",
-            replacement: resolve(config.root ?? process.cwd(), application),
-          },
-        ],
+        alias: {
+          "effective-rsc/application-entry": resolve(config.root ?? process.cwd(), application),
+        },
       },
       environments: {
         client: {

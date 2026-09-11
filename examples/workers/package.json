@@ -1,0 +1,26 @@
+{
+  "name": "ersc-workers-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "local": "wrangler dev --local --no-bundle --config dist/rsc/wrangler.json --port 8787"
+  },
+  "dependencies": {
+    "effective-rsc": "workspace:*",
+    "effect": "catalog:",
+    "@effect/platform-browser": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-server-dom-webpack": "catalog:"
+  },
+  "devDependencies": {
+    "vite-plus": "catalog:",
+    "@cloudflare/vite-plugin": "catalog:",
+    "@vitejs/plugin-rsc": "catalog:",
+    "wrangler": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:"
+  }
+}
