@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer, Stream } from "effect";
 import { HttpServerResponse } from "effect/unstable/http";
 
 import { Application } from "../../src/application/ersc";
-import { createFetchHandler, getWorkersEnv } from "../../src/workers";
+import { createFetchHandler, getWorkersEnv, getWorkersRequestContext } from "../../src/workers";
 
 class RequestEnvironment extends Context.Service<RequestEnvironment, { readonly value: string }>()(
   "ersc/tests/workers/RequestEnvironment",
@@ -13,6 +13,10 @@ class RequestLifetime extends Context.Service<
   RequestLifetime,
   { readonly events: Array<string> }
 >()("ersc/tests/workers/RequestLifetime") {}
+
+type TestEnv = { readonly mode?: "empty" | "failure" | "stream"; readonly value: string };
+
+const encoder = new TextEncoder();
 
 describe("createFetchHandler", () => {
   it.effect(
@@ -25,9 +29,43 @@ describe("createFetchHandler", () => {
           Effect.gen(function* () {
             const environment = yield* RequestEnvironment;
             const lifetime = yield* RequestLifetime;
-            return HttpServerResponse.text(environment.value).pipe(
-              HttpServerResponse.setHeader("x-events", lifetime.events.join(",")),
-            );
+            const requestContext = yield* getWorkersRequestContext<
+              TestEnv,
+              { readonly requestId: string }
+            >();
+            if (requestContext.env.mode === "empty") {
+              return HttpServerResponse.empty();
+            }
+            if (requestContext.env.mode === "failure") {
+              return HttpServerResponse.stream(
+                Stream.fromReadableStream({
+                  evaluate: () =>
+                    new ReadableStream<Uint8Array>({
+                      start(controller) {
+                        controller.error(new Error("intentional stream failure"));
+                      },
+                    }),
+                  onError: (cause) => cause,
+                }),
+              );
+            }
+            if (requestContext.env.mode === "stream") {
+              return HttpServerResponse.stream(
+                Stream.fromReadableStream({
+                  evaluate: () =>
+                    new ReadableStream<Uint8Array>({
+                      pull(controller) {
+                        controller.enqueue(encoder.encode(environment.value));
+                        return new Promise<void>(() => {});
+                      },
+                    }),
+                  onError: (cause) => cause,
+                }),
+              );
+            }
+            return HttpServerResponse.text(
+              `${environment.value}|${requestContext.executionContext.requestId}|${requestContext.request.url}`,
+            ).pipe(HttpServerResponse.setHeader("x-events", lifetime.events.join(",")));
           }),
         );
         const Layout = ERSC.Layout.make({
@@ -62,18 +100,79 @@ describe("createFetchHandler", () => {
         });
         const handler = createFetchHandler(App);
 
-        const first = yield* Effect.promise(() =>
-          handler(new Request("https://workers.test/"), { value: "first" }, {}),
+        const [first, second] = yield* Effect.promise(() =>
+          Promise.all([
+            handler(
+              new Request("https://workers.test/?request=first"),
+              { value: "first" },
+              { requestId: "one" },
+            ),
+            handler(
+              new Request("https://workers.test/?request=second"),
+              { value: "second" },
+              { requestId: "two" },
+            ),
+          ]),
         );
-        expect(events).toEqual(["acquired"]);
-        expect(yield* Effect.promise(() => first.text())).toBe("first");
-        expect(events).toEqual(["acquired", "released"]);
+        expect(yield* Effect.promise(() => first.text())).toBe(
+          "first|one|https://workers.test/?request=first",
+        );
+        expect(yield* Effect.promise(() => second.text())).toBe(
+          "second|two|https://workers.test/?request=second",
+        );
+        expect(events).toEqual(["acquired", "acquired", "released", "released"]);
 
-        const second = yield* Effect.promise(() =>
-          handler(new Request("https://workers.test/"), { value: "second" }, {}),
+        const empty = yield* Effect.promise(() =>
+          handler(
+            new Request("https://workers.test/?request=empty"),
+            { mode: "empty", value: "empty" },
+            { requestId: "empty" },
+          ),
         );
-        expect(yield* Effect.promise(() => second.text())).toBe("second");
-        expect(events).toEqual(["acquired", "released", "acquired", "released"]);
+        expect(empty.body).toBeNull();
+        expect(events).toEqual([
+          "acquired",
+          "acquired",
+          "released",
+          "released",
+          "acquired",
+          "released",
+        ]);
+
+        const streaming = yield* Effect.promise(() =>
+          handler(
+            new Request("https://workers.test/?request=stream"),
+            { mode: "stream", value: "stream" },
+            { requestId: "stream" },
+          ),
+        );
+        expect(streaming.body).not.toBeNull();
+        yield* Effect.promise(() => streaming.body!.cancel());
+        expect(events).toEqual([
+          "acquired",
+          "acquired",
+          "released",
+          "released",
+          "acquired",
+          "released",
+          "acquired",
+          "released",
+        ]);
+
+        const failing = yield* Effect.promise(() =>
+          handler(
+            new Request("https://workers.test/?request=failure"),
+            { mode: "failure", value: "failure" },
+            { requestId: "failure" },
+          ),
+        );
+        yield* Effect.promise(() =>
+          failing.text().then(
+            () => Promise.reject(new Error("Expected stream failure.")),
+            () => undefined,
+          ),
+        );
+        expect(events.filter((event) => event === "released")).toHaveLength(5);
       }),
   );
 });
