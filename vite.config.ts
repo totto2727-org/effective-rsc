@@ -36,6 +36,6 @@ export default defineConfig({
   fmt: { ignorePatterns: inactive },
   lint: { ignorePatterns: inactive },
   test: {
-    include: ["packages/effective-rsc/tests/{application,client,server}/**/*.test.{ts,tsx}"],
+    include: ["packages/effective-rsc/tests/**/*.test.{ts,tsx}"],
   },
 });
