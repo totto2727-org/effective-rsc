@@ -1,4 +1,4 @@
-import { access, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, rm, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
@@ -6,7 +6,7 @@ import { dirname, resolve } from "node:path";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const viteConfig = resolve(root, "examples/workers/vite.config.ts");
 const generatedWranglerConfig = resolve(root, "examples/workers/dist/rsc/wrangler.json");
-const testEnvironmentFile = resolve(root, "tests/.workers-fetch.env");
+const testEnvironmentFile = resolve(root, "tmp/.workers-fetch.env");
 const devOrigin = "http://127.0.0.1:5174";
 const wranglerOrigin = "http://127.0.0.1:8788";
 
@@ -99,6 +99,7 @@ const withServer = async (label, name, args, origin, project) => {
 try {
   await run("vp", ["build", "--config", viteConfig]);
   await access(generatedWranglerConfig);
+  await mkdir(dirname(testEnvironmentFile), { recursive: true });
   await writeFile(testEnvironmentFile, "");
   console.log(`Verified generated Wrangler configuration: ${generatedWranglerConfig}`);
 

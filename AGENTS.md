@@ -1,12 +1,12 @@
-# effective-rsc Workers migration
+# effective-rsc Workers
 
 ## Repository structure
 
-- `packages/effective-rsc/`: active fetch-based framework and Vite integration.
-- `examples/workers/`: active consumer using the public package exports, Workers `fetch`, and runtime `env`.
+- `packages/effective-rsc/`: fetch-based framework and Vite integration.
+- `examples/workers/`: consumer using the public package exports, Workers `fetch`, and runtime `env`.
 - `tests/`: end-to-end acceptance against the real consumer.
-- `vendor/`: read-only upstream references. Never edit or import from them.
-- Original Bun/Rspack examples, deployment packages, scripts, and fixtures are retained for comparison but excluded from the active workspace.
+- `docs/`: current architecture and verification documentation.
+- Removed upstream implementations and references remain available in Git history, not in the working tree.
 
 ## Development commands
 
@@ -29,8 +29,8 @@ From the repository root:
 - `vp run local` serves the generated Worker using Wrangler locally without Vite.
 - `vp fmt` formats with VitePlus.
 - `vp lint` uses default VitePlus lint rules.
-- `vp run typecheck` checks the active TypeScript graph.
-- `vp test run` runs active unit/integration tests.
+- `vp run typecheck` checks all framework source, the example, and retained tests.
+- `vp test run` runs the retained unit/integration tests.
 - `vp run test:e2e` runs real browser acceptance.
 
 For direct Vite commands, enter `examples/workers/` and use `vp dev` or `vp build`.
@@ -38,7 +38,7 @@ The root `vite.config.ts` owns repository formatting, linting, and test configur
 
 ## Architecture
 
-### Authorized migration
+### Runtime boundary
 
 The user's 2026-09-11 requirements explicitly supersede the upstream Bun-only runtime, Rspack compilation, proprietary development server, Vercel packaging, and Bun verification commands.
 The common boundary is a Web `Request` to `Response` handler. The initial host is Cloudflare Workers.
@@ -58,7 +58,8 @@ D1, KV, R2, database abstractions, Node/Bun host adapters, and hosted deployment
 - **VitePlus**: unified tooling with the Vite core and Vitest versions pinned in `pnpm-workspace.yaml`.
 - **Cloudflare Vite plugin / Wrangler**: local Workers runtime only.
 - **Playwright**: browser validation of actual built and development applications.
-- **Effect**: read `vendor/effect/LLMS.md` before editing Effect code.
+- **Effect**: consult the installed version's source and official documentation before changing Effect APIs.
+- Keep all retained source and tests covered by root checks. Do not hide legacy files behind tooling exclusions.
 
 ## Package-specific rules
 

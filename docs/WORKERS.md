@@ -1,6 +1,6 @@
 # Workers architecture
 
-This document overrides preserved upstream Bun/Rspack decisions for the active Workers fork.
+This document describes the Workers framework and its Vite integration.
 The upstream base is `ed886996d1d3780b94166af4f798c53416d547c8`.
 
 ## Goal
@@ -56,7 +56,7 @@ Workers assets are host-owned, not Bun filesystem middleware.
 The example's Cloudflare configuration owns the assets binding and runtime variables.
 Changing Wrangler runtime variables must not require rebuilding the application.
 
-The active package exposes TypeScript source exports for Vite bundling.
+The package exposes TypeScript source exports for Vite bundling.
 The workspace consumer exercises the actual `effective-rsc`, `effective-rsc/vite`, and `effective-rsc/workers` export map.
 This is not a claim of standalone unbundled Node compatibility or published-package readiness.
 
@@ -64,24 +64,23 @@ This is not a claim of standalone unbundled Node compatibility or published-pack
 
 `vite.config.ts` at the repository root owns formatting, lint, and unit-test configuration.
 Formatting and lint rules use VitePlus defaults, matching the source monorepo's baseline formatting.
-Ignore patterns only exclude inactive upstream areas, references, dependencies, and generated output.
-The old custom formatter and lint configuration files are removed from the active root.
-The active package manager workspace excludes upstream Bun/Rspack examples and adapters.
+Ignore patterns only exclude dependencies and generated or temporary output.
+The workspace contains the framework and its Workers example.
 
 ## Verification contract
 
-- `vp run typecheck` checks the active consumer and its reachable framework modules.
-- `vp test run` checks the public Fetch adapter's request-context and lifecycle behavior.
+- `vp run typecheck` checks every retained framework source file, the consumer, and test source.
+- `vp test run` checks the retained framework tests, including the public Fetch adapter's request-context and lifecycle behavior.
 - `vp run test:e2e` builds the real example, starts VitePlus development mode, and then starts Wrangler against the same build with default and overridden variables.
 - Browser checks cover HTML, Flight, hydrated interaction, navigation, unknown routes, and secret non-disclosure.
 - Successful compilation alone does not establish Workers runtime or hydration correctness.
 
 [Observed verification results](WORKERS-VALIDATION.md) map each requirement to its completed local checks.
 
-## Deliberately inactive or deferred
+## Scope
 
-The preserved upstream CLI, Bun server/filesystem hosting, Rspack build machinery, development panel/RPC, Vercel adapter, and old examples are not supported by this active workspace.
-Their source may remain in Git for comparison, but it must not be imported by the active Worker runtime graph.
+The upstream CLI, Bun server/filesystem hosting, Rspack build machinery, development panel/RPC, Vercel adapter, obsolete examples, and vendored research snapshots have been removed.
+Their history is preserved by Git.
 Node and Bun can eventually host the same Fetch interface through host adapters, but no adapter or compatibility guarantee is delivered in this milestone.
 D1, KV, R2, authentication integrations, and production deployment remain outside the user's requested scope.
 

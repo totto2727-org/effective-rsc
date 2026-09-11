@@ -10,8 +10,8 @@ Bun and containers are not required.
 - Dependencies pinned in `pnpm-workspace.yaml` and `pnpm-lock.yaml`, including React Canary and Effect v4 RC.
 - Local workerd support on your platform.
 
-The active workspace contains `packages/effective-rsc` and `examples/workers` only.
-Other upstream examples and tooling remain for comparison and are not supported by this fork.
+The workspace contains `packages/effective-rsc` and `examples/workers`.
+Obsolete upstream implementations, examples, tooling, and source snapshots have been removed from the working tree and remain available in Git history.
 
 ## Run locally
 
@@ -133,8 +133,8 @@ The browser acceptance runner exercises both the real development server and the
 
 ## Documentation
 
-[Workers architecture](../../docs/WORKERS.md) is authoritative for the active fork.
-Other architecture documents describe the upstream design unless explicitly updated for Workers.
+[Workers architecture](../../docs/WORKERS.md) describes the framework.
+[Verification results](../../docs/WORKERS-VALIDATION.md) record the local acceptance checks.
 
 ## License
 

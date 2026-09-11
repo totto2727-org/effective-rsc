@@ -19,7 +19,7 @@ The upstream history is preserved from `ed886996d1d3780b94166af4f798c53416d547c8
 | HTTP behavior                                     | HTML and Flight content types, `private, no-store`, `Vary: Accept`, and a 404 for an unknown route passed in all 3 host configurations.                                                                                                         |
 | Request isolation and lifecycle                   | The public Fetch adapter test passed per-request Layer acquisition, overlapping env isolation, original request/execution-context identity, EOF disposal, bodyless disposal before return, cancellation exactly once, and stream-error cleanup. |
 | VitePlus formatter and linter                     | `vp fmt --check` passed; `vp lint` reported 0 warnings and 0 errors with its 96 default rules. The root config adds ignore patterns, not custom style or lint rules.                                                                            |
-| Type safety of active workflow                    | `vp run typecheck` passed for the active example, reachable framework code, Fetch test, Playwright config, and browser test source.                                                                                                             |
+| Type safety of active workflow                    | `vp run typecheck` passed for all retained framework source and tests, the example, Playwright config, and browser test source.                                                                                                                 |
 | New sibling directory, local changes only         | Implementation is in the cloned sibling directory with local commits. No PR, push, publishing, or cloud deployment was performed.                                                                                                               |
 
 ## Reproduce
@@ -58,5 +58,25 @@ The acceptance environment file was removed and ports 5173, 5174, 8787, and 8788
 
 This verifies the requested local Fetch/env workflow, not every preserved upstream feature or a production deployment.
 D1 and other storage integrations, Node/Bun host adapters, and cloud deployment remain explicitly outside this milestone.
-The retained upstream CLI, old build pipeline, old examples, and old integration suites are inactive.
+The upstream CLI, old build pipeline, old examples, and obsolete integration suites were removed during cleanup.
 This is a local Vite source-package consumer, not a published npm package certification.
+
+## Cleanup regression verification
+
+The cleanup reduced the tracked working tree from 7,325 files to 106 while preserving the original Git history.
+The final tree contains the framework, Workers example, current documentation, necessary license notices, and runnable tests.
+Legacy applications, source snapshots, Bun/Rspack runtime and build tooling, obsolete CI/release/editor configuration, redundant TypeScript/Turbo configuration, and unused dependencies were removed.
+No remaining source or configuration refers to the deleted vendor tree, Bun runtime modules, Rspack modules, or the removed custom Effect lint rules.
+
+Verification after the final cleanup:
+
+- Frozen-lockfile installation passed with VitePlus.
+- Default VitePlus formatting, lint, and whole-tree type checking passed.
+- `vp test run` passed all 156 tests in 26 files, including the now-portable route-scaling test.
+- `vp run test:e2e` passed all 9 real browser cases against Vite/workerd, standalone Wrangler, and the same Wrangler artifact with overridden runtime bindings.
+- A local `vp pm pack` audit found 52 package files, all public export targets, resolved catalog versions, and no obsolete runtime, build, vendor, or test directories.
+- The required third-party MIT notice was preserved verbatim apart from whitespace and verified inside the tarball.
+- Local Markdown links resolved successfully.
+
+The temporary tarball and test output were removed after verification.
+No package was published and no PR, push, or cloud deployment was performed.
