@@ -1,97 +1,52 @@
-import * as BunHttpServer from '@effect/platform-bun/BunHttpServer';
-import * as BunStream from '@effect/platform-bun/BunStream';
-import { Effect, Layer, Option, Schema, Stream, type Types } from 'effect';
-import type { PlatformError } from 'effect/PlatformError';
+import { Context, Effect, Layer, Option, Schema, Stream, type Types } from "effect";
+import type { PlatformError } from "effect/PlatformError";
 import {
   HttpEffect,
   HttpRouter,
   HttpServerRequest,
   HttpServerResponse,
-  HttpStaticServer,
-} from 'effect/unstable/http';
-import type { ServeError } from 'effect/unstable/http/HttpServerError';
+} from "effect/unstable/http";
 
-import { type ApplicationDefinition, getApplicationState } from '../application/definition';
-import { getERSCIdentity } from '../application/ersc-identity';
+import { type ApplicationDefinition, getApplicationState } from "../application/definition";
+import { getERSCIdentity } from "../application/ersc-identity";
 import {
   applyMiddleware,
   type AnyMiddleware,
   getScopedHttpMiddleware,
-} from '../application/middleware';
-import type { EncodedPageParams, PageParams } from '../application/page';
-import type { CompiledDestination } from '../application/route-graph';
-import { FrameworkAssetNamespace, isAbsolutePath } from '../application/route-path';
-import { FlightMediaType } from '../rsc/flight';
-import { renderRouteTree } from '../rsc/render-route-tree';
-import { FlightHtmlInjector } from './flight-html-stream';
-import { FlightRenderer } from './flight-renderer';
-import { HtmlRenderError, HtmlRenderer } from './html-renderer';
-import type { RequestOutcome } from './request-outcome';
-import {
-  ApplicationIdleTimeoutSeconds,
-  ApplicationMaxRequestBodySizeBytes,
-  ServerConfig,
-} from './server-config';
+} from "../application/middleware";
+import type { EncodedPageParams, PageParams } from "../application/page";
+import type { CompiledDestination } from "../application/route-graph";
+import { isAbsolutePath } from "../application/route-path";
+import { FlightMediaType } from "../rsc/flight";
+import { renderRouteTree } from "../rsc/render-route-tree";
+import { FlightRenderer } from "./flight-renderer";
+import { HtmlRenderError, HtmlRenderer } from "./html-renderer";
+import type { RequestOutcome } from "./request-outcome";
 import {
   prepareServerFnRequest,
   type PreparedServerFnRequest,
   type ServerFnRequestFailure,
-} from './server-fn-request';
+} from "./server-fn-request";
 
-const RenderersLayer = Layer.mergeAll(FlightRenderer.layer, HtmlRenderer.layer).pipe(
-  Layer.provide(FlightHtmlInjector.layer),
-);
-
-const StaticAssetsLayer = Layer.unwrap(
-  Effect.map(ServerConfig, ({ clientAssetsCacheControl, clientAssetsRoot }) =>
-    HttpStaticServer.layer({
-      cacheControl: clientAssetsCacheControl,
-      prefix: FrameworkAssetNamespace,
-      root: clientAssetsRoot,
-    }).pipe(Layer.provide(HttpRouter.disableLogger)),
-  ),
-);
-
-const PublicAssetsLayer = Layer.unwrap(
-  Effect.map(ServerConfig, ({ publicAssetsRoot }) =>
-    HttpStaticServer.layer({
-      cacheControl: 'public, max-age=0',
-      root: publicAssetsRoot,
-    }),
-  ),
-);
-
-// Bun derives `development` from NODE_ENV, which `ersc start` does not set, and its error page
-// carries the failure message and source stack.
-const BunServerLayer = Layer.unwrap(
-  Effect.map(ServerConfig, ({ hostname, port }) =>
-    BunHttpServer.layer({
-      development: false,
-      hostname,
-      idleTimeout: ApplicationIdleTimeoutSeconds,
-      maxRequestBodySize: ApplicationMaxRequestBodySizeBytes,
-      port,
-    }),
-  ),
-);
+const RenderersLayer = Layer.mergeAll(FlightRenderer.layer, HtmlRenderer.layer);
 
 const EmptyEncodedPageParams: EncodedPageParams = Object.freeze({});
 const DynamicResponseHeaders = {
-  'cache-control': 'private, no-store',
+  "cache-control": "private, no-store",
 } as const;
 
 const appendAcceptVary = (vary: string | undefined) => {
-  if (vary === undefined || vary.trim() === '') {
-    return 'Accept';
+  if (vary === undefined || vary.trim() === "") {
+    return "Accept";
   }
 
-  const fields = vary.split(',').map((field) => field.trim().toLowerCase());
-  return fields.includes('*') || fields.includes('accept') ? vary : `${vary}, Accept`;
+  const fields = vary.split(",").map((field) => field.trim().toLowerCase());
+  return fields.includes("*") || fields.includes("accept") ? vary : `${vary}, Accept`;
 };
 
 const acceptVaryPreResponseHandler: HttpEffect.PreResponseHandler = (_request, response) =>
   Effect.succeed(
-    HttpServerResponse.setHeader(response, 'vary', appendAcceptVary(response.headers['vary'])),
+    HttpServerResponse.setHeader(response, "vary", appendAcceptVary(response.headers["vary"])),
   );
 
 type RenderOptions<Services> = RequestOutcome & {
@@ -104,7 +59,7 @@ const fromWebStream = (
   stream: ReadableStream<Uint8Array>,
   options?: { readonly releaseLockOnEnd?: boolean },
 ) =>
-  BunStream.fromReadableStream({
+  Stream.fromReadableStream({
     evaluate: () => stream,
     onError: (cause) => cause,
     releaseLockOnEnd: options?.releaseLockOnEnd,
@@ -122,20 +77,13 @@ const combinePageMiddleware = <Services>(
     );
 
 type HttpApplicationRequirements =
-  | ServerConfig
-  | Layer.Services<ReturnType<typeof HttpStaticServer.layer>>
-  | HttpRouter.Request.From<'Error', HtmlRenderError | ServerFnRequestFailure>;
+  | HttpRouter.HttpRouter
+  | HttpRouter.Request.From<"Error", HtmlRenderError | ServerFnRequestFailure>;
 
 export type HttpApplicationLayer<ApplicationError> = Layer.Layer<
   never,
   ApplicationError | PlatformError,
   HttpApplicationRequirements
->;
-
-export type ServerApplicationLayer<ApplicationError> = Layer.Layer<
-  never,
-  HttpRouter.Request.Without<ApplicationError> | PlatformError | ServeError,
-  ServerConfig
 >;
 
 const httpLayer = <Services, ApplicationError>(
@@ -179,7 +127,7 @@ const httpLayer = <Services, ApplicationError>(
         temporaryReferences,
       });
 
-      if (request.headers['accept'] === FlightMediaType) {
+      if (request.headers["accept"] === FlightMediaType) {
         return HttpServerResponse.stream(
           fromWebStream(flight.stream, { releaseLockOnEnd: true }).pipe(
             Stream.ensuring(flight.release),
@@ -202,25 +150,25 @@ const httpLayer = <Services, ApplicationError>(
       return HttpServerResponse.stream(
         fromWebStream(htmlStream).pipe(Stream.ensuring(flight.release)),
         {
-          contentType: 'text/html;charset=utf-8',
+          contentType: "text/html;charset=utf-8",
           headers: DynamicResponseHeaders,
           status,
         },
       );
     });
 
-    if (request.method !== 'POST' && destination.page.paramsSchema !== null) {
+    if (request.method !== "POST" && destination.page.paramsSchema !== null) {
       return yield* Schema.decodeEffect(destination.page.paramsSchema)(encodedParams).pipe(
         Effect.matchEffect({
           onFailure: () =>
             Effect.succeed(
               HttpServerResponse.empty({ status: 404, headers: DynamicResponseHeaders }),
             ),
-          onSuccess: (value) => renderResponse({ _tag: 'Decoded', value }),
+          onSuccess: (value) => renderResponse({ _tag: "Decoded", value }),
         }),
       );
     }
-    return yield* renderResponse({ _tag: 'Encoded', value: encodedParams });
+    return yield* renderResponse({ _tag: "Encoded", value: encodedParams });
   });
 
   const executeServerFnAndRefresh = (
@@ -256,10 +204,14 @@ const httpLayer = <Services, ApplicationError>(
       const RequestContextMiddleware = HttpRouter.middleware<{
         provides: Services | FlightRenderer | HtmlRenderer;
       }>()((httpEffect): Effect.Effect<HttpServerResponse.HttpServerResponse, Types.unhandled> =>
-        httpEffect.pipe(Effect.provideContext(applicationServices)),
+        Effect.flatMap(Effect.context(), (requestContext) =>
+          httpEffect.pipe(
+            Effect.provideContext(Context.merge(requestContext, applicationServices)),
+          ),
+        ),
       );
       const makeRouteLayer = (destination: CompiledDestination<Services>) => {
-        const GetLayer = HttpRouter.add('GET', destination.pattern, (request) =>
+        const GetLayer = HttpRouter.add("GET", destination.pattern, (request) =>
           render({
             destination,
             formState: null,
@@ -277,10 +229,10 @@ const httpLayer = <Services, ApplicationError>(
                 RequestContextMiddleware,
               );
         const PageLayer = GetLayer.pipe(Layer.provide(PageMiddleware.layer));
-        const ServerFnLayer = HttpRouter.add('POST', destination.pattern, (request) =>
+        const ServerFnLayer = HttpRouter.add("POST", destination.pattern, (request) =>
           prepareServerFnRequest(request, identity).pipe(
             Effect.flatMap((prepared) => executeServerFnAndRefresh(prepared, destination, request)),
-            Effect.catchTag('ServerFnRequestError', (error) =>
+            Effect.catchTag("ServerFnRequestError", (error) =>
               Effect.succeed(
                 HttpServerResponse.text(error.message, {
                   headers: DynamicResponseHeaders,
@@ -302,14 +254,7 @@ const httpLayer = <Services, ApplicationError>(
     }),
   );
 
-  return Layer.mergeAll(StaticAssetsLayer, PublicAssetsLayer).pipe(
-    Layer.provideMerge(ApplicationRoutesLayer),
-  );
+  return ApplicationRoutesLayer;
 };
 
-const serverLayer = <Services, ApplicationError>(
-  application: ApplicationDefinition<Services, ApplicationError>,
-): ServerApplicationLayer<ApplicationError> =>
-  HttpRouter.serve(httpLayer(application)).pipe(Layer.provide(BunServerLayer));
-
-export const ServerApplication = { httpLayer, serverLayer };
+export const ServerApplication = { httpLayer };

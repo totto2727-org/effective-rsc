@@ -1,10 +1,10 @@
-import type { TemporaryReferenceSet } from 'react-server-dom-rspack/server.node';
+import type { createTemporaryReferenceSet } from "@vitejs/plugin-rsc/rsc/server";
 
-import type { FlightPayload } from '../rsc/flight';
+import type { FlightPayload } from "../rsc/flight";
 
 export type RequestOutcome = {
-  readonly formState: FlightPayload['formState'];
-  readonly serverFnResult: FlightPayload['serverFnResult'];
+  readonly formState: FlightPayload["formState"];
+  readonly serverFnResult: FlightPayload["serverFnResult"];
   readonly status: 200;
-  readonly temporaryReferences?: TemporaryReferenceSet;
+  readonly temporaryReferences?: ReturnType<typeof createTemporaryReferenceSet>;
 };

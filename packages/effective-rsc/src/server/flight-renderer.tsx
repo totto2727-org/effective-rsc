@@ -1,11 +1,10 @@
-import { Context, Effect, Exit, FiberSet, Layer, Scope } from 'effect';
-import type { TemporaryReferenceSet } from 'react-server-dom-rspack/server.node';
-import { renderToReadableStream } from 'react-server-dom-rspack/server.node';
+import { Context, Effect, Exit, FiberSet, Layer, Scope } from "effect";
+import { createTemporaryReferenceSet, renderToReadableStream } from "@vitejs/plugin-rsc/rsc/server";
 
-import type { AnyMiddleware } from '../application/middleware';
-import type { RenderRuntimeContext } from '../application/render-runtime';
-import type { FlightPayload, ServerFnResult } from '../rsc/flight';
-import type { RouteTreeModel } from '../rsc/route-tree';
+import type { AnyMiddleware } from "../application/middleware";
+import type { RenderRuntimeContext } from "../application/render-runtime";
+import type { FlightPayload, ServerFnResult } from "../rsc/flight";
+import type { RouteTreeModel } from "../rsc/route-tree";
 
 type FlightStream = ReadableStream<Uint8Array>;
 
@@ -16,19 +15,19 @@ export type FlightRender = {
 };
 
 export type FlightRenderOptions<Services> = {
-  readonly formState: FlightPayload['formState'];
+  readonly formState: FlightPayload["formState"];
   readonly middleware: ReadonlyArray<AnyMiddleware<Services>>;
   readonly renderRuntime: RenderRuntimeContext;
   readonly routeTree: RouteTreeModel;
   readonly serverFnResult: ServerFnResult | null;
-  readonly temporaryReferences?: TemporaryReferenceSet;
+  readonly temporaryReferences?: ReturnType<typeof createTemporaryReferenceSet>;
 };
 
 export class FlightRenderer extends Context.Service<FlightRenderer>()(
-  'ersc/server/flight-renderer/FlightRenderer',
+  "ersc/server/flight-renderer/FlightRenderer",
   {
     make: Effect.succeed({
-      render: Effect.fn('FlightRenderer.render')(function* <Services>({
+      render: Effect.fn("FlightRenderer.render")(function* <Services>({
         formState,
         middleware,
         renderRuntime,
@@ -51,7 +50,7 @@ export class FlightRenderer extends Context.Service<FlightRenderer>()(
           const stream = renderRuntime.bind(runtime, middleware, () => {
             const payload = { formState, routeTree, serverFnResult } satisfies FlightPayload;
             return renderToReadableStream(payload, {
-              onError: (error) => {
+              onError: (error: unknown) => {
                 if (!signal.aborted) {
                   void runtime(Effect.logError(error));
                 }

@@ -1,26 +1,27 @@
-import { Cause, Effect, Schema } from 'effect';
-import { HttpServerRequest } from 'effect/unstable/http';
+import { Cause, Effect, Schema } from "effect";
+import { HttpServerRequest } from "effect/unstable/http";
 import {
   createTemporaryReferenceSet,
   decodeAction,
   decodeFormState,
   decodeReply,
   loadServerAction,
-} from 'react-server-dom-rspack/server.node';
+} from "@vitejs/plugin-rsc/rsc/server";
 
-import type { ERSCIdentity } from '../application/ersc-identity';
-import type { AnyMiddleware } from '../application/middleware';
-import { matchServerFnInvocation } from '../application/server-fn';
-import { ServerFnIdHeader } from '../rsc/flight';
-import type { RequestOutcome } from './request-outcome';
-import { serverFnOutcome } from './server-fn-outcome';
+import type { ERSCIdentity } from "../application/ersc-identity";
+import type { AnyMiddleware } from "../application/middleware";
+import { matchServerFnInvocation } from "../application/server-fn";
+import { ServerFnIdHeader } from "../rsc/flight";
+import type { RequestOutcome } from "./request-outcome";
+import { serverFnOutcome } from "./server-fn-outcome";
 
 const ServerFnArraySizeLimit = 10_000;
+const ServerFnBodySizeLimit = 10 * 1024 * 1024;
 const decodeArguments = Schema.decodeUnknownEffect(Schema.Array(Schema.Unknown));
 const NoMiddleware = Object.freeze([]);
 
 export class ServerFnRequestError extends Schema.TaggedError<ServerFnRequestError>()(
-  'ServerFnRequestError',
+  "ServerFnRequestError",
   {
     cause: Schema.Defect(),
     message: Schema.String,
@@ -29,7 +30,7 @@ export class ServerFnRequestError extends Schema.TaggedError<ServerFnRequestErro
 ) {}
 
 class ServerFnExecutionError extends Schema.TaggedError<ServerFnExecutionError>()(
-  'ServerFnExecutionError',
+  "ServerFnExecutionError",
   { cause: Schema.Defect() },
 ) {}
 
@@ -62,30 +63,71 @@ export type PreparedServerFnRequest<ApplicationServices> = {
 const validateOrigin = (request: HttpServerRequest.HttpServerRequest) =>
   Effect.try({
     try: () => {
-      const origin = request.headers['origin'];
+      const origin = request.headers["origin"];
       if (origin === undefined) {
-        throw new Error('The Origin header is missing.');
+        throw new Error("The Origin header is missing.");
       }
 
-      const expectedHost = request.headers['host'];
+      const expectedHost = request.headers["host"];
       if (expectedHost === undefined || new URL(origin).host !== expectedHost.toLowerCase()) {
-        throw new Error(`Origin "${origin}" does not match host "${expectedHost ?? ''}".`);
+        throw new Error(`Origin "${origin}" does not match host "${expectedHost ?? ""}".`);
       }
     },
-    catch: (cause) => requestError('Rejected a cross-origin Server Function request.', 403, cause),
+    catch: (cause) => requestError("Rejected a cross-origin Server Function request.", 403, cause),
   });
 
+const readBodyBytes = Effect.fnUntraced(function* (request: Request) {
+  if (request.body === null) {
+    return new Uint8Array();
+  }
+
+  const reader = request.body.getReader();
+  const chunks: Array<Uint8Array> = [];
+  let length = 0;
+  try {
+    while (true) {
+      const result = yield* Effect.tryPromise({
+        try: () => reader.read(),
+        catch: (cause) => bodyReadError("Failed to read the Server Function request body.", cause),
+      });
+      if (result.done) {
+        break;
+      }
+      length += result.value.byteLength;
+      if (length > ServerFnBodySizeLimit) {
+        return yield* bodyReadError(
+          "The Server Function request body exceeds the 10 MiB limit.",
+          new Error("Server Function request body limit exceeded."),
+        );
+      }
+      chunks.push(result.value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const bytes = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
+});
+
 const readBody = Effect.fnUntraced(function* (request: Request) {
-  if (request.headers.get('content-type')?.toLowerCase().startsWith('multipart/form-data')) {
+  const bytes = yield* readBodyBytes(request);
+  const replay = new Request(request, { body: bytes });
+  if (request.headers.get("content-type")?.toLowerCase().startsWith("multipart/form-data")) {
     return yield* Effect.tryPromise({
-      try: () => request.formData(),
-      catch: (cause) => bodyReadError('Failed to read the Server Function request body.', cause),
+      try: () => replay.formData(),
+      catch: (cause) => bodyReadError("Failed to read the Server Function request body.", cause),
     });
   }
 
   return yield* Effect.tryPromise({
-    try: () => request.text(),
-    catch: (cause) => bodyReadError('Failed to read the Server Function request body.', cause),
+    try: () => replay.text(),
+    catch: (cause) => bodyReadError("Failed to read the Server Function request body.", cause),
   });
 });
 
@@ -98,19 +140,19 @@ const prepareServerFnOperation = <ApplicationServices>(
     const invocation = action(...args);
     const match = matchServerFnInvocation(invocation, identity);
     switch (match._tag) {
-      case 'Match':
+      case "Match":
         return {
           effect: normalizeServerFnFailure(match.effect),
           middleware: match.middleware,
         };
-      case 'IdentityMismatch':
+      case "IdentityMismatch":
         return {
           effect: Effect.die(
-            new TypeError('Server Function was created by a different ERSC module.'),
+            new TypeError("Server Function was created by a different ERSC module."),
           ),
           middleware: NoMiddleware,
         };
-      case 'Native':
+      case "Native":
         return {
           effect: normalizeServerFnFailure(Effect.promise(() => Promise.resolve(invocation))),
           middleware: NoMiddleware,
@@ -131,18 +173,22 @@ const prepareClientServerFn = Effect.fnUntraced(function* <ApplicationServices>(
         arraySizeLimit: ServerFnArraySizeLimit,
         temporaryReferences,
       }),
-    catch: (cause) => requestError('Failed to decode Server Function arguments.', 400, cause),
+    catch: (cause) => requestError("Failed to decode Server Function arguments.", 400, cause),
   });
   const args = yield* decodeArguments(decoded).pipe(
     Effect.mapError((cause) =>
-      requestError('Expected a Server Function argument array.', 400, cause),
+      requestError("Expected a Server Function argument array.", 400, cause),
     ),
   );
-  const action = yield* Effect.try({
+  const action = yield* Effect.tryPromise({
     try: () => loadServerAction(actionId),
-    catch: (cause) => requestError('The requested Server Function does not exist.', 400, cause),
+    catch: (cause) => requestError("The requested Server Function does not exist.", 400, cause),
   });
-  const operation = yield* prepareServerFnOperation(identity, action, args);
+  const operation = yield* prepareServerFnOperation(
+    identity,
+    action as (...args: ReadonlyArray<unknown>) => unknown,
+    args,
+  );
 
   const prepared: PreparedServerFnRequest<ApplicationServices> = {
     execute: serverFnOutcome(operation.effect).pipe(
@@ -164,19 +210,23 @@ const prepareProgressiveServerFn = Effect.fnUntraced(function* <ApplicationServi
   request: Request,
   identity: ERSCIdentity<ApplicationServices>,
 ) {
-  const formData = yield* Effect.tryPromise({
-    try: () => request.formData(),
-    catch: (cause) => bodyReadError('Failed to read the Server Function form body.', cause),
-  });
+  const body = yield* readBody(request);
+  if (!(body instanceof FormData)) {
+    return yield* bodyReadError(
+      "Expected a multipart Server Function form body.",
+      new Error("Expected FormData from a progressive Server Function request."),
+    );
+  }
+  const formData = body;
   const decodedAction = yield* Effect.tryPromise({
     try: () => Promise.resolve(decodeAction(formData)),
-    catch: (cause) => requestError('Failed to decode the Server Function form action.', 400, cause),
+    catch: (cause) => requestError("Failed to decode the Server Function form action.", 400, cause),
   });
   if (decodedAction === null) {
     return yield* requestError(
-      'The submitted form does not contain a Server Function action.',
+      "The submitted form does not contain a Server Function action.",
       400,
-      new Error('decodeAction returned null.'),
+      new Error("decodeAction returned null."),
     );
   }
 
@@ -184,16 +234,16 @@ const prepareProgressiveServerFn = Effect.fnUntraced(function* <ApplicationServi
   const execute = Effect.gen(function* () {
     const actionResult = yield* operation.effect.pipe(
       Effect.mapError((error) =>
-        requestError('The Server Function form action failed.', 500, error.cause),
+        requestError("The Server Function form action failed.", 500, error.cause),
       ),
     );
     const decodedFormState = yield* Effect.tryPromise({
       try: () => decodeFormState(actionResult, formData),
-      catch: (cause) => requestError('Failed to decode React form state.', 500, cause),
+      catch: (cause) => requestError("Failed to decode React form state.", 500, cause),
     });
 
     return {
-      formState: decodedFormState,
+      formState: decodedFormState ?? null,
       serverFnResult: null,
       status: 200,
     } satisfies RequestOutcome;

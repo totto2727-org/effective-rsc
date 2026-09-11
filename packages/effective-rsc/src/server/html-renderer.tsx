@@ -1,72 +1,53 @@
-import { Context, Effect, FiberSet, Layer, Schema, type Scope } from 'effect';
-import { use } from 'react';
-import { preinit } from 'react-dom';
-import { renderToReadableStream } from 'react-dom/server.bun';
-import { createFromReadableStream } from 'react-server-dom-rspack/client';
+import { Context, Effect, Layer, Schema, type Scope } from "effect";
 
-import { RouteTree } from '../client/route-tree';
-import type { FlightPayload } from '../rsc/flight';
-import { FlightHtmlInjector } from './flight-html-stream';
-import type { FlightRender } from './flight-renderer';
-import { ServerConfig } from './server-config';
+import type { FlightPayload } from "../rsc/flight";
+import type { FlightRender } from "./flight-renderer";
 
-type HtmlStream = ReadableStream<Uint8Array>;
+declare global {
+  interface ImportMeta {
+    readonly viteRsc: {
+      loadModule<T>(environment: string, entry: string): Promise<T>;
+    };
+  }
+}
 
-export class HtmlRenderError extends Schema.TaggedError<HtmlRenderError>()('HtmlRenderError', {
+export type HtmlRenderOptions = {
+  readonly formState: FlightPayload["formState"];
+  readonly signal: AbortSignal;
+};
+
+export type RenderHtml = (
+  stream: ReadableStream<Uint8Array>,
+  options: HtmlRenderOptions,
+) => Promise<ReadableStream<Uint8Array>>;
+
+export class HtmlRenderError extends Schema.TaggedError<HtmlRenderError>()("HtmlRenderError", {
   cause: Schema.Defect(),
 }) {}
 
 export class HtmlRenderer extends Context.Service<HtmlRenderer>()(
-  'ersc/server/html-renderer/HtmlRenderer',
+  "ersc/server/html-renderer/HtmlRenderer",
   {
-    make: Effect.gen(function* () {
-      const { clientBootstrapScripts, clientStylesheets } = yield* ServerConfig;
-      const flightHtmlInjector = yield* FlightHtmlInjector;
-
-      return {
-        render: Effect.fn('HtmlRenderer.render')(function* ({
-          flight,
-          formState,
-        }: {
-          readonly flight: FlightRender;
-          readonly formState: FlightPayload['formState'];
-        }): Effect.fn.Return<HtmlStream, HtmlRenderError, Scope.Scope> {
-          const signal = yield* Effect.abortSignal;
-          const runtime = yield* FiberSet.makeRuntimePromise<never>();
-          const [ssrFlightStream, browserFlightStream] = flight.stream.tee();
-          let payload: PromiseLike<FlightPayload> | null = null;
-
-          function SsrRoot() {
-            // Emit CSS without server-only siblings that shift hydration's useId paths.
-            for (const href of clientStylesheets) {
-              preinit(href, { as: 'style', precedence: 'default' });
-            }
-            const { routeTree } = use(
-              (payload ??= createFromReadableStream<FlightPayload>(ssrFlightStream)),
+    make: Effect.succeed({
+      render: Effect.fn("HtmlRenderer.render")(function* ({
+        flight,
+        formState,
+      }: {
+        readonly flight: FlightRender;
+        readonly formState: FlightPayload["formState"];
+      }): Effect.fn.Return<ReadableStream<Uint8Array>, HtmlRenderError, Scope.Scope> {
+        const signal = yield* Effect.abortSignal;
+        return yield* Effect.tryPromise({
+          try: async () => {
+            const ssr = await import.meta.viteRsc.loadModule<typeof import("./ssr")>(
+              "ssr",
+              "index",
             );
-            return <RouteTree root={routeTree} />;
-          }
-
-          const htmlStream = yield* Effect.tryPromise({
-            try: () =>
-              renderToReadableStream(<SsrRoot />, {
-                bootstrapScripts: [...clientBootstrapScripts],
-                formState,
-                onError: (error, errorInfo) => {
-                  if (!signal.aborted && !flight.signal.aborted) {
-                    void runtime(
-                      Effect.logError('HTML render failed.', error, errorInfo.componentStack),
-                    );
-                  }
-                },
-                signal,
-              }),
-            catch: (cause) => new HtmlRenderError({ cause }),
-          });
-
-          return htmlStream.pipeThrough(flightHtmlInjector.inject(browserFlightStream));
-        }),
-      };
+            return ssr.renderHtml(flight.stream, { formState, signal });
+          },
+          catch: (cause) => new HtmlRenderError({ cause }),
+        });
+      }),
     }),
   },
 ) {
