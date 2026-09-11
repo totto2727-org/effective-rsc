@@ -1,12 +1,6 @@
 import { Cause, Effect, Schema } from "effect";
 import { HttpServerRequest } from "effect/unstable/http";
-import {
-  createTemporaryReferenceSet,
-  decodeAction,
-  decodeFormState,
-  decodeReply,
-  loadServerAction,
-} from "@vitejs/plugin-rsc/rsc/server";
+import type { createTemporaryReferenceSet } from "@vitejs/plugin-rsc/rsc/server";
 
 import type { ERSCIdentity } from "../application/ersc-identity";
 import type { AnyMiddleware } from "../application/middleware";
@@ -117,7 +111,7 @@ const readBodyBytes = Effect.fnUntraced(function* (request: Request) {
 
 const readBody = Effect.fnUntraced(function* (request: Request) {
   const bytes = yield* readBodyBytes(request);
-  const replay = new Request(request, { body: bytes });
+  const replay = new Request(request, { body: bytes, method: request.method });
   if (request.headers.get("content-type")?.toLowerCase().startsWith("multipart/form-data")) {
     return yield* Effect.tryPromise({
       try: () => replay.formData(),
@@ -165,6 +159,9 @@ const prepareClientServerFn = Effect.fnUntraced(function* <ApplicationServices>(
   actionId: string,
   identity: ERSCIdentity<ApplicationServices>,
 ) {
+  const { createTemporaryReferenceSet, decodeReply, loadServerAction } = yield* Effect.promise(
+    () => import("@vitejs/plugin-rsc/rsc/server"),
+  );
   const temporaryReferences = createTemporaryReferenceSet();
   const body = yield* readBody(request);
   const decoded = yield* Effect.tryPromise({
@@ -210,6 +207,9 @@ const prepareProgressiveServerFn = Effect.fnUntraced(function* <ApplicationServi
   request: Request,
   identity: ERSCIdentity<ApplicationServices>,
 ) {
+  const { decodeAction, decodeFormState } = yield* Effect.promise(
+    () => import("@vitejs/plugin-rsc/rsc/server"),
+  );
   const body = yield* readBody(request);
   if (!(body instanceof FormData)) {
     return yield* bodyReadError(

@@ -44,15 +44,18 @@ describe("createFetchHandler", () => {
                 RequestEnvironment.of({ value: env.value }),
               ),
             ),
-            Layer.acquireRelease(
-              Effect.sync(() => {
-                events.push("acquired");
-                return RequestLifetime.of({ events });
-              }),
-              () =>
+            Layer.effect(
+              RequestLifetime,
+              Effect.acquireRelease(
                 Effect.sync(() => {
-                  events.push("released");
+                  events.push("acquired");
+                  return RequestLifetime.of({ events });
                 }),
+                () =>
+                  Effect.sync(() => {
+                    events.push("released");
+                  }),
+              ),
             ),
           ),
           routes: ERSC.withMiddleware(Respond).Routes.make({ layout: Layout }).page("/", Page),

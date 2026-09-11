@@ -5,6 +5,19 @@ import rsc from "@vitejs/plugin-rsc";
 // The original Bun/Rspack applications and read-only references are inactive.
 const inactive = [
   "vendor/**",
+  ".github/**",
+  "docs/architecture/**",
+  "packages/effective-rsc/docs/**",
+  "packages/effective-rsc/LLMS.md",
+  "packages/effective-rsc/bin/**",
+  "packages/effective-rsc/rslib.config.ts",
+  "packages/effective-rsc/vitest.config.ts",
+  "packages/effective-rsc/src/build/**",
+  "packages/effective-rsc/src/dev/**",
+  "packages/effective-rsc/src/cli.ts",
+  "packages/effective-rsc/src/server/serve.ts",
+  "packages/effective-rsc/src/server/start.ts",
+  "packages/effective-rsc/src/server/server-config.ts",
   "site/**",
   "fixtures/**",
   "examples/event-platform/**",
@@ -21,12 +34,8 @@ const inactive = [
 ];
 
 export default defineConfig({
-  plugins: [rsc({ serverHandler: false })],
   fmt: { ignorePatterns: inactive },
   lint: { ignorePatterns: inactive },
-  resolve: {
-    conditions: ["react-server"],
-  },
   test: {
     include: [
       "packages/effective-rsc/tests/server/workers.test.tsx",
