@@ -31,30 +31,11 @@ export const ersc = (options: ErscViteOptions = {}): PluginOption[] => {
           "effective-rsc/application-entry": resolve(config.root ?? process.cwd(), application),
         },
       },
-      environments: {
-        client: {
-          build: {
-            rollupOptions: {
-              input: {
-                index: browserEntry,
-              },
-            },
-          },
-        },
-        rsc: {
-          build: {
-            rollupOptions: {
-              input: {
-                index: rscEntry,
-              },
-            },
-          },
-        },
-      },
     }),
   };
 
   return [
+    react(),
     rsc({
       entries: {
         client: browserEntry,
@@ -63,7 +44,6 @@ export const ersc = (options: ErscViteOptions = {}): PluginOption[] => {
       },
       serverHandler: false,
     }),
-    react(),
     applicationAlias,
   ];
 };
