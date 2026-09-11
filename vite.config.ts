@@ -1,5 +1,4 @@
 import { defineConfig } from "vite-plus";
-import rsc from "@vitejs/plugin-rsc";
 
 // Match the workspace baseline: default VitePlus formatting and lint rules.
 // The original Bun/Rspack applications and read-only references are inactive.

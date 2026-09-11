@@ -1,6 +1,5 @@
 import { Cause, Effect, Schema } from "effect";
 import { HttpServerRequest } from "effect/unstable/http";
-import type { createTemporaryReferenceSet } from "@vitejs/plugin-rsc/rsc/server";
 
 import type { ERSCIdentity } from "../application/ersc-identity";
 import type { AnyMiddleware } from "../application/middleware";
