@@ -63,7 +63,7 @@ test("hydrates the client counter and navigates application links", async ({ pag
   const counter = page.getByRole("button", { name: "Count: 0" });
   await expect(counter).toBeVisible();
   await counter.click();
-  await expect(counter).toHaveText("Count: 1");
+  await expect(page.getByRole("button")).toHaveText("Count: 1");
 
   await page.getByRole("link", { name: "About" }).click();
   await expect(page).toHaveURL(/\/about$/);
