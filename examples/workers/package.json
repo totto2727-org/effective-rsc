@@ -8,19 +8,19 @@
     "local": "wrangler dev --local --no-bundle --config dist/rsc/wrangler.json --port 8787"
   },
   "dependencies": {
-    "effective-rsc": "workspace:*",
-    "effect": "catalog:",
     "@effect/platform-browser": "catalog:",
+    "effect": "catalog:",
+    "effective-rsc": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-server-dom-webpack": "catalog:"
   },
   "devDependencies": {
-    "vite-plus": "catalog:",
     "@cloudflare/vite-plugin": "catalog:",
-    "@vitejs/plugin-rsc": "catalog:",
-    "wrangler": "catalog:",
     "@types/react": "catalog:",
-    "@types/react-dom": "catalog:"
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-rsc": "catalog:",
+    "vite-plus": "catalog:",
+    "wrangler": "catalog:"
   }
 }

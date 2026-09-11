@@ -38,21 +38,21 @@
   },
   "scripts": {},
   "dependencies": {
-    "@vitejs/plugin-rsc": "catalog:",
-    "@vitejs/plugin-react": "6.1.1"
+    "@vitejs/plugin-react": "6.1.1",
+    "@vitejs/plugin-rsc": "catalog:"
   },
   "devDependencies": {
-    "effect": "catalog:",
     "@effect/platform-browser": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-server-dom-webpack": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:"
+    "react-server-dom-webpack": "catalog:"
   },
   "peerDependencies": {
-    "effect": "catalog:",
     "@effect/platform-browser": "catalog:",
+    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-server-dom-webpack": "catalog:",

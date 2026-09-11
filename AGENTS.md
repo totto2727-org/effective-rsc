@@ -1,45 +1,71 @@
-## Dependencies
+# effective-rsc Workers migration
 
-- Put a dependency version in the root catalog only when at least two package manifests reference
-  it, counting the workspace root; dependencies used by only one manifest declare their version
-  locally.
-- Workspace packages reference shared catalog versions with `catalog:`.
-- Pin React Canary, React DOM Canary, and `react-server-dom-rspack` to one exact compatible release.
+## Repository structure
 
-## References
+- `packages/effective-rsc/`: active fetch-based framework and Vite integration.
+- `examples/workers/`: active consumer using the public package exports, Workers `fetch`, and runtime `env`.
+- `tests/`: end-to-end acceptance against the real consumer.
+- `vendor/`: read-only upstream references. Never edit or import from them.
+- Original Bun/Rspack examples, deployment packages, scripts, and fixtures are retained for comparison but excluded from the active workspace.
 
-- Read `docs/README.md` and the relevant owning documents before planning or changing framework
-  behavior. Do not contradict an Accepted decision or silently resolve an Open question; surface
-  the conflict instead.
-- `vendor/` contains read-only references. Never edit or import from them; prefer them over web
-  sources.
-- Read `vendor/effect/LLMS.md` before writing Effect code.
+## Development commands
 
-## Code
+### Execution rules
 
-- Keep browser, RSC, SSR, and shared module graphs explicit. Code for one runtime must not depend on
-  another runtime's entry point or ambient globals.
-- Export deliberate public subpaths from package manifests; do not expose package roots as broad
-  barrels. Use direct-file exports for single-file modules and barrels only for real aggregates.
-- Use path-qualified Effect service identifiers and `layerTest` for reusable fakes. A service owns
-  `static readonly layer` when its contract and implementation share a runtime graph; a contract
-  shared across runtime graphs stays implementation-free and its owning runtime exports a `*Layer`.
-  Use `Effect.fn` for public operations implemented as `(params) => Effect.gen(...)` and
-  `Effect.fnUntraced` for internal operations with that shape.
-- Propagate request and navigation cancellation through Effect interruption and Web Streams. Do not
-  detach work from its request scope without an explicit lifetime owner.
-- Throw a plain `TypeError` for programmer error: a contract that only a wiring mistake can violate,
-  such as a value from another ERSC module or a concern rendered outside its request runtime. Model
-  anything reachable from request input, I/O, or application code as a typed Effect failure. A throw
-  that request data can trigger is a bug in the boundary, not a style choice.
-- Preserve React's native RSC and Server Function protocols. Framework APIs may add Effect typing,
-  validation, and lifecycle management but must not invent replacement transports.
-- Generated framework artifacts live under `.ersc/`; never hand-edit or import them across
-  package boundaries except through their documented generated entry points.
+- Work on this independent clone, not the parent virtual monorepo.
+- Do not create PRs, push commits, publish packages, or deploy to Cloudflare. The user requested local implementation and local Git history only.
+- Use VitePlus for formatting, linting, checks, package management, and test entry points.
+- Formatting follows the parent workspace's default VitePlus baseline. Lint rules stay at VitePlus defaults. Do not restore the upstream custom Effect/Oxlint rules or add unrelated lint overrides.
+- Keep temporary evidence under this repository's ignored `tmp/` directory. Never commit `.dev.vars` or real secrets.
+- Local acceptance must not require Cloudflare authentication or remote services.
 
-## Verify
+### Standard tasks
 
-- Run `bun run check`, `bun run test`, and `bun run build` from the repository root outside managed
-  filesystem or seccomp sandboxes.
-- Keep protocol and compiler tests runtime-independent where possible. Integration tests own the
-  boundaries between Rspack compilation, RSC rendering, SSR, hydration, and browser navigation.
+From the repository root:
+
+- `vp install` installs the pinned pnpm workspace dependencies.
+- `vp run dev` runs the real Workers consumer through the Cloudflare Vite plugin.
+- `vp run build` produces the consumer's Worker and client assets.
+- `vp run local` serves the generated Worker using Wrangler locally without Vite.
+- `vp fmt` formats with VitePlus.
+- `vp lint` uses default VitePlus lint rules.
+- `vp run typecheck` checks the active TypeScript graph.
+- `vp test run` runs active unit/integration tests.
+- `vp run test:e2e` runs real browser acceptance.
+
+For direct Vite commands, enter `examples/workers/` and use `vp dev` or `vp build`.
+The root `vite.config.ts` owns repository formatting, linting, and test configuration.
+
+## Architecture
+
+### Authorized migration
+
+The user's 2026-09-11 requirements explicitly supersede the upstream Bun-only runtime, Rspack compilation, proprietary development server, Vercel packaging, and Bun verification commands.
+The common boundary is a Web `Request` to `Response` handler. The initial host is Cloudflare Workers.
+Workers-specific `env` and execution context stay behind the host adapter and in request-local Effect context, never implicitly in Flight or HTML.
+D1, KV, R2, database abstractions, Node/Bun host adapters, and hosted deployments are outside the current scope.
+
+### Graphs and lifetimes
+
+- Keep browser, RSC, SSR, and tooling graphs explicit. Only the RSC graph resolves React's `react-server` condition.
+- RSC and SSR execute in workerd through Cloudflare child environments. Do not fall back to Node SSR in development.
+- Scope application services to the request, and preserve their lifetime through response body completion, error, and cancellation.
+- Preserve React's native RSC and Server Function protocols. Do not invent a replacement transport.
+- Use the generated Wrangler config for built-local execution. Do not ask Wrangler to compile unprocessed RSC source.
+
+## Development tools
+
+- **VitePlus**: unified tooling with the Vite core and Vitest versions pinned in `pnpm-workspace.yaml`.
+- **Cloudflare Vite plugin / Wrangler**: local Workers runtime only.
+- **Playwright**: browser validation of actual built and development applications.
+- **Effect**: read `vendor/effect/LLMS.md` before editing Effect code.
+
+## Package-specific rules
+
+- Keep dependency versions in the shared catalog only when at least two active manifests reference them.
+- Preserve explicit public package subpaths rather than exporting internal modules indiscriminately.
+- Use path-qualified Effect service identifiers. Keep shared runtime contracts implementation-free.
+- Use typed failures for input and I/O errors, and plain `TypeError` only for violated wiring invariants.
+- Do not count a build, mock, or copied-source test as proof that the public Workers fetch path works. Test both `vp dev` and the Vite-independent Wrangler artifact.
+
+_This AGENTS.md was generated from the [share-artifact skill](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/SKILL.md) and [AGENTS template](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/agents/template.md)._

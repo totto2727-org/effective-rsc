@@ -1,0 +1,16 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 2rem;
+  color: #172554;
+  background: #f8fafc;
+}
+nav {
+  display: flex;
+  gap: 1rem;
+}
+main {
+  max-width: 48rem;
+}
+button {
+  padding: 0.5rem 1rem;
+}
