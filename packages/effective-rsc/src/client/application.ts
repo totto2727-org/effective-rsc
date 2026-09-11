@@ -46,22 +46,35 @@ const activateBrowser = Effect.gen(function* () {
   }
 });
 
+const installViteHmr = Effect.gen(function* () {
+  const hot = (import.meta as ImportMeta & {
+    readonly hot?: {
+      on: (event: string, listener: () => void) => void;
+      off: (event: string, listener: () => void) => void;
+    };
+  }).hot;
+  if (hot === undefined) {
+    return;
+  }
+
+  const run = yield* BrowserEffectRunner;
+  const routeRefresher = yield* RouteRefresher;
+  const refresh = () => {
+    void run(routeRefresher.refreshCurrentRoute('hmr-refresh'));
+  };
+  hot.on('rsc:update', refresh);
+  yield* Effect.addFinalizer(() => Effect.sync(() => hot.off('rsc:update', refresh)));
+});
+
 export const browserMain = Effect.scoped(
   Effect.gen(function* () {
-    if (process.env.NODE_ENV === 'development') {
-      yield* Effect.tryPromise(() => import('../dev/client')).pipe(
-        Effect.flatMap(({ startDevClient }) => startDevClient),
-        Effect.catch((cause) => Effect.logError('Development client stopped.', cause)),
-        Effect.forkScoped,
-      );
-    }
-
-    yield* activateBrowser.pipe(
-      Effect.catchTags({
-        FlightLoadError: () => renderBrowserFailure,
-        ReactDOMHydrationError: () => renderBrowserFailure,
-      }),
-    );
+    yield* activateBrowser;
+    yield* installViteHmr;
     return yield* Effect.never;
-  }),
+  }).pipe(
+    Effect.catchTags({
+      FlightLoadError: () => renderBrowserFailure,
+      ReactDOMHydrationError: () => renderBrowserFailure,
+    }),
+  ),
 ).pipe(Effect.provide(BrowserLayer));

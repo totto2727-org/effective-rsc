@@ -4,7 +4,7 @@ import {
   createTemporaryReferenceSet,
   encodeReply,
   setServerCallback,
-} from 'react-server-dom-rspack/client.browser';
+} from '@vitejs/plugin-rsc/browser';
 
 import { BrowserEffectRunner } from './browser-effect-runner';
 import { BrowserRenderer } from './browser-renderer';

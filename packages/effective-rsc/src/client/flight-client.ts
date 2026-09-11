@@ -1,10 +1,10 @@
-// oxlint-disable effecttsgo/process-env-in-effect -- Rspack replaces NODE_ENV at compile time.
+// Vite replaces `import.meta.env.DEV` at compile time.
 import { Context, Deferred, Effect, Exit, Layer, Schema, Scope, Stream } from 'effect';
 import { HttpBody, HttpClient, HttpClientRequest } from 'effect/unstable/http';
 import {
   createFromReadableStream,
-  type TemporaryReferenceSet,
-} from 'react-server-dom-rspack/client.browser';
+  createTemporaryReferenceSet,
+} from '@vitejs/plugin-rsc/browser';
 
 import { FlightMediaType, ServerFnIdHeader, type FlightPayload } from '../rsc/flight';
 import { InitialFlightStream } from './initial-flight-stream';
@@ -24,7 +24,7 @@ export type FlightRequest =
       readonly body: BodyInit;
       readonly destination: URL;
       readonly id: string;
-      readonly temporaryReferences: TemporaryReferenceSet;
+      readonly temporaryReferences: ReturnType<typeof createTemporaryReferenceSet>;
     };
 
 type DecodedFlight = {
@@ -60,7 +60,7 @@ export class FlightClient extends Context.Service<FlightClient>()('ersc/client/F
         try: () =>
           createFromReadableStream<FlightPayload>(
             stream,
-            process.env.NODE_ENV === 'development' ? { startTime: 0 } : undefined,
+            import.meta.env.DEV ? { startTime: 0 } : undefined,
           ),
         catch: (cause) => new FlightLoadError({ cause, reason: 'DecodeFailed' }),
       });
@@ -90,7 +90,7 @@ export class FlightClient extends Context.Service<FlightClient>()('ersc/client/F
                 }),
                 HttpClientRequest.setBody(HttpBody.raw(flightRequest.body)),
               );
-        const requestStartTime = process.env.NODE_ENV === 'development' ? performance.now() : 0;
+        const requestStartTime = import.meta.env.DEV ? performance.now() : 0;
         const response = yield* client.execute(request).pipe(
           Scope.provide(responseScope),
           Effect.mapError(
@@ -164,13 +164,13 @@ export class FlightClient extends Context.Service<FlightClient>()('ersc/client/F
         );
         const decodeOptions =
           flightRequest._tag === 'ServerFunction'
-            ? process.env.NODE_ENV === 'development'
+            ? import.meta.env.DEV
               ? {
                   startTime: requestStartTime,
                   temporaryReferences: flightRequest.temporaryReferences,
                 }
               : { temporaryReferences: flightRequest.temporaryReferences }
-            : process.env.NODE_ENV === 'development'
+            : import.meta.env.DEV
               ? {
                   startTime: requestStartTime,
                 }
