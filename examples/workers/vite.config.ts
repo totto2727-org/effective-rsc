@@ -14,5 +14,7 @@ export default defineConfig({
       persistState: false,
     }),
   ],
+  // Wrangler only uploads modules inside the Worker output directory.
+  environments: { ssr: { build: { outDir: "./dist/rsc/ssr" } } },
   server: { host: "127.0.0.1", port: 5173, strictPort: true },
 });

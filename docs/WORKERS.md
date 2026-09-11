@@ -50,6 +50,8 @@ Cloudflare's plugin remains application-owned with `viteEnvironment: { name: "rs
 
 VitePlus drives Vite and builds the graph-specific outputs.
 Wrangler runs the generated `examples/workers/dist/rsc/wrangler.json` using `--local --no-bundle`.
+The consumer sets `environments.ssr.build.outDir` to `./dist/rsc/ssr` so every dynamically loaded SSR module resides inside Wrangler's Worker upload root.
+Emitting SSR as a sibling `dist/ssr` builds successfully but fails in Wrangler at runtime because that module is not attached to the Worker.
 Workers assets are host-owned, not Bun filesystem middleware.
 The example's Cloudflare configuration owns the assets binding and runtime variables.
 Changing Wrangler runtime variables must not require rebuilding the application.
@@ -74,7 +76,7 @@ The active package manager workspace excludes upstream Bun/Rspack examples and a
 - Browser checks cover HTML, Flight, hydrated interaction, navigation, unknown routes, and secret non-disclosure.
 - Successful compilation alone does not establish Workers runtime or hydration correctness.
 
-Actual observed verification results are recorded separately after completion.
+[Observed verification results](WORKERS-VALIDATION.md) map each requirement to its completed local checks.
 
 ## Deliberately inactive or deferred
 

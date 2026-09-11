@@ -93,6 +93,7 @@ import { ersc } from "effective-rsc/vite";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
+  environments: { ssr: { build: { outDir: "./dist/rsc/ssr" } } },
   plugins: [
     ersc(),
     cloudflare({
