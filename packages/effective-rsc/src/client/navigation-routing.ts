@@ -1,6 +1,6 @@
-const ReactTransitionNavigationInfo = 'react-transition';
+const ReactTransitionNavigationInfo = "react-transition";
 
-export const NativeDocumentNavigationInfo = 'ersc-native-document';
+export const NativeDocumentNavigationInfo = "ersc-native-document";
 
 export const isRoutedNavigation = (event: NavigateEvent) =>
   event.canIntercept &&
@@ -9,10 +9,10 @@ export const isRoutedNavigation = (event: NavigateEvent) =>
   event.formData === null &&
   event.info !== ReactTransitionNavigationInfo &&
   event.info !== NativeDocumentNavigationInfo &&
-  event.navigationType !== 'reload';
+  event.navigationType !== "reload";
 
 export const preserveRequestedHash = (requested: URL, resolved: URL) =>
-  resolved.hash === '' &&
+  resolved.hash === "" &&
   resolved.origin === requested.origin &&
   resolved.pathname === requested.pathname &&
   resolved.search === requested.search

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { createContext, use } from 'react';
+import { createContext, use } from "react";
 
-import type { RouteTreeModel } from '../rsc/route-tree';
+import type { RouteTreeModel } from "../rsc/route-tree";
 
 type RouteNodeRendererProps = { readonly node: RouteTreeModel };
 type RouteTreeProps = { readonly root: RouteTreeModel };
@@ -20,7 +20,7 @@ export function RouteTree({ root }: RouteTreeProps) {
 export function RouteOutlet() {
   const node = use(RouteNodeContext);
   if (node === null) {
-    throw new TypeError('RouteOutlet rendered outside its route node.');
+    throw new TypeError("RouteOutlet rendered outside its route node.");
   }
   return node.child === null ? null : <RouteNodeRenderer key={node.child.id} node={node.child} />;
 }

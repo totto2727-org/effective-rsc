@@ -1,8 +1,8 @@
-import { Context, Effect, Layer, MutableRef } from 'effect';
+import { Context, Effect, Layer, MutableRef } from "effect";
 
-import type { RouteTreeModel } from '../rsc/route-tree';
-import { FlightClient, type FlightLoadError } from './flight-client';
-import { NavigationApi } from './navigation-api';
+import type { RouteTreeModel } from "../rsc/route-tree";
+import { FlightClient, type FlightLoadError } from "./flight-client";
+import { NavigationApi } from "./navigation-api";
 
 type CachedRoute = {
   readonly entry: CacheHistoryEntry;
@@ -12,14 +12,14 @@ type CachedRoute = {
 
 type CacheHistoryEntry = Pick<
   NavigationHistoryEntry,
-  'addEventListener' | 'id' | 'index' | 'removeEventListener'
+  "addEventListener" | "id" | "index" | "removeEventListener"
 >;
 
 type RouteCache = Map<string, CachedRoute>;
 
 export type RouteLoad =
   | {
-      readonly _tag: 'Route';
+      readonly _tag: "Route";
       readonly cache: (entry: NavigationHistoryEntry) => void;
       readonly completed: Effect.Effect<void, FlightLoadError>;
       readonly release: Effect.Effect<void>;
@@ -27,16 +27,16 @@ export type RouteLoad =
       readonly routeTree: RouteTreeModel;
     }
   | {
-      readonly _tag: 'Document';
+      readonly _tag: "Document";
       readonly release: Effect.Effect<void>;
     };
 
 export type RouteLoadRequest = {
-  readonly destination: Pick<NavigationDestination, 'id' | 'url'>;
+  readonly destination: Pick<NavigationDestination, "id" | "url">;
   readonly navigationType: NavigationType;
 };
 
-export class RouteLoader extends Context.Service<RouteLoader>()('ersc/client/RouteLoader', {
+export class RouteLoader extends Context.Service<RouteLoader>()("ersc/client/RouteLoader", {
   make: Effect.gen(function* () {
     const flightClient = yield* FlightClient;
     const navigationApi = yield* NavigationApi;
@@ -53,9 +53,9 @@ export class RouteLoader extends Context.Service<RouteLoader>()('ersc/client/Rou
     const store = (cache: RouteCache, entry: CacheHistoryEntry, routeTree: RouteTreeModel) => {
       const cached = cache.get(entry.id);
       if (cached?.entry !== entry) {
-        cached?.entry.removeEventListener('dispose', cached.onDispose);
+        cached?.entry.removeEventListener("dispose", cached.onDispose);
         const onDispose = () => remove(cache, entry);
-        entry.addEventListener('dispose', onDispose, { once: true });
+        entry.addEventListener("dispose", onDispose, { once: true });
         cache.set(entry.id, { entry, onDispose, routeTree });
         return;
       }
@@ -64,7 +64,7 @@ export class RouteLoader extends Context.Service<RouteLoader>()('ersc/client/Rou
 
     const clear = (cache: RouteCache) => {
       for (const cached of cache.values()) {
-        cached.entry.removeEventListener('dispose', cached.onDispose);
+        cached.entry.removeEventListener("dispose", cached.onDispose);
       }
       cache.clear();
     };
@@ -95,11 +95,11 @@ export class RouteLoader extends Context.Service<RouteLoader>()('ersc/client/Rou
 
     const load = Effect.fnUntraced(function* (request: RouteLoadRequest) {
       const cache = MutableRef.get(cacheRef);
-      if (request.navigationType === 'traverse') {
+      if (request.navigationType === "traverse") {
         const cached = cache.get(request.destination.id);
         if (cached !== undefined) {
           return {
-            _tag: 'Route',
+            _tag: "Route",
             cache: () => undefined,
             completed: Effect.void,
             release: Effect.void,
@@ -110,14 +110,14 @@ export class RouteLoader extends Context.Service<RouteLoader>()('ersc/client/Rou
       }
 
       const resource = yield* flightClient.load({
-        _tag: 'Navigation',
+        _tag: "Navigation",
         destination: new URL(request.destination.url),
       });
-      if (resource._tag === 'Document') {
+      if (resource._tag === "Document") {
         return resource satisfies RouteLoad;
       }
       return {
-        _tag: 'Route',
+        _tag: "Route",
         cache: cacheRoute(cache, resource.payload.routeTree),
         completed: resource.completed,
         release: resource.release,

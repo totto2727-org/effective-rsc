@@ -1,6 +1,6 @@
-import { Context, Effect, Layer, MutableRef } from 'effect';
+import { Context, Effect, Layer, MutableRef } from "effect";
 
-import type { RouteTreeModel } from '../rsc/route-tree';
+import type { RouteTreeModel } from "../rsc/route-tree";
 
 export type BrowserRendererNavigation = {
   readonly committed: Promise<void>;
@@ -9,12 +9,12 @@ export type BrowserRendererNavigation = {
 };
 
 type InitialRender = {
-  readonly _tag: 'Initial';
+  readonly _tag: "Initial";
   readonly routeTree: RouteTreeModel;
 };
 
 type RouteRender = {
-  readonly _tag: 'Navigation' | 'Refresh';
+  readonly _tag: "Navigation" | "Refresh";
   readonly order: number;
   readonly committed: PromiseWithResolvers<void>;
   readonly retired: PromiseWithResolvers<void>;
@@ -25,20 +25,20 @@ export type BrowserRender =
   | InitialRender
   | RouteRender
   | {
-      readonly _tag: 'Discard';
+      readonly _tag: "Discard";
       readonly order: number;
       readonly restore: InitialRender | RouteRender;
     };
 
 type LiveRender = {
-  readonly _tag: 'Scheduled' | 'DiscardRequested' | 'Committed';
+  readonly _tag: "Scheduled" | "DiscardRequested" | "Committed";
   readonly lastPublicationOrder: number;
 };
 
 type BrowserRendererState =
-  | { readonly _tag: 'Uninitialized' }
+  | { readonly _tag: "Uninitialized" }
   | {
-      readonly _tag: 'Ready';
+      readonly _tag: "Ready";
       current: BrowserRender;
       publicationOrder: number;
       readonly liveRenders: Map<RouteRender, LiveRender>;
@@ -46,15 +46,15 @@ type BrowserRendererState =
     };
 
 export class BrowserRenderer extends Context.Service<BrowserRenderer>()(
-  'ersc/client/BrowserRenderer',
+  "ersc/client/BrowserRenderer",
   {
     make: Effect.sync(() => {
-      const state = MutableRef.make<BrowserRendererState>({ _tag: 'Uninitialized' });
+      const state = MutableRef.make<BrowserRendererState>({ _tag: "Uninitialized" });
       const publications = new WeakSet<BrowserRender>();
       const getReadyState = () => {
         const current = MutableRef.get(state);
-        if (current._tag === 'Uninitialized') {
-          throw new TypeError('BrowserRenderer must be initialized by ReactDOMRenderer.');
+        if (current._tag === "Uninitialized") {
+          throw new TypeError("BrowserRenderer must be initialized by ReactDOMRenderer.");
         }
         return current;
       };
@@ -64,16 +64,16 @@ export class BrowserRenderer extends Context.Service<BrowserRenderer>()(
         publish: (render: BrowserRender) => void,
       ) => {
         const current = MutableRef.get(state);
-        if (current._tag === 'Ready') {
+        if (current._tag === "Ready") {
           if (current.publish === publish) {
             return;
           }
-          throw new TypeError('BrowserRenderer cannot be initialized by more than one React root.');
+          throw new TypeError("BrowserRenderer cannot be initialized by more than one React root.");
         }
 
         MutableRef.set(state, {
-          _tag: 'Ready',
-          current: { _tag: 'Initial', routeTree: initialRouteTree },
+          _tag: "Ready",
+          current: { _tag: "Initial", routeTree: initialRouteTree },
           publicationOrder: 0,
           liveRenders: new Map(),
           publish,
@@ -85,7 +85,7 @@ export class BrowserRenderer extends Context.Service<BrowserRenderer>()(
         getReadyState().publish(render);
       };
 
-      const schedule = (routeTree: RouteTreeModel, kind: 'Navigation' | 'Refresh') => {
+      const schedule = (routeTree: RouteTreeModel, kind: "Navigation" | "Refresh") => {
         const ready = getReadyState();
         const order = ++ready.publicationOrder;
         const render: RouteRender = {
@@ -95,7 +95,7 @@ export class BrowserRenderer extends Context.Service<BrowserRenderer>()(
           retired: Promise.withResolvers<void>(),
           routeTree,
         };
-        ready.liveRenders.set(render, { _tag: 'Scheduled', lastPublicationOrder: order });
+        ready.liveRenders.set(render, { _tag: "Scheduled", lastPublicationOrder: order });
         publish(render);
 
         return {
@@ -103,60 +103,60 @@ export class BrowserRenderer extends Context.Service<BrowserRenderer>()(
           discard: () => {
             const live = ready.liveRenders.get(render);
             // Cancellation can arrive before the caller observes a commit or retirement.
-            if (live?._tag !== 'Scheduled') {
+            if (live?._tag !== "Scheduled") {
               return render.retired.promise;
             }
             ready.liveRenders.set(render, {
-              _tag: 'DiscardRequested',
+              _tag: "DiscardRequested",
               lastPublicationOrder: order,
             });
             const current = ready.current;
-            const restore = current._tag === 'Discard' ? current.restore : current;
+            const restore = current._tag === "Discard" ? current.restore : current;
             const discardOrder = ++ready.publicationOrder;
-            if (restore._tag !== 'Initial') {
+            if (restore._tag !== "Initial") {
               // Keep the tree alive even if another render commits before this discard.
               // Reinsertion keeps the map ordered by each render's last publication.
               ready.liveRenders.delete(restore);
               ready.liveRenders.set(restore, {
-                _tag: 'Committed',
+                _tag: "Committed",
                 lastPublicationOrder: discardOrder,
               });
             }
-            publish({ _tag: 'Discard', order: discardOrder, restore });
+            publish({ _tag: "Discard", order: discardOrder, restore });
             return render.retired.promise;
           },
           retired: render.retired.promise,
         };
       };
 
-      const navigate = (routeTree: RouteTreeModel) => schedule(routeTree, 'Navigation');
-      const refresh = (routeTree: RouteTreeModel) => schedule(routeTree, 'Refresh');
+      const navigate = (routeTree: RouteTreeModel) => schedule(routeTree, "Navigation");
+      const refresh = (routeTree: RouteTreeModel) => schedule(routeTree, "Refresh");
 
       const commit = (render: BrowserRender) => {
         const ready = getReadyState();
-        if (render._tag === 'Initial') {
+        if (render._tag === "Initial") {
           return;
         }
         if (!publications.has(render)) {
-          throw new TypeError('Browser render does not belong to this root.');
+          throw new TypeError("Browser render does not belong to this root.");
         }
         const current = ready.current;
-        if (current._tag !== 'Initial' && render.order < current.order) {
-          throw new TypeError('Browser renders must commit in publication order.');
+        if (current._tag !== "Initial" && render.order < current.order) {
+          throw new TypeError("Browser renders must commit in publication order.");
         }
-        const visible = render._tag === 'Discard' ? render.restore : render;
-        if (visible._tag !== 'Initial') {
+        const visible = render._tag === "Discard" ? render.restore : render;
+        if (visible._tag !== "Initial") {
           const live = ready.liveRenders.get(visible);
           if (live === undefined) {
-            throw new TypeError('A retired browser tree cannot commit.');
+            throw new TypeError("A retired browser tree cannot commit.");
           }
           ready.liveRenders.set(visible, {
-            _tag: 'Committed',
+            _tag: "Committed",
             lastPublicationOrder: live.lastPublicationOrder,
           });
         }
         ready.current = render;
-        if (render._tag !== 'Discard') {
+        if (render._tag !== "Discard") {
           render.committed.resolve();
         }
 

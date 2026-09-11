@@ -1,4 +1,4 @@
-declare module 'react-server-dom-rspack/client.browser' {
+declare module "react-server-dom-rspack/client.browser" {
   export type TemporaryReferenceSet = unknown;
 
   export function createTemporaryReferenceSet(): TemporaryReferenceSet;

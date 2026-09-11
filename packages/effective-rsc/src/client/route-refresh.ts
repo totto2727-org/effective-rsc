@@ -1,12 +1,12 @@
-import { Context, Effect, Exit, FiberHandle, Layer, Ref, Scope } from 'effect';
-import { addTransitionType, startTransition } from 'react';
+import { Context, Effect, Exit, FiberHandle, Layer, Ref, Scope } from "effect";
+import { addTransitionType, startTransition } from "react";
 
-import { BrowserRenderer } from './browser-renderer';
-import { NavigationApi } from './navigation-api';
-import { isRoutedNavigation, preserveRequestedHash } from './navigation-routing';
-import { RouteLoader } from './route-loader';
+import { BrowserRenderer } from "./browser-renderer";
+import { NavigationApi } from "./navigation-api";
+import { isRoutedNavigation, preserveRequestedHash } from "./navigation-routing";
+import { RouteLoader } from "./route-loader";
 
-export type RouteRefreshTransitionType = 'hmr-refresh' | 'server-function';
+export type RouteRefreshTransitionType = "hmr-refresh" | "server-function";
 
 type RouteRefreshImplementation = {
   readonly interruptCurrentRouteRefresh: Effect.Effect<void>;
@@ -14,7 +14,7 @@ type RouteRefreshImplementation = {
 };
 
 export class RouteRefresher extends Context.Service<RouteRefresher>()(
-  'ersc/client/RouteRefresher',
+  "ersc/client/RouteRefresher",
   {
     make: Effect.gen(function* () {
       const navigationApi = yield* NavigationApi;
@@ -28,7 +28,7 @@ export class RouteRefresher extends Context.Service<RouteRefresher>()(
         yield* current.interruptCurrentRouteRefresh;
       });
 
-      const refreshCurrentRoute = Effect.fn('RouteRefresher.refreshCurrentRoute')(function* (
+      const refreshCurrentRoute = Effect.fn("RouteRefresher.refreshCurrentRoute")(function* (
         transitionType: RouteRefreshTransitionType,
       ) {
         const current = yield* Ref.get(implementation);
@@ -59,14 +59,14 @@ export const installRouteRefresh = Effect.gen(function* () {
   const waitForNavigationIdle = Effect.suspend(() => {
     const transition = navigationApi.getTransition();
     return transition === null
-      ? Effect.succeed('Idle' as const)
+      ? Effect.succeed("Idle" as const)
       : Effect.promise(() =>
           transition.finished.then(
             () => undefined,
             () => undefined,
           ),
-        ).pipe(Effect.as('Settled' as const));
-  }).pipe(Effect.repeat({ while: (state) => state === 'Settled' }), Effect.asVoid);
+        ).pipe(Effect.as("Settled" as const));
+  }).pipe(Effect.repeat({ while: (state) => state === "Settled" }), Effect.asVoid);
 
   const waitForRoutedNavigation = Effect.callback<void>((resume) => {
     const onNavigate = (event: NavigateEvent) => {
@@ -89,16 +89,16 @@ export const installRouteRefresh = Effect.gen(function* () {
             routeLoader
               .load({
                 destination: {
-                  id: currentEntry?.id ?? '',
+                  id: currentEntry?.id ?? "",
                   url: destination.href,
                 },
-                navigationType: 'replace',
+                navigationType: "replace",
               })
               .pipe(Scope.provide(responseScope)),
           );
           const release = resource.release.pipe(Scope.use(responseScope));
 
-          if (resource._tag === 'Document') {
+          if (resource._tag === "Document") {
             yield* release;
             yield* Effect.sync(navigationApi.reloadDocument);
             return;
@@ -112,7 +112,7 @@ export const installRouteRefresh = Effect.gen(function* () {
           }
 
           const commitRefresh = routeLoader.prepareRefresh(resource.routeTree);
-          let published!: ReturnType<BrowserRenderer['Service']['refresh']>;
+          let published!: ReturnType<BrowserRenderer["Service"]["refresh"]>;
           yield* Effect.sync(() => {
             startTransition(() => {
               addTransitionType(transitionType);
@@ -122,14 +122,14 @@ export const installRouteRefresh = Effect.gen(function* () {
           // Finish publication and install its browser-owned lifetime before allowing cancellation.
           yield* Effect.raceFirst(
             Effect.all([Effect.promise(() => published.committed), resource.completed], {
-              concurrency: 'unbounded',
+              concurrency: "unbounded",
               discard: true,
             }).pipe(Effect.andThen(Effect.sync(commitRefresh))),
             Effect.promise(() => published.retired),
           ).pipe(
             Effect.ensuring(release),
             Effect.catch((cause) =>
-              Effect.logError('Failed to stream the refreshed route.', cause),
+              Effect.logError("Failed to stream the refreshed route.", cause),
             ),
             Effect.forkIn(browserScope, { startImmediately: true }),
           );
@@ -159,7 +159,7 @@ export const installRouteRefresh = Effect.gen(function* () {
       yield* Effect.raceFirst(refreshRoute(transitionType), waitForRoutedNavigation);
     },
     Effect.scoped,
-    Effect.catch((cause) => Effect.logError('Failed to refresh the current route.', cause)),
+    Effect.catch((cause) => Effect.logError("Failed to refresh the current route.", cause)),
   );
 
   yield* routeRefresher.replace({

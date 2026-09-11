@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Schema } from 'effect';
+import { Context, Effect, Layer, Schema } from "effect";
 import {
   Component,
   type ErrorInfo,
@@ -6,25 +6,25 @@ import {
   StrictMode,
   useLayoutEffect,
   useState,
-} from 'react';
-import { hydrateRoot } from 'react-dom/client';
+} from "react";
+import { hydrateRoot } from "react-dom/client";
 
-import type { FlightPayload } from '../rsc/flight';
-import { BrowserEffectRunner } from './browser-effect-runner';
-import { BrowserRenderStatus } from './browser-render-status';
-import { type BrowserRender, BrowserRenderer } from './browser-renderer';
-import { BrowserFailureScreen } from './browser-screen';
-import { RouteTree } from './route-tree';
+import type { FlightPayload } from "../rsc/flight";
+import { BrowserEffectRunner } from "./browser-effect-runner";
+import { BrowserRenderStatus } from "./browser-render-status";
+import { type BrowserRender, BrowserRenderer } from "./browser-renderer";
+import { BrowserFailureScreen } from "./browser-screen";
+import { RouteTree } from "./route-tree";
 
 export class ReactDOMHydrationError extends Schema.TaggedError<ReactDOMHydrationError>()(
-  'ReactDOMHydrationError',
+  "ReactDOMHydrationError",
   { cause: Schema.Defect() },
 ) {}
 
 type BrowserErrorBoundaryState =
-  | { readonly _tag: 'Uninitialized' }
-  | { readonly _tag: 'Ready'; readonly render: BrowserRender }
-  | { readonly _tag: 'Failed'; readonly render: BrowserRender };
+  | { readonly _tag: "Uninitialized" }
+  | { readonly _tag: "Ready"; readonly render: BrowserRender }
+  | { readonly _tag: "Failed"; readonly render: BrowserRender };
 type BrowserErrorBoundaryProps = {
   readonly children: ReactNode;
   readonly onError: (error: unknown, info: ErrorInfo) => void;
@@ -33,23 +33,23 @@ type BrowserErrorBoundaryProps = {
 };
 
 class BrowserErrorBoundary extends Component<BrowserErrorBoundaryProps, BrowserErrorBoundaryState> {
-  override readonly state: BrowserErrorBoundaryState = { _tag: 'Uninitialized' };
+  override readonly state: BrowserErrorBoundaryState = { _tag: "Uninitialized" };
 
   static getDerivedStateFromError() {
-    return { _tag: 'Failed' } as const;
+    return { _tag: "Failed" } as const;
   }
 
   static getDerivedStateFromProps(
     props: BrowserErrorBoundaryProps,
     state: BrowserErrorBoundaryState,
   ): BrowserErrorBoundaryState | null {
-    if (state._tag !== 'Uninitialized' && props.render === state.render) {
+    if (state._tag !== "Uninitialized" && props.render === state.render) {
       return null;
     }
     // Discard acknowledges a cancelled candidate, not a request to retry the failed tree.
-    return state._tag === 'Failed' && props.render._tag === 'Discard'
-      ? { _tag: 'Failed', render: props.render }
-      : { _tag: 'Ready', render: props.render };
+    return state._tag === "Failed" && props.render._tag === "Discard"
+      ? { _tag: "Failed", render: props.render }
+      : { _tag: "Ready", render: props.render };
   }
 
   override componentDidCatch(error: unknown, info: ErrorInfo) {
@@ -57,19 +57,19 @@ class BrowserErrorBoundary extends Component<BrowserErrorBoundaryProps, BrowserE
   }
 
   override componentDidMount() {
-    if (this.state._tag === 'Ready') {
+    if (this.state._tag === "Ready") {
       this.props.onRendered();
     }
   }
 
   override componentDidUpdate() {
-    if (this.state._tag === 'Ready') {
+    if (this.state._tag === "Ready") {
       this.props.onRendered();
     }
   }
 
   override render() {
-    if (this.state._tag === 'Failed') {
+    if (this.state._tag === "Failed") {
       return <BrowserFailureScreen />;
     }
 
@@ -78,7 +78,7 @@ class BrowserErrorBoundary extends Component<BrowserErrorBoundaryProps, BrowserE
 }
 
 export class ReactDOMRenderer extends Context.Service<ReactDOMRenderer>()(
-  'ersc/client/ReactDOMRenderer',
+  "ersc/client/ReactDOMRenderer",
   {
     make: Effect.gen(function* () {
       const browserRenderer = yield* BrowserRenderer;
@@ -94,22 +94,22 @@ export class ReactDOMRenderer extends Context.Service<ReactDOMRenderer>()(
           void run(
             Effect.gen(function* () {
               yield* renderStatus.report({
-                _tag: 'Failed',
+                _tag: "Failed",
                 error,
                 componentStack: info.componentStack ?? null,
               });
-              yield* Effect.logError('Uncaught client render error.', error, info.componentStack);
+              yield* Effect.logError("Uncaught client render error.", error, info.componentStack);
             }),
           );
         };
 
         const reportRendered = () => {
-          void run(renderStatus.report({ _tag: 'Rendered' }));
+          void run(renderStatus.report({ _tag: "Rendered" }));
         };
 
         function Root() {
           const [render, setRender] = useState<BrowserRender>(() => ({
-            _tag: 'Initial',
+            _tag: "Initial",
             routeTree: initialPayload.routeTree,
           }));
 
@@ -122,7 +122,7 @@ export class ReactDOMRenderer extends Context.Service<ReactDOMRenderer>()(
             browserRenderer.commit(render);
           }, [render]);
 
-          const routeTree = render._tag === 'Discard' ? render.restore.routeTree : render.routeTree;
+          const routeTree = render._tag === "Discard" ? render.restore.routeTree : render.routeTree;
           return (
             <BrowserErrorBoundary onError={reportError} onRendered={reportRendered} render={render}>
               <RouteTree root={routeTree} />

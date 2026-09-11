@@ -1,26 +1,23 @@
 // Vite replaces `import.meta.env.DEV` at compile time.
-import { Context, Deferred, Effect, Exit, Layer, Schema, Scope, Stream } from 'effect';
-import { HttpBody, HttpClient, HttpClientRequest } from 'effect/unstable/http';
-import {
-  createFromReadableStream,
-  createTemporaryReferenceSet,
-} from '@vitejs/plugin-rsc/browser';
+import { Context, Deferred, Effect, Exit, Layer, Schema, Scope, Stream } from "effect";
+import { HttpBody, HttpClient, HttpClientRequest } from "effect/unstable/http";
+import { createFromReadableStream, createTemporaryReferenceSet } from "@vitejs/plugin-rsc/browser";
 
-import { FlightMediaType, ServerFnIdHeader, type FlightPayload } from '../rsc/flight';
-import { InitialFlightStream } from './initial-flight-stream';
+import { FlightMediaType, ServerFnIdHeader, type FlightPayload } from "../rsc/flight";
+import { InitialFlightStream } from "./initial-flight-stream";
 
-export class FlightLoadError extends Schema.TaggedError<FlightLoadError>()('FlightLoadError', {
+export class FlightLoadError extends Schema.TaggedError<FlightLoadError>()("FlightLoadError", {
   cause: Schema.Defect(),
-  reason: Schema.Literals(['RequestFailed', 'UnexpectedResponse', 'DecodeFailed']),
+  reason: Schema.Literals(["RequestFailed", "UnexpectedResponse", "DecodeFailed"]),
 }) {}
 
 export type FlightRequest =
   | {
-      readonly _tag: 'Navigation';
+      readonly _tag: "Navigation";
       readonly destination: URL;
     }
   | {
-      readonly _tag: 'ServerFunction';
+      readonly _tag: "ServerFunction";
       readonly body: BodyInit;
       readonly destination: URL;
       readonly id: string;
@@ -33,17 +30,17 @@ type DecodedFlight = {
 };
 
 type FlightResource = DecodedFlight & {
-  readonly _tag: 'Flight';
+  readonly _tag: "Flight";
   readonly release: Effect.Effect<void>;
   readonly resolvedUrl: URL;
 };
 
 type DocumentResource = {
-  readonly _tag: 'Document';
+  readonly _tag: "Document";
   readonly release: Effect.Effect<void>;
 };
 
-export class FlightClient extends Context.Service<FlightClient>()('ersc/client/FlightClient', {
+export class FlightClient extends Context.Service<FlightClient>()("ersc/client/FlightClient", {
   make: Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const initialFlight = yield* InitialFlightStream;
@@ -62,7 +59,7 @@ export class FlightClient extends Context.Service<FlightClient>()('ersc/client/F
             stream,
             import.meta.env.DEV ? { startTime: 0 } : undefined,
           ),
-        catch: (cause) => new FlightLoadError({ cause, reason: 'DecodeFailed' }),
+        catch: (cause) => new FlightLoadError({ cause, reason: "DecodeFailed" }),
       });
 
       return {
@@ -79,9 +76,9 @@ export class FlightClient extends Context.Service<FlightClient>()('ersc/client/F
       return yield* Effect.gen(function* () {
         const client = httpClient.pipe(HttpClient.withScope);
         const request =
-          flightRequest._tag === 'Navigation'
+          flightRequest._tag === "Navigation"
             ? HttpClientRequest.get(flightRequest.destination).pipe(
-                HttpClientRequest.setHeader('accept', FlightMediaType),
+                HttpClientRequest.setHeader("accept", FlightMediaType),
               )
             : HttpClientRequest.post(flightRequest.destination).pipe(
                 HttpClientRequest.setHeaders({
@@ -97,39 +94,39 @@ export class FlightClient extends Context.Service<FlightClient>()('ersc/client/F
             (cause) =>
               new FlightLoadError({
                 cause,
-                reason: 'RequestFailed',
+                reason: "RequestFailed",
               }),
           ),
         );
         if (response.status < 200 || response.status >= 300) {
-          if (flightRequest._tag === 'Navigation') {
-            return { _tag: 'Document', release } satisfies DocumentResource;
+          if (flightRequest._tag === "Navigation") {
+            return { _tag: "Document", release } satisfies DocumentResource;
           }
           return yield* new FlightLoadError({
             cause: new Error(`Flight request failed with status ${response.status}.`),
-            reason: 'RequestFailed',
+            reason: "RequestFailed",
           });
         }
-        const contentType = response.headers['content-type']
-          ?.split(';', 1)[0]
+        const contentType = response.headers["content-type"]
+          ?.split(";", 1)[0]
           ?.trim()
           .toLowerCase();
         if (contentType !== FlightMediaType) {
-          if (flightRequest._tag === 'Navigation') {
-            return { _tag: 'Document', release } satisfies DocumentResource;
+          if (flightRequest._tag === "Navigation") {
+            return { _tag: "Document", release } satisfies DocumentResource;
           }
           return yield* new FlightLoadError({
             cause: new Error(
-              `Expected a ${FlightMediaType} response, received ${response.headers['content-type'] ?? 'no content type'}.`,
+              `Expected a ${FlightMediaType} response, received ${response.headers["content-type"] ?? "no content type"}.`,
             ),
-            reason: 'UnexpectedResponse',
+            reason: "UnexpectedResponse",
           });
         }
 
-        if (response.url === '') {
+        if (response.url === "") {
           return yield* new FlightLoadError({
-            cause: new Error('Expected the Flight response to include a resolved URL.'),
-            reason: 'UnexpectedResponse',
+            cause: new Error("Expected the Flight response to include a resolved URL."),
+            reason: "UnexpectedResponse",
           });
         }
         const resolvedUrl = yield* Effect.try({
@@ -137,7 +134,7 @@ export class FlightClient extends Context.Service<FlightClient>()('ersc/client/F
           catch: (cause) =>
             new FlightLoadError({
               cause,
-              reason: 'UnexpectedResponse',
+              reason: "UnexpectedResponse",
             }),
         });
 
@@ -152,7 +149,7 @@ export class FlightClient extends Context.Service<FlightClient>()('ersc/client/F
                     (cause) =>
                       new FlightLoadError({
                         cause,
-                        reason: 'RequestFailed',
+                        reason: "RequestFailed",
                       }),
                   ),
                   Exit.asVoid,
@@ -163,7 +160,7 @@ export class FlightClient extends Context.Service<FlightClient>()('ersc/client/F
           ),
         );
         const decodeOptions =
-          flightRequest._tag === 'ServerFunction'
+          flightRequest._tag === "ServerFunction"
             ? import.meta.env.DEV
               ? {
                   startTime: requestStartTime,
@@ -180,12 +177,12 @@ export class FlightClient extends Context.Service<FlightClient>()('ersc/client/F
           catch: (cause) =>
             new FlightLoadError({
               cause,
-              reason: 'DecodeFailed',
+              reason: "DecodeFailed",
             }),
         });
 
         return {
-          _tag: 'Flight',
+          _tag: "Flight",
           completed: Deferred.await(completed),
           payload,
           release,

@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { createRoot } from 'react-dom/client';
+import type { ReactNode } from "react";
+import { createRoot } from "react-dom/client";
 
 const BrowserFailureStyles = `
   .ersc-browser-failure,
@@ -128,37 +128,37 @@ const BrowserFailureStyles = `
 
 export function BrowserFailureScreen() {
   return (
-    <main aria-labelledby='ersc-browser-failure-title' className='ersc-browser-failure'>
+    <main aria-labelledby="ersc-browser-failure-title" className="ersc-browser-failure">
       <style>{BrowserFailureStyles}</style>
-      <div className='ersc-browser-failure__content'>
-        <div aria-hidden='true' className='ersc-browser-failure__icon'>
-          <svg fill='none' viewBox='0 0 22 22'>
-            <path d='M11 6.25v5.5' stroke='currentColor' strokeLinecap='round' strokeWidth='1.7' />
-            <circle cx='11' cy='15.25' fill='currentColor' r='.9' />
+      <div className="ersc-browser-failure__content">
+        <div aria-hidden="true" className="ersc-browser-failure__icon">
+          <svg fill="none" viewBox="0 0 22 22">
+            <path d="M11 6.25v5.5" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" />
+            <circle cx="11" cy="15.25" fill="currentColor" r=".9" />
             <path
-              d='M8.93 3.33 2.18 15a2.4 2.4 0 0 0 2.08 3.6h13.48a2.4 2.4 0 0 0 2.08-3.6L13.07 3.33a2.4 2.4 0 0 0-4.14 0Z'
-              stroke='currentColor'
-              strokeWidth='1.7'
+              d="M8.93 3.33 2.18 15a2.4 2.4 0 0 0 2.08 3.6h13.48a2.4 2.4 0 0 0 2.08-3.6L13.07 3.33a2.4 2.4 0 0 0-4.14 0Z"
+              stroke="currentColor"
+              strokeWidth="1.7"
             />
           </svg>
         </div>
-        <h1 id='ersc-browser-failure-title'>Something went wrong</h1>
-        <p className='ersc-browser-failure__message'>
+        <h1 id="ersc-browser-failure-title">Something went wrong</h1>
+        <p className="ersc-browser-failure__message">
           This page couldn’t be displayed. Try reloading it.
         </p>
-        <hr className='ersc-browser-failure__rule' />
+        <hr className="ersc-browser-failure__rule" />
         <button
-          className='ersc-browser-failure__reload'
-          type='button'
+          className="ersc-browser-failure__reload"
+          type="button"
           onClick={() => window.location.reload()}
         >
-          <svg aria-hidden='true' fill='none' viewBox='0 0 16 16'>
+          <svg aria-hidden="true" fill="none" viewBox="0 0 16 16">
             <path
-              d='M13 5.5A5.5 5.5 0 1 0 13.15 10M13 2.75V5.5h-2.75'
-              stroke='currentColor'
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth='1.4'
+              d="M13 5.5A5.5 5.5 0 1 0 13.15 10M13 2.75V5.5h-2.75"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.4"
             />
           </svg>
           Reload page
@@ -169,7 +169,7 @@ export function BrowserFailureScreen() {
 }
 
 const renderBrowserScreen = (screen: ReactNode) => {
-  const container = document.createElement('div');
+  const container = document.createElement("div");
   document.body.replaceChildren(container);
   createRoot(container).render(screen);
 };

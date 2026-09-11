@@ -1,20 +1,20 @@
 // oxlint-disable effecttsgo/process-env, effecttsgo/process-env-in-effect -- Rspack replaces NODE_ENV at compile time.
-import * as BrowserHttpClient from '@effect/platform-browser/BrowserHttpClient';
-import { Effect, Layer } from 'effect';
+import * as BrowserHttpClient from "@effect/platform-browser/BrowserHttpClient";
+import { Effect, Layer } from "effect";
 
-import { navigationMode } from './browser-capabilities';
-import { BrowserEffectRunner } from './browser-effect-runner';
-import { BrowserRenderStatus } from './browser-render-status';
-import { BrowserRenderer } from './browser-renderer';
-import { showBrowserFailure } from './browser-screen';
-import { installCallServer } from './call-server';
-import { installClientRouter } from './client-router';
-import { FlightClient } from './flight-client';
-import { InitialFlightStream } from './initial-flight-stream';
-import { NavigationApi } from './navigation-api';
-import { ReactDOMRenderer } from './react-dom-renderer';
-import { RouteLoader } from './route-loader';
-import { installRouteRefresh, RouteRefresher } from './route-refresh';
+import { navigationMode } from "./browser-capabilities";
+import { BrowserEffectRunner } from "./browser-effect-runner";
+import { BrowserRenderStatus } from "./browser-render-status";
+import { BrowserRenderer } from "./browser-renderer";
+import { showBrowserFailure } from "./browser-screen";
+import { installCallServer } from "./call-server";
+import { installClientRouter } from "./client-router";
+import { FlightClient } from "./flight-client";
+import { InitialFlightStream } from "./initial-flight-stream";
+import { NavigationApi } from "./navigation-api";
+import { ReactDOMRenderer } from "./react-dom-renderer";
+import { RouteLoader } from "./route-loader";
+import { installRouteRefresh, RouteRefresher } from "./route-refresh";
 
 const BrowserServicesLayer = Layer.mergeAll(
   BrowserEffectRunner.layer,
@@ -41,18 +41,20 @@ const activateBrowser = Effect.gen(function* () {
   yield* installRouteRefresh;
   yield* installCallServer;
   const mode = yield* navigationMode;
-  if (mode === 'Client') {
+  if (mode === "Client") {
     yield* installClientRouter;
   }
 });
 
 const installViteHmr = Effect.gen(function* () {
-  const hot = (import.meta as ImportMeta & {
-    readonly hot?: {
-      on: (event: string, listener: () => void) => void;
-      off: (event: string, listener: () => void) => void;
-    };
-  }).hot;
+  const hot = (
+    import.meta as ImportMeta & {
+      readonly hot?: {
+        on: (event: string, listener: () => void) => void;
+        off: (event: string, listener: () => void) => void;
+      };
+    }
+  ).hot;
   if (hot === undefined) {
     return;
   }
@@ -60,10 +62,10 @@ const installViteHmr = Effect.gen(function* () {
   const run = yield* BrowserEffectRunner;
   const routeRefresher = yield* RouteRefresher;
   const refresh = () => {
-    void run(routeRefresher.refreshCurrentRoute('hmr-refresh'));
+    void run(routeRefresher.refreshCurrentRoute("hmr-refresh"));
   };
-  hot.on('rsc:update', refresh);
-  yield* Effect.addFinalizer(() => Effect.sync(() => hot.off('rsc:update', refresh)));
+  hot.on("rsc:update", refresh);
+  yield* Effect.addFinalizer(() => Effect.sync(() => hot.off("rsc:update", refresh)));
 });
 
 export const browserMain = Effect.scoped(

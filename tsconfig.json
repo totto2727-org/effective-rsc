@@ -27,10 +27,10 @@
   "exclude": ["vendor", "node_modules", "examples/workers/dist"],
   "include": [
     "vite.config.ts",
+    "playwright.config.ts",
+    "tests/**/*.ts",
     "examples/workers/**/*.ts",
     "examples/workers/**/*.tsx",
-    "packages/effective-rsc/src/vite-env.d.ts",
-    "packages/effective-rsc/src/workers.test.ts",
-    "packages/effective-rsc/src/vite.test.ts"
+    "packages/effective-rsc/tests/server/workers.test.tsx"
   ]
 }

@@ -1,5 +1,5 @@
-import * as BrowserRuntime from '@effect/platform-browser/BrowserRuntime';
+import * as BrowserRuntime from "@effect/platform-browser/BrowserRuntime";
 
-import { browserMain } from './application';
+import { browserMain } from "./application";
 
 BrowserRuntime.runMain(browserMain);

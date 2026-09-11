@@ -1,8 +1,8 @@
-import { Context, Effect, Layer } from 'effect';
+import { Context, Effect, Layer } from "effect";
 
 type NavigateListener = (event: NavigateEvent) => void;
 
-export class NavigationApi extends Context.Service<NavigationApi>()('ersc/client/NavigationApi', {
+export class NavigationApi extends Context.Service<NavigationApi>()("ersc/client/NavigationApi", {
   make: Effect.succeed({
     getCurrentEntry: () => window.navigation?.currentEntry ?? null,
     getCurrentUrl: () => window.location.href,
@@ -13,8 +13,8 @@ export class NavigationApi extends Context.Service<NavigationApi>()('ersc/client
     replaceDocument: (url: string) => window.location.replace(url),
     subscribe: (listener: NavigateListener) => {
       const navigation = window.navigation;
-      navigation?.addEventListener('navigate', listener);
-      return () => navigation?.removeEventListener('navigate', listener);
+      navigation?.addEventListener("navigate", listener);
+      return () => navigation?.removeEventListener("navigate", listener);
     },
   }),
 }) {

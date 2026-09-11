@@ -1,6 +1,6 @@
 // Adapted from rsc-html-stream by Devon Govett.
 // Copyright (c) 2024-present Devon Govett. Licensed under the MIT License; see vendor/rsc-html-stream/LICENSE.
-import { Context, Effect, Layer } from 'effect';
+import { Context, Effect, Layer } from "effect";
 
 const Encoder = new TextEncoder();
 
@@ -16,7 +16,7 @@ export const makeInitialFlightStream = (
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       const enqueue = (chunk: EmbeddedFlightChunk) => {
-        controller.enqueue(typeof chunk === 'string' ? Encoder.encode(chunk) : chunk);
+        controller.enqueue(typeof chunk === "string" ? Encoder.encode(chunk) : chunk);
       };
       for (const chunk of queue) {
         enqueue(chunk);
@@ -39,8 +39,8 @@ const makeBrowserInitialFlightStream = () => {
   const flightWindow = window as FlightWindow;
   const queue = (flightWindow.__FLIGHT_DATA ??= []);
   return makeInitialFlightStream(queue, (close) => {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', close, { once: true });
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", close, { once: true });
     } else {
       close();
     }
@@ -55,11 +55,11 @@ const makeServerInitialFlightStream = () =>
   });
 
 export class InitialFlightStream extends Context.Service<InitialFlightStream>()(
-  'ersc/client/initial-flight-stream/InitialFlightStream',
+  "ersc/client/initial-flight-stream/InitialFlightStream",
   {
     make: Effect.sync(() => ({
       stream:
-        typeof window === 'undefined'
+        typeof window === "undefined"
           ? makeServerInitialFlightStream()
           : makeBrowserInitialFlightStream(),
     })),

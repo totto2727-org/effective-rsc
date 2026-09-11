@@ -1,9 +1,9 @@
-declare module 'react-server-dom-rspack/client' {
+declare module "react-server-dom-rspack/client" {
   export function createFromReadableStream<T>(stream: ReadableStream<Uint8Array>): PromiseLike<T>;
 }
 
-declare module 'react-server-dom-rspack/server.node' {
-  import type { ReactFormState } from 'react-dom/client';
+declare module "react-server-dom-rspack/server.node" {
+  import type { ReactFormState } from "react-dom/client";
 
   export type TemporaryReferenceSet = unknown;
 
