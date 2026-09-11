@@ -1,5 +1,0 @@
-var Foo;
-(function (Foo) {
-    Foo[Foo["a"] = 0] = "a";
-})(Foo || (Foo = {}));
-const unresolved = a;
