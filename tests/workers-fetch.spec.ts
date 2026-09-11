@@ -39,16 +39,22 @@ test("serves HTML and Flight responses without leaking server bindings", async (
   expect(flight.headers()["vary"]).toContain("Accept");
   expect(flightBody).not.toContain(serverSecret);
 
+  const scriptUrls = new Set<string>();
+  page.on("response", (response) => {
+    if (response.request().resourceType() === "script") {
+      scriptUrls.add(response.url());
+    }
+  });
   await page.goto("/");
+  await page.waitForLoadState("networkidle");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(expected.label);
   await expect(page.getByTestId("secret-status")).toHaveText(
     expected.secretConfigured ? "Server secret configured" : "No server secret",
   );
   await expect(page.locator("body")).not.toContainText(serverSecret);
 
-  for (const source of await page
-    .locator("script[src]")
-    .evaluateAll((scripts) => scripts.map((script) => (script as HTMLScriptElement).src))) {
+  expect(scriptUrls.size).toBeGreaterThan(0);
+  for (const source of scriptUrls) {
     const asset = await request.get(source);
     expect(asset.ok()).toBeTruthy();
     expect(await asset.text()).not.toContain(serverSecret);
