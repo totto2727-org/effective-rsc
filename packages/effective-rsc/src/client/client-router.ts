@@ -454,7 +454,7 @@ export const installClientRouter = Effect.gen(function* () {
       lifetime,
     });
     void run(executeRouterCommand(begin.command)).catch(() => undefined);
-    // oxlint-disable-next-line effecttsgo/async-function -- Navigation handlers are native Promise boundaries.
+    // Navigation handlers are native Promise boundaries.
     const handler = async (precommitController?: NavigationPrecommitController) => {
       const preparation = Promise.withResolvers<NavigationPreparation>();
 
@@ -542,7 +542,7 @@ export const installClientRouter = Effect.gen(function* () {
         throw new TypeError("A loaded route must be published or released.");
       });
 
-      // oxlint-disable-next-line effecttsgo/async-function -- React Transition Actions are a native Promise boundary.
+      // React Transition Actions are a native Promise boundary.
       startTransition(async () => {
         await run(navigationAction, { signal: navigationSignal })
           .then(preparation.resolve)

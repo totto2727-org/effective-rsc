@@ -1,5 +1,5 @@
 // Adapted from rsc-html-stream by Devon Govett.
-// Copyright (c) 2024-present Devon Govett. Licensed under the MIT License; see vendor/rsc-html-stream/LICENSE.
+// Copyright (c) 2024-present Devon Govett. Licensed under the MIT License; see THIRD-PARTY-NOTICES.md.
 
 const encoder = new TextEncoder();
 const htmlTrailer = encoder.encode("</body></html>");

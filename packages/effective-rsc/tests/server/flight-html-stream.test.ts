@@ -1,5 +1,5 @@
 // Adapted from the rsc-html-stream test suite by Devon Govett.
-// Copyright (c) 2024-present Devon Govett. Licensed under the MIT License; see vendor/rsc-html-stream/LICENSE.
+// Copyright (c) 2024-present Devon Govett. Licensed under the MIT License; see THIRD-PARTY-NOTICES.md.
 import { createContext, runInContext } from "node:vm";
 
 import { describe, expect, it } from "@effect/vitest";

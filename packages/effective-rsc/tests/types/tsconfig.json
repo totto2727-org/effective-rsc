@@ -1,7 +1,0 @@
-{
-  "extends": "../../../../tsconfig.json",
-  "compilerOptions": {
-    "types": ["react/canary"]
-  },
-  "include": ["./**/*.ts", "./**/*.tsx"]
-}

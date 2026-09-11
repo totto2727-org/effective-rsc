@@ -61,7 +61,7 @@ const middleware = ERSC.Middleware.make((httpEffect) => httpEffect);
 ERSC.withMiddleware(middleware).Routes.make();
 ERSC.Middleware.make(
   // @ts-expect-error Middleware must handle every typed failure it introduces.
-  // oxlint-disable-next-line effecttsgo/missing-effect-context, effecttsgo/missing-effect-error -- intentional invalid Effect fixture
+  // intentional invalid Effect fixture
   (httpEffect) => Effect.andThen(Effect.fail("failure"), httpEffect),
 );
 
@@ -252,7 +252,7 @@ ServiceERSC.make({ routes: serviceRoutes });
 ServiceERSC.make({
   routes: serviceRoutes,
   // @ts-expect-error The application Layer must have no remaining service requirements.
-  layer: incompleteLayer, // oxlint-disable-line effecttsgo/missing-layer-context -- intentional invalid Layer fixture
+  layer: incompleteLayer, // intentional invalid Layer fixture
 });
 
 const NarrowERSC = Application.ersc<PageService>();
@@ -266,7 +266,7 @@ const layoutServicePageOptions = {
   }),
 };
 // @ts-expect-error LayoutService is not part of this application's declared contracts.
-NarrowERSC.Page.make(layoutServicePageOptions); // oxlint-disable-line effecttsgo/missing-effect-context -- intentional invalid Effect fixture
+NarrowERSC.Page.make(layoutServicePageOptions); // intentional invalid Effect fixture
 const ProvideLayoutService = NarrowERSC.Middleware.make<{ provides: LayoutService }>((httpEffect) =>
   httpEffect.pipe(Effect.provideService(LayoutService, LayoutService.of({}))),
 );
@@ -290,7 +290,7 @@ LayoutDependenciesERSC.Page.make({
 });
 NarrowERSC.Middleware.make<{ provides: LayoutService }>(
   // @ts-expect-error A middleware must provide every service declared in `provides`.
-  // oxlint-disable-next-line effecttsgo/missing-effect-context, effecttsgo/missing-effect-error -- intentional invalid middleware fixture
+  // intentional invalid middleware fixture
   (httpEffect) => httpEffect,
 );
 const RequiresLayoutService = LayoutServiceERSC.Middleware.make((httpEffect) =>
@@ -301,7 +301,7 @@ LayoutServiceERSC.withMiddleware(RequiresLayoutService);
 NarrowERSC.withMiddleware(RequiresLayoutService);
 NarrowERSC.Middleware.make((httpEffect) =>
   // @ts-expect-error LayoutService is not available to this middleware.
-  // oxlint-disable-next-line effecttsgo/missing-effect-context, effecttsgo/missing-effect-error -- intentional invalid Effect fixture
+  // intentional invalid Effect fixture
   Effect.gen(function* () {
     yield* LayoutService;
     return yield* httpEffect;
@@ -309,7 +309,7 @@ NarrowERSC.Middleware.make((httpEffect) =>
 );
 NarrowERSC.Layout.make({
   // @ts-expect-error LayoutService is not part of this application's declared contracts.
-  // oxlint-disable-next-line effecttsgo/missing-effect-context -- intentional invalid Effect fixture
+  // intentional invalid Effect fixture
   render: Effect.fnUntraced(function* ({ children }) {
     yield* LayoutService;
     return children;
@@ -317,7 +317,7 @@ NarrowERSC.Layout.make({
 });
 NarrowERSC.Component.make({
   // @ts-expect-error LayoutService is not part of this application's declared contracts.
-  // oxlint-disable-next-line effecttsgo/missing-effect-context -- intentional invalid Effect fixture
+  // intentional invalid Effect fixture
   render: Effect.fnUntraced(function* () {
     yield* LayoutService;
     return null;
@@ -326,7 +326,7 @@ NarrowERSC.Component.make({
 NarrowERSC.ServerFn.make({
   input: Schema.String,
   // @ts-expect-error LayoutService is not part of this application's declared contracts.
-  // oxlint-disable-next-line effecttsgo/missing-effect-context -- intentional invalid Effect fixture
+  // intentional invalid Effect fixture
   handler: Effect.fnUntraced(function* () {
     yield* LayoutService;
     return null;
@@ -392,7 +392,7 @@ void servicesAreExact;
 const typecheckLoadingRenderers = (loading: boolean) => {
   ERSC.Loading.make({
     // @ts-expect-error Loading must be immediately renderable, not asynchronous.
-    // oxlint-disable-next-line effecttsgo/async-function -- intentional invalid renderer fixture
+    // intentional invalid renderer fixture
     render: async () => <p>Loading...</p>,
   });
   ERSC.Loading.make({

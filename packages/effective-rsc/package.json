@@ -16,7 +16,8 @@
   "files": [
     "src",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md"
   ],
   "type": "module",
   "types": "./src/index.ts",

@@ -67,7 +67,7 @@ describe("ERSC.Component.make", () => {
       let runtimeEntered = false;
       const runtime: RenderRuntime<never> = (effect) => {
         runtimeEntered = true;
-        // oxlint-disable-next-line effecttsgo/run-effect-inside-effect -- custom request runner under test
+        // custom request runner under test
         return Effect.runPromise(effect).finally(() => {
           runtimeEntered = false;
         });

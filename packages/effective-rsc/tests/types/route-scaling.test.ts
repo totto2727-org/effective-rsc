@@ -1,7 +1,6 @@
-/* oxlint-disable effecttsgo/node-builtin-import -- This test measures the installed TypeScript compiler in a separate process. */
+// This test measures the installed TypeScript compiler in a separate process.
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -14,16 +13,12 @@ const compiler = join(
 );
 
 it("quadrupling a route chain uses less than six times the type instantiations", () => {
-  const workspace = mkdtempSync(join(tmpdir(), "ersc-route-scaling-"));
+  const workspace = mkdtempSync(join(repository, "tmp", "ersc-route-scaling-"));
   try {
     writeFileSync(
       join(workspace, "tsconfig.json"),
       JSON.stringify({
         extends: resolve(repository, "tsconfig.json"),
-        compilerOptions: {
-          types: ["bun"],
-          typeRoots: [resolve(repository, "node_modules/@types")],
-        },
         files: ["routes.ts"],
         include: [],
       }),
