@@ -7,10 +7,6 @@
     "effect",
     "react-server-components"
   ],
-  "homepage": "https://effective-rsc.nikhilsnayak.dev/",
-  "bugs": {
-    "url": "https://github.com/nikhilsnayak/effective-rsc/issues"
-  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -33,10 +29,6 @@
     "./vite": "./src/vite.ts",
     "./workers": "./src/workers.ts"
   },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {},
   "dependencies": {
     "@vitejs/plugin-react": "6.1.1",
     "@vitejs/plugin-rsc": "catalog:"
