@@ -59,6 +59,7 @@ test("hydrates the client counter and navigates application links", async ({ pag
   const expected = configuredProject(testInfo.project.name);
 
   await page.goto("/");
+  await page.waitForLoadState("networkidle");
   const counter = page.getByRole("button", { name: "Count: 0" });
   await expect(counter).toBeVisible();
   await counter.click();
