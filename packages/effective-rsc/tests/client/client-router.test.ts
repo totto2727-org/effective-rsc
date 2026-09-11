@@ -16,7 +16,7 @@ vi.mock("react", (importOriginal) =>
   })),
 );
 
-vi.mock("react-server-dom-rspack/client.browser", () => ({
+vi.mock("@vitejs/plugin-rsc/browser", () => ({
   createFromReadableStream: vi.fn((stream: ReadableStream<Uint8Array>) => {
     const reader = stream.getReader();
     return reader.read().then(() => {

@@ -21,7 +21,7 @@ const decodeFlight = vi.fn(
   ) => Promise.resolve(decodedPayload),
 );
 
-vi.doMock("react-server-dom-rspack/client.browser", () => ({
+vi.doMock("@vitejs/plugin-rsc/browser", () => ({
   createFromReadableStream: decodeFlight,
 }));
 
@@ -128,7 +128,10 @@ it.effect("requests and decodes a whole-tree Flight response", () =>
     expect(observedRequest?.method).toBe("GET");
     expect(observedRequest?.url).toBe("https://effective-rsc.test/schedule/day-two");
     expect(observedRequest?.headers["accept"]).toBe("text/x-component");
-    expect(decodeFlight).toHaveBeenCalledWith(expect.any(ReadableStream), undefined);
+    expect(decodeFlight).toHaveBeenCalledWith(
+      expect.any(ReadableStream),
+      expect.objectContaining({ startTime: expect.any(Number) }),
+    );
 
     yield* response.release;
   }),
@@ -345,9 +348,13 @@ it.effect("decodes a Server Function response with its temporary references", ()
     expect(observedRequest?.url).toBe("https://effective-rsc.test/");
     expect(observedRequest?.headers["accept"]).toBe("text/x-component");
     expect(observedRequest?.headers[ServerFnIdHeader]).toBe("server-function-id");
-    expect(decodeFlight).toHaveBeenCalledWith(expect.any(ReadableStream), {
-      temporaryReferences,
-    });
+    expect(decodeFlight).toHaveBeenCalledWith(
+      expect.any(ReadableStream),
+      expect.objectContaining({
+        startTime: expect.any(Number),
+        temporaryReferences,
+      }),
+    );
 
     yield* response.release;
   }),

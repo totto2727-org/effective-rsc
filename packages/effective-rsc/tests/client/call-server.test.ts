@@ -28,7 +28,7 @@ vi.mock("react", (importOriginal) =>
   })),
 );
 
-vi.mock("react-server-dom-rspack/client.browser", () => ({
+vi.mock("@vitejs/plugin-rsc/browser", () => ({
   createTemporaryReferenceSet: vi.fn(() => ({})),
   encodeReply: vi.fn(() => Promise.resolve("encoded arguments")),
   setServerCallback: vi.fn((callback: ServerCallback) => {

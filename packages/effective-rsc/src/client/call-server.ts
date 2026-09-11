@@ -57,7 +57,7 @@ export const installCallServer = Effect.gen(function* () {
   };
   const callServer = Effect.fnUntraced(function* (
     id: string,
-    args: ReadonlyArray<unknown>,
+    args: Array<unknown>,
     invocationResult: PromiseWithResolvers<unknown>,
   ) {
     const currentEntry = navigationApi.getCurrentEntry();

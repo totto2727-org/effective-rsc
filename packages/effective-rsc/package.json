@@ -3,7 +3,7 @@
   "version": "0.1.4-workers.0",
   "description": "Effect-native React Server Components with a Web fetch core and Vite/Cloudflare Workers integration.",
   "keywords": [
-    "bun",
+    "cloudflare-workers",
     "effect",
     "react-server-components"
   ],
@@ -48,14 +48,13 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-server-dom-webpack": "catalog:"
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "@effect/platform-browser": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-server-dom-webpack": "catalog:",
     "vite": "*"
   }
 }

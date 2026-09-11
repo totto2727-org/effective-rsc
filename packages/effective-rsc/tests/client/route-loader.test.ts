@@ -13,7 +13,7 @@ const decodedFlights = vi.hoisted<
   }>
 >(() => []);
 
-vi.mock("react-server-dom-rspack/client.browser", () => ({
+vi.mock("@vitejs/plugin-rsc/browser", () => ({
   createFromReadableStream: vi.fn(() => Promise.resolve(decodedFlights.shift())),
 }));
 

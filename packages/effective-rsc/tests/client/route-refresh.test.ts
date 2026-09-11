@@ -3,7 +3,7 @@ import { Deferred, Effect, Fiber, Layer } from "effect";
 import { HttpClient } from "effect/unstable/http";
 import { vi } from "vitest";
 
-vi.mock("react-server-dom-rspack/client.browser", () => ({
+vi.mock("@vitejs/plugin-rsc/browser", () => ({
   createFromReadableStream: vi.fn(),
 }));
 

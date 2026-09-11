@@ -1,4 +1,3 @@
-// oxlint-disable effecttsgo/process-env, effecttsgo/process-env-in-effect -- Rspack replaces NODE_ENV at compile time.
 import * as BrowserHttpClient from "@effect/platform-browser/BrowserHttpClient";
 import { Effect, Layer } from "effect";
 

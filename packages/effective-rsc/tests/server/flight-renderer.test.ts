@@ -5,7 +5,7 @@ import type { RenderRuntimeContext } from "../../src/application/render-runtime"
 
 let renderSignal: AbortSignal | undefined;
 
-vi.doMock("react-server-dom-rspack/server.node", () => ({
+vi.doMock("@vitejs/plugin-rsc/rsc/server", () => ({
   renderToReadableStream: (_model: unknown, options?: { readonly signal?: AbortSignal }) => {
     renderSignal = options?.signal;
     return new ReadableStream<Uint8Array>();
