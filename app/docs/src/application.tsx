@@ -1,5 +1,6 @@
 import { Effect } from "effect";
 import { Application } from "effront";
+import { getWorkersRequestContext } from "effront/workers";
 import { DocsShell } from "./components/docs-shell";
 import { getPage, navigation } from "./content";
 import { architectureBaseline } from "./content/architecture-baseline";
@@ -7,15 +8,32 @@ import { architectureBaseline } from "./content/architecture-baseline";
 const EFFRONT = Application.effront();
 const RootLayout = EFFRONT.Layout.make({
   render: ({ children }) =>
-    Effect.succeed(
-      <html lang="ja" className="dark">
-        <head>
-          <meta charSet="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-        </head>
-        <body>{children}</body>
-      </html>,
-    ),
+    Effect.map(getWorkersRequestContext(), ({ request }) => {
+      // The shared layout keeps its client state while each request refreshes page metadata.
+      const page = getPage(new URL(request.url).pathname);
+      return (
+        <html lang="ja" className="dark">
+          <head>
+            <meta charSet="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+          </head>
+          <body>
+            <DocsShell
+              current={{
+                slug: page.slug,
+                title: page.title,
+                section: page.section,
+                group: page.group,
+              }}
+              navigation={navigation}
+              headings={page.headings}
+            >
+              {children}
+            </DocsShell>
+          </body>
+        </html>
+      );
+    }),
 });
 
 function documentPage(slug: string) {
@@ -27,46 +45,35 @@ function documentPage(slug: string) {
         <>
           <title>{`${page.title} | Effront`}</title>
           <meta name="description" content={page.description} />
-          <DocsShell
-            current={{
-              slug: page.slug,
-              title: page.title,
-              section: page.section,
-              group: page.group,
-            }}
-            navigation={navigation}
-            headings={page.headings}
+          <article
+            className="prose prose-neutral max-w-none dark:prose-invert"
+            data-doc-page={page.slug}
           >
-            <article
-              className="prose prose-neutral max-w-none dark:prose-invert"
-              data-doc-page={page.slug}
-            >
-              <header className="not-prose mb-10 border-b pb-8">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-emerald-700">
-                  {page.section}
+            <header className="not-prose mb-10 border-b pb-8">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-emerald-700">
+                {page.section}
+              </p>
+              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{page.title}</h1>
+              <p className="mt-4 text-base leading-8 text-muted-foreground">{page.description}</p>
+            </header>
+            {page.section === "アーキテクチャ" && (
+              <aside
+                className="not-prose mb-8 rounded-lg border p-4 text-sm leading-7 text-muted-foreground"
+                data-architecture-baseline={architectureBaseline.commit}
+              >
+                <p>
+                  解説対象: <code>effront@{architectureBaseline.version}</code>
                 </p>
-                <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{page.title}</h1>
-                <p className="mt-4 text-base leading-8 text-muted-foreground">{page.description}</p>
-              </header>
-              {page.section === "アーキテクチャ" && (
-                <aside
-                  className="not-prose mb-8 rounded-lg border p-4 text-sm leading-7 text-muted-foreground"
-                  data-architecture-baseline={architectureBaseline.commit}
-                >
-                  <p>
-                    解説対象: <code>effront@{architectureBaseline.version}</code>
-                  </p>
-                  <p>
-                    基準コミット: <code className="break-all">{architectureBaseline.commit}</code>
-                  </p>
-                  <p>
-                    確認日: {architectureBaseline.reviewedOn}。この版の実装を基準に解説しています。
-                  </p>
-                </aside>
-              )}
-              <Content />
-            </article>
-          </DocsShell>
+                <p>
+                  基準コミット: <code className="break-all">{architectureBaseline.commit}</code>
+                </p>
+                <p>
+                  確認日: {architectureBaseline.reviewedOn}。この版の実装を基準に解説しています。
+                </p>
+              </aside>
+            )}
+            <Content />
+          </article>
         </>,
       ),
   });

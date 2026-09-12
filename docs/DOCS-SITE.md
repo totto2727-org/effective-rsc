@@ -32,6 +32,11 @@ Tailwind Typography styles articles, and the document starts in dark mode regard
 Shiki tokenizes code on the server with locally imported grammars and a JavaScript regex engine.
 The client receives rendered content and navigation metadata rather than the content registry or highlighter implementation.
 
+The shared RootLayout owns DocsShell, including the sidebar, header, and table of contents; each Page owns its document metadata and article.
+The server supplies the destination's navigation metadata as Layout props, while React preserves the shared client shell and its sidebar scroll container during client navigation between routes.
+Sidebar search and scroll state belong to that persistent shell, and only the Page article participates in the framework's named page transition.
+Document scrolling and heading anchors remain native navigation behavior rather than a global scroll lock.
+
 To add a page, define its stable heading IDs and register its explicit route in `src/application.tsx`.
 Update the catalog count when deliberately changing the number of pages.
 
@@ -136,3 +141,11 @@ All 10 documentation browser cases passed against Vite development and independe
 A long API identifier initially overflowed the desktop table of contents; applying word wrapping to TOC links resolved the observed overflow and the rerun passed.
 The Guide author checked 18 extracted source files and the API reference author checked 17 CodeBlock examples against the installed public package types with the imports and surrounding definitions stated in the text.
 Those extracted fixtures are temporary and are not substitutes for the real Fetch and browser acceptance checks above.
+
+## Shared sidebar validation
+
+On 2026-09-12, the shared Layout change passed `vp run check` and all 308 Vitest tests.
+Real Vite and standalone Wrangler browser checks retain the sidebar, overflow container, and input DOM identities, the search query, and nonzero sidebar scroll through sidebar links, article links, previous/next links, and Back/Forward.
+The history check changes the sidebar position on the destination before traversing, verifying that it retains the latest position rather than restoring an older entry's sidebar offset.
+The active link, title, breadcrumb, and table of contents update for the destination, while document scrolling and heading anchors continue to work.
+Native animation samples and observed capture styles confirm that `effront-page` captures the article and excludes the sidebar.
