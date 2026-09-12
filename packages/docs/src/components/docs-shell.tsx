@@ -178,25 +178,6 @@ export function DocsShell({ current, navigation, headings, children }: DocsShell
         <DocsNavigation current={current} navigation={navigation} />
       </Sidebar>
       <SidebarInset>
-        <noscript>
-          <nav aria-label="ドキュメントナビゲーション" className="docs-noscript-nav">
-            <p>
-              <strong>effective-rsc</strong> Workers edition
-            </p>
-            <ul>
-              {navigation.map((item) => (
-                <li key={item.slug}>
-                  <a
-                    href={item.slug}
-                    aria-current={item.slug === current.slug ? "page" : undefined}
-                  >
-                    {item.section}: {item.title}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </noscript>
         <header className="sticky top-0 z-20 flex h-15 items-center gap-3 border-b border-border/80 bg-background/90 px-4 backdrop-blur md:px-8">
           <SidebarTrigger aria-label="Toggle Sidebar" className="md:hidden" />
           <div className="min-w-0">
@@ -215,6 +196,25 @@ export function DocsShell({ current, navigation, headings, children }: DocsShell
         </header>
         <div className="mx-auto grid w-full max-w-[90rem] grid-cols-1 lg:grid-cols-[minmax(0,1fr)_11rem]">
           <main id="main-content" className="min-w-0 px-5 py-10 sm:px-8 sm:py-14 lg:px-14">
+            <noscript>
+              <nav aria-label="ドキュメントナビゲーション" className="docs-noscript-nav">
+                <p>
+                  <strong>effective-rsc</strong> Workers edition
+                </p>
+                <ul>
+                  {navigation.map((item) => (
+                    <li key={item.slug}>
+                      <a
+                        href={item.slug}
+                        aria-current={item.slug === current.slug ? "page" : undefined}
+                      >
+                        {item.section}: {item.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </noscript>
             <div className="max-w-3xl">{children}</div>
             <PreviousNext current={current} navigation={navigation} />
           </main>

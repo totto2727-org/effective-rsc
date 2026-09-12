@@ -294,7 +294,7 @@ function SidebarMenuItem(props: React.ComponentProps<"li">) {
   return <li data-sidebar="menu-item" data-slot="sidebar-menu-item" {...props} />;
 }
 const menuButtonVariants = cva(
-  "flex h-8 w-full items-center gap-2 overflow-hidden rounded-md px-2 text-left text-sm outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium",
+  "flex min-h-8 w-full items-center gap-2 overflow-hidden rounded-md px-2 py-1.5 text-left text-sm wrap-break-word outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium",
   {
     variants: { size: { default: "h-8", sm: "h-7 text-xs" } },
     defaultVariants: { size: "default" },
