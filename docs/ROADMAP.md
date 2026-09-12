@@ -37,6 +37,11 @@ Status: planned; Node and Bun server adapters will be designed separately.
 - Keep `src/entry.client.ts` as the application definition export.
 - Use `src/entry.workers.ts` as the Web Fetch export and the default Vite RSC entry.
 - Vite + Cloudflare consumes `entry.workers.ts` directly.
-- For future Node/Bun hosts, add `src/entry.server.ts` that imports the export from `entry.workers.ts` and adapts requests, responses, and lifecycle handling to the server runtime.
+- For future Node/Bun hosts, use `src/entry.server.ts` for host startup and evaluate two integration paths: adapt the Fetch export from `entry.workers.ts`, or host the application directly through Effect HTTP.
+- For direct Effect HTTP hosting, build the application Runtime and reusable Layers once per server lifecycle instead of rebuilding them per request.
+- Keep request-specific values and resources in isolated request scopes, preserving response streaming, cancellation, and finalization semantics.
+- Treat improved throughput and reduced allocation from Runtime reuse as a performance hypothesis, not a measured result; compare both paths under representative concurrent SSR/Flight traffic before selecting the default.
+- Measure startup cost, latency, throughput, memory, and shutdown cleanup, and distinguish Runtime-reuse benefits from Fetch-conversion overhead.
+- Preserve the current Workers Fetch implementation while evaluating these server-only alternatives.
 - Keep server startup and runtime-specific adaptation outside the reusable Fetch entry.
 - Validate streaming, cancellation, request context, static assets, and server startup/shutdown through each real adapter before documenting it as supported.
