@@ -16,5 +16,9 @@ export default defineConfig({
     },
   },
   fmt: { ignorePatterns },
-  lint: { ignorePatterns, options: { typeAware: true, typeCheck: true } },
+  lint: {
+    plugins: ["eslint", "typescript", "unicorn", "oxc", "react"],
+    ignorePatterns,
+    options: { typeAware: true, typeCheck: true },
+  },
 });
