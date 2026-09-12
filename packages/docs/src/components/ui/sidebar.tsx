@@ -54,7 +54,11 @@ function SidebarProvider({
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const next = typeof value === "function" ? value(open) : value;
-      setOpenProp?.(next) ?? setUncontrolledOpen(next);
+      if (setOpenProp) {
+        setOpenProp(next);
+      } else {
+        setUncontrolledOpen(next);
+      }
       document.cookie = `sidebar_state=${next}; path=/; max-age=604800`;
     },
     [open, setOpenProp],
