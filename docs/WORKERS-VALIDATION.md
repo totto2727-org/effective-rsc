@@ -102,3 +102,26 @@ Observed checks:
 
 The actual consumer build also caught two integration problems before acceptance: Node ESM required an explicit `.ts` import in the configuration entry, and the SSR nesting hook had to run before Cloudflare's configuration hook.
 Both were corrected and verified through the public package entry and real build, not just a custom hook harness.
+
+## Standard Playwright lifecycle verification (2026-09-12)
+
+The custom E2E runner has been deleted in favor of Playwright's standard `webServer` array.
+The package-owned test host points at the unchanged example source, with explicit environment-specific output directories and test-only inspector/persistence isolation.
+Unlike the historical sequential runner above, the current configuration keeps three independent hosts running during the matrix and builds each Wrangler artifact separately.
+Runtime variable overrides are still supplied only to Wrangler after compilation.
+Normal example configuration and its development commands are unchanged.
+
+Observed checks:
+
+- A single `(cd packages/e2e && vp run test)` passed all 9 browser cases, with Playwright logging termination of all three servers.
+- Two simultaneous invocations each passed all 9 cases (18 total), using six distinct HTTP ports: 64305 through 64310.
+- TCP connection attempts confirmed all six listeners were closed after both invocations completed.
+- An intentional `playwright test --timeout 1 --max-failures 1` failure returned exit 1 and closed all three of its listeners (64557 through 64559).
+- Standard root Vitest discovery passed 29 files and 176 tests, including the real Git/VitePlus CLI suite.
+- VitePlus formatting, default lint, root type checking, and E2E package type checking passed.
+
+Initial acceptance caught that a root-level build output override did not relocate Cloudflare's RSC/client outputs.
+The test host now explicitly sets all three environment output directories, keeping nested SSR inside each isolated Worker artifact.
+The E2E TypeScript config enables `allowImportingTsExtensions` because the public framework source export uses explicit `.ts` imports; it adds no include/exclude overrides.
+Builds, state, failure traces, and test logs remain in the package's ignored `tmp/` directory for diagnosis.
+These checks cover local workerd hosting, not cloud deployment.

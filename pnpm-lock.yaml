@@ -215,6 +215,9 @@ importers:
       '@types/node':
         specifier: 22.20.2
         version: 22.20.2
+      effective-rsc:
+        specifier: workspace:*
+        version: link:../effective-rsc
       typescript:
         specifier: 7.0.2
         version: 7.0.2

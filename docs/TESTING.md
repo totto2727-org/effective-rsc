@@ -42,7 +42,7 @@ Both package archives were inspected and contained no unit, integration, or brow
 
 ## Independent test ownership
 
-`packages/e2e` owns its Playwright dependency, configuration, server runner, test environment file, browser suites, and generated reports.
+`packages/e2e` owns its Playwright dependency, configuration, standard webServer settings, test environment file, browser suites, and generated reports.
 It references the existing `examples/workers` app without copying or relocating it.
 From that package, `vp run test` runs all three local-hosting variants and `vp run typecheck` checks its configuration and test source.
 The root package has no E2E runner script or Playwright dependency.
@@ -54,3 +54,11 @@ Standard root Vitest discovery also includes these package tests, but never the 
 
 After separation, root Vitest discovery passed 29 files and 176 tests, the generator package alone passed 2 files and 16 tests, and the independent E2E project passed all nine browser cases.
 Package-local test fixtures were removed by their lifecycle cleanup.
+
+## Standard E2E server lifecycle
+
+The E2E package uses Playwright's [webServer](https://playwright.dev/docs/test-webserver) for startup, readiness, and shutdown instead of a custom `run.mjs` runner.
+The Vite host configuration reuses the example source and public integration plugin while isolating test-only output, inspector, and persistence settings.
+Three dynamically selected HTTP ports and one unique run directory keep simultaneous invocations separate.
+Both Wrangler hosts build their own isolated artifacts before starting; overrides are applied at Wrangler startup, not during compilation.
+See [the E2E project instructions](../packages/e2e/AGENTS.md) for commands and retained diagnostic artifacts.

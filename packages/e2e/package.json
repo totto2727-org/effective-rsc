@@ -3,13 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node run.mjs",
+    "test": "playwright test",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
     "@tsconfig/strictest": "2.0.8",
     "@types/node": "22.20.2",
+    "effective-rsc": "workspace:*",
     "typescript": "7.0.2",
     "vite-plus": "catalog:",
     "wrangler": "catalog:"
