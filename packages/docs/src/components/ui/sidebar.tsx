@@ -25,6 +25,7 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
 };
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
@@ -49,6 +50,7 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen);
   const open = openProp ?? uncontrolledOpen;
   const setOpen = React.useCallback(
@@ -86,8 +88,9 @@ function SidebarProvider({
       setOpenMobile,
       isMobile,
       toggleSidebar,
+      triggerRef,
     }),
-    [open, setOpen, openMobile, isMobile, toggleSidebar],
+    [open, setOpen, openMobile, isMobile, toggleSidebar, triggerRef],
   );
   return (
     <SidebarContext.Provider value={value}>
@@ -121,7 +124,7 @@ function Sidebar({
   side?: "left" | "right";
   collapsible?: "offcanvas" | "icon" | "none";
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  const { isMobile, state, openMobile, setOpenMobile, triggerRef } = useSidebar();
   if (collapsible === "none")
     return (
       <div
@@ -142,6 +145,10 @@ function Sidebar({
           data-sidebar="sidebar"
           data-mobile="true"
           side={side}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            triggerRef.current?.focus();
+          }}
           className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground"
           style={{ "--sidebar-width": SIDEBAR_WIDTH_MOBILE } as React.CSSProperties}
         >
@@ -189,9 +196,10 @@ function Sidebar({
 }
 
 function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar, triggerRef } = useSidebar();
   return (
     <Button
+      ref={triggerRef}
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
