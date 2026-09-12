@@ -174,26 +174,29 @@ export function DocsShell({ current, navigation, headings, children }: DocsShell
       <a href="#main-content" className="skip-link">
         本文へ移動
       </a>
-      <noscript>
-        <nav aria-label="ドキュメントナビゲーション" className="docs-noscript-nav">
-          <p>
-            <strong>effective-rsc</strong> Workers edition
-          </p>
-          <ul>
-            {navigation.map((item) => (
-              <li key={item.slug}>
-                <a href={item.slug} aria-current={item.slug === current.slug ? "page" : undefined}>
-                  {item.section}: {item.title}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </noscript>
       <Sidebar>
         <DocsNavigation current={current} navigation={navigation} />
       </Sidebar>
       <SidebarInset>
+        <noscript>
+          <nav aria-label="ドキュメントナビゲーション" className="docs-noscript-nav">
+            <p>
+              <strong>effective-rsc</strong> Workers edition
+            </p>
+            <ul>
+              {navigation.map((item) => (
+                <li key={item.slug}>
+                  <a
+                    href={item.slug}
+                    aria-current={item.slug === current.slug ? "page" : undefined}
+                  >
+                    {item.section}: {item.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </noscript>
         <header className="sticky top-0 z-20 flex h-15 items-center gap-3 border-b border-border/80 bg-background/90 px-4 backdrop-blur md:px-8">
           <SidebarTrigger aria-label="Toggle Sidebar" className="md:hidden" />
           <div className="min-w-0">
