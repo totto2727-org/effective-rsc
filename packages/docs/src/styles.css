@@ -161,12 +161,6 @@ input {
   scroll-margin-top: 6rem;
   letter-spacing: -0.025em;
 }
-[data-doc-page] :where(p) {
-  line-height: 1.75;
-}
-[data-doc-page] :where(h1) {
-  line-height: 1.15;
-}
 [data-doc-page] :where(a) {
   overflow-wrap: anywhere;
 }

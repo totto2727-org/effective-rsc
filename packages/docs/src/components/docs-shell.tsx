@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import "../styles.css";
 import { ArrowLeftIcon, ArrowRightIcon, ExternalLinkIcon, SearchIcon } from "lucide-react";
 import {
   Sidebar,
