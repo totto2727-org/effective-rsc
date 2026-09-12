@@ -5,8 +5,10 @@
 - `packages/effront/`: application and Fetch runtime (`effront`).
 - `packages/vite/`: portable build integration (`@effront/vite`).
 - `packages/cloudflare/`: Cloudflare Vite integration (`@effront/cloudflare`) and separate runtime accessors (`@effront/cloudflare/workers`).
+- `packages/markdown/`: Vite glob collections and comark React SSR rendering (`@effront/markdown`).
+- `examples/markdown/`: file-relative Markdown routing and asset consumer.
 - `examples/workers/`: consumer using the public package exports, Workers `fetch`, and runtime `env`.
-- `app/docs/`: SSR Guide and upstream-comparison site, using the framework itself with shadcn/ui and Tailwind Typography.
+- `app/docs/`: SSR Guide, API reference, and implementation architecture site, using the framework itself with shadcn/ui and Tailwind Typography.
 - `tests/e2e/`: independently managed Playwright acceptance against the real consumer.
 - `packages/gitignore-patterns/`: Gitignore generator and its colocated unit / package-owned Vitest CLI integration tests.
 - `docs/`: current architecture and verification documentation.
@@ -19,7 +21,7 @@ Workspace discovery uses `app/*`, `packages/*`, `tests/*`, and `examples/*`, wit
 ### Execution rules
 
 - Work on this independent clone, not the parent virtual monorepo.
-- Do not create PRs, push commits, publish packages, or deploy to Cloudflare. The user requested local implementation and local Git history only.
+- Push and create pull requests only in `totto2727-org/effective-rsc`, as authorized by the user. Never target the upstream repository. Do not publish packages or deploy without explicit authorization.
 - Use VitePlus for formatting, linting, checks, package management, and test entry points.
 - Formatting follows the parent workspace's default VitePlus baseline. Lint rules stay at VitePlus defaults. Do not restore the upstream custom Effect/Oxlint rules or add unrelated lint overrides.
 - Keep temporary evidence under this repository's ignored `tmp/` directory. Never commit `.dev.vars` or real secrets.
@@ -97,3 +99,5 @@ _This AGENTS.md was generated from the [share-artifact skill](https://raw.github
 - Prefer affirmative instructions and working examples over statements of what something is not. Reserve negative warnings for necessary correctness, compatibility, or safety constraints.
 - Architecture > Implementation chapters explain the current packages/effront implementation. Display the reviewed package version and commit, and keep embedded source excerpts synchronized with both that baseline and current files; validate them locally; retain upstream provenance separately in docs/UPSTREAM.md.
 - Deferred features belong in docs/ROADMAP.md and must not be presented as implemented APIs.
+
+Run `vp run test:markdown` from `tests/e2e/` for Markdown SSR, navigation, assets, and content-change acceptance.

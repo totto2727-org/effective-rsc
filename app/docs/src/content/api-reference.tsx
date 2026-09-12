@@ -343,6 +343,10 @@ const section = EFFRONT.Routes.make({
             "同じ identity の Layout と Loading を設定します。",
           ],
           [
+            "Routes.fromPages(entries, { layout?, loading? })",
+            "glob などで列挙した [静的パス, Page] の配列から Routes を作ります。初期化時に空配列、無効なパス、重複、identity の不一致を検証します。Page は params を持たない定義を使用します。直接アプリケーションへ渡す場合は Layout を設定し、子 Routes として mount することもできます。",
+          ],
+          [
             "routes.page(path, page)",
             "Page を追加した新しい Routes を返します。path と params の対応を型で検証します。",
           ],

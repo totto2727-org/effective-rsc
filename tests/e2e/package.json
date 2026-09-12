@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "test": "playwright test",
-    "test:docs": "playwright test --config docs.playwright.config.ts"
+    "test:docs": "playwright test --config docs.playwright.config.ts",
+    "test:markdown": "playwright test --config markdown.playwright.config.ts"
   },
   "devDependencies": {
     "@effront/cloudflare": "workspace:*",

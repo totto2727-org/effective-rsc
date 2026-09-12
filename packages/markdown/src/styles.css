@@ -1,0 +1,9 @@
+@import "katex/dist/katex.min.css";
+
+.comark pre {
+  overflow-x: auto;
+}
+.comark img,
+.comark svg {
+  max-width: 100%;
+}

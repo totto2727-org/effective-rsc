@@ -40,7 +40,11 @@ Status: planned by user request on 2026-09-12; no SSG implementation or static-h
 
 ## Markdown rendering and content collections
 
-Status: planned by user request on 2026-09-12; implementation and public API design are deferred.
+Status: initial glob-based collections and SSR rendering implemented in `@effront/markdown` on 2026-09-12; typed metadata and extensible loaders remain planned.
+
+The initial package maps a source directory to a public prefix, preserves nested paths, resolves file-relative links and images, and uses standard comark React rendering with the mdts plugin defaults.
+See [the package API and example](../packages/markdown/README.md).
+Follow-up issue creation for typed metadata, relationships, and loaders is blocked because the fork currently has GitHub Issues disabled; this milestone remains recorded here until the tracker is available.
 
 ### Direction
 
@@ -57,7 +61,7 @@ Status: planned by user request on 2026-09-12; implementation and public API des
 - Separate content loading and indexing from route creation so an application can choose URLs, parameters, Layouts, and rendering policy.
 - Integrate local content discovery, changes, additions, and removals with Vite development and the production build. Preprocess or bundle local files as needed so Workers SSR does not depend on a runtime filesystem.
 - Begin with SSR as the rendering target. Content collections do not require SSG; the separate HTML/Flight SSG milestone can later consume the same entries and route enumeration.
-- Keep runtime-specific loading and build integration outside the portable core. Decide package boundaries during implementation rather than committing to package names now.
+- Keep future runtime-specific loaders outside the portable core and extend the collection contract in `@effront/markdown`.
 
 ### Acceptance before release
 
