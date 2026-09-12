@@ -2,6 +2,7 @@ import type { DocPage } from "./types";
 
 const baseline = "ed886996d1d3780b94166af4f798c53416d547c8";
 const comparison = "9058a71dcb522ffed8eb838ef9aef3c69953dfe7";
+const injectorFix = "214149b697845a0b033701656ec5d8ac89738269";
 const upstream = `https://github.com/nikhilsnayak/effective-rsc/blob/${baseline}`;
 
 interface ReadingSnippet {
@@ -746,6 +747,45 @@ git show ${comparison}:examples/workers/wrangler.jsonc`}</code>
           Function 用の POST を区別する既存の構造は残り、開発判定は
           <code>process.env.NODE_ENV</code> から <code>import.meta.env.DEV</code> へ変わります。
         </p>
+
+        <aside id="post-comparison-injector" aria-label="固定比較より後の修正">
+          <p>
+            <strong>比較範囲外の追記: このサイトの検証で見つかった境界の問題</strong>
+          </p>
+          <p>
+            ローカルコミット <code>{injectorFix}</code> は、上の比較終点 <code>{comparison}</code>{" "}
+            より後の修正です。 元の12抜粋は更新せず、ここだけを別の時点の記録として読んでください。
+            対象は <code>packages/effective-rsc/src/server/flight-html-stream.ts</code> です。
+          </p>
+          <p>
+            HTML stream の chunk は HTML parser が挿入を許す区切りとは限りません。 修正前は Flight
+            の script を並行して挿入できるため、分割された href 属性、日本語の UTF-8
+            文字、コメント、script／style の途中へ入り込む可能性がありました。 修正は HTML
+            本体をそのまま流し、HTML の EOF 後に Flight の script を出力し、保持した document
+            の閉じタグを最後に出力します。 HTML 自体の streaming は保ちますが、ブラウザー向け Flight
+            の埋め込みは HTML 完了まで待つ方式です。 待機中のブラウザー側 Flight は tee
+            のキューに蓄積されるため、hydration 開始とメモリ使用量のトレードオフがあります。
+          </p>
+          <p>
+            同じ修正で、Flight の各 chunk を独立して厳密に UTF-8 decode し、不完全・不正な UTF-8 は
+            base64 のバイト列として扱うようにしています。 また、cancel 時に保留中の flush や tee
+            のもう一方を待って request scope の解放が止まらないよう、readable
+            側でキャンセルを受け取る wrapper を加えています。 これは新しい RSC
+            プロトコルではなく、既存のバイト列を壊さず運ぶための修正です。
+          </p>
+          <p>
+            同コミットの <code>packages/effective-rsc/tests/server/flight-html-stream.test.ts</code>{" "}
+            は、 HTML の境界、Flight のテスト用バイト列の全分割位置での復元、EOF
+            の順序、エラー、キャンセルを回帰テストにしています。
+            この修正のテストと、固定比較の時点の実装を混同しないよう、確認コマンドも分けます。
+          </p>
+          <pre>
+            <code>{`# 固定比較とは別の、後続修正だけを確認
+git show ${injectorFix} -- packages/effective-rsc/src/server/flight-html-stream.ts packages/effective-rsc/tests/server/flight-html-stream.test.ts
+# 現在の作業ツリーで injector の回帰テストを実行
+vp test run packages/effective-rsc/tests/server/flight-html-stream.test.ts`}</code>
+          </pre>
+        </aside>
 
         <h2 id="server-functions">Server Function も同じ境界で読む</h2>
         <p>
