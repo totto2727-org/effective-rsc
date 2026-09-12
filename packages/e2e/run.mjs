@@ -3,9 +3,10 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const exampleRoot = resolve(root, "examples/workers");
-const generatedWranglerConfig = resolve(root, "examples/workers/dist/rsc/wrangler.json");
+const root = dirname(fileURLToPath(import.meta.url));
+const workspace = resolve(root, "../..");
+const exampleRoot = resolve(workspace, "examples/workers");
+const generatedWranglerConfig = resolve(workspace, "examples/workers/dist/rsc/wrangler.json");
 const testEnvironmentFile = resolve(root, "tmp/.workers-fetch.env");
 const devOrigin = "http://127.0.0.1:5174";
 const wranglerOrigin = "http://127.0.0.1:8788";

@@ -1,5 +1,6 @@
 packages:
   - packages/effective-rsc
+  - packages/e2e
   - packages/gitignore-patterns
   - examples/workers
 

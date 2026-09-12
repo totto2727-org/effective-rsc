@@ -78,7 +78,7 @@ The workspace contains the framework and its Workers example.
 
 - `vp run typecheck` checks every retained framework source file, the consumer, and test source.
 - `vp test run` checks the retained framework tests, including the public Fetch adapter's request-context and lifecycle behavior.
-- `vp run test:e2e` builds the real example, starts VitePlus development mode, and then starts Wrangler against the same build with default and overridden variables.
+- `(cd packages/e2e && vp run test)` builds the real example, starts VitePlus development mode, and then starts Wrangler against the same build with default and overridden variables.
 - Browser checks cover HTML, Flight, hydrated interaction, navigation, unknown routes, and secret non-disclosure.
 - Successful compilation alone does not establish Workers runtime or hydration correctness.
 

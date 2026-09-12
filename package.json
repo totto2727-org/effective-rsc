@@ -9,21 +9,17 @@
     "fmt": "vp fmt",
     "lint": "vp lint",
     "test": "vp test run",
-    "test:e2e": "node tests/run-workers-fetch.mjs",
-    "typecheck": "tsc --noEmit",
-    "test:ignore": "tsc -p packages/gitignore-patterns/tsconfig.build.json && node tests/gitignore-patterns.mjs"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@effect/vitest": "4.0.0-rc.113",
     "@effective-rsc/gitignore-patterns": "workspace:*",
-    "@playwright/test": "1.63.0",
     "@types/node": "22.20.2",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
     "typescript": "7.0.2",
-    "vite-plus": "catalog:",
-    "wrangler": "catalog:"
+    "vite-plus": "catalog:"
   },
   "packageManager": "pnpm@12.3.4"
 }

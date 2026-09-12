@@ -1,24 +1,31 @@
-import assert from "node:assert/strict";
+import { afterAll, beforeAll, expect, test } from "vite-plus/test";
 import { spawnSync } from "node:child_process";
 import { mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { generateIgnorePatterns } from "@effective-rsc/gitignore-patterns";
+import { generateIgnorePatterns } from "../src/index.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const executable = resolve(root, "node_modules/.bin/vp");
-await mkdir(resolve(root, "tmp"), { recursive: true });
-const temporary = await mkdtemp(resolve(root, "tmp/gitignore-acceptance-"));
-const emptyGitConfig = resolve(temporary, "empty-git-config");
-await writeFile(emptyGitConfig, "");
-const environment = {
-  ...process.env,
-  GIT_CONFIG_NOSYSTEM: "1",
-  GIT_CONFIG_GLOBAL: emptyGitConfig,
-  NO_COLOR: "1",
-};
+let temporary: string;
+let environment: NodeJS.ProcessEnv;
+beforeAll(async () => {
+  await mkdir(resolve(root, "tmp"), { recursive: true });
+  temporary = await mkdtemp(resolve(root, "tmp/gitignore-acceptance-"));
+  const emptyGitConfig = resolve(temporary, "empty-git-config");
+  await writeFile(emptyGitConfig, "");
+  environment = {
+    ...process.env,
+    GIT_CONFIG_NOSYSTEM: "1",
+    GIT_CONFIG_GLOBAL: emptyGitConfig,
+    NO_COLOR: "1",
+  };
+});
+afterAll(async () => {
+  if (temporary !== undefined) await rm(temporary, { recursive: true, force: true });
+});
 
-const run = (command, args, cwd, input) => {
+const run = (command: string, args: string[], cwd: string, input?: string) => {
   const result = spawnSync(command, args, {
     cwd,
     env: environment,
@@ -27,18 +34,18 @@ const run = (command, args, cwd, input) => {
     timeout: 30_000,
     maxBuffer: 10 * 1024 * 1024,
   });
-  assert.ifError(result.error);
-  assert.equal(result.signal, null, `${command} ${args.join(" ")} was interrupted`);
+  expect(result.error).toBeUndefined();
+  expect(result.signal, `${command} ${args.join(" ")} was interrupted`).toBeNull();
   return result;
 };
 
-const write = async (directory, name, contents) => {
+const write = async (directory: string, name: string, contents: string) => {
   const target = resolve(directory, name);
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, contents);
 };
 
-const writeConfig = (directory, patterns) =>
+const writeConfig = (directory: string, patterns: string[]) =>
   write(
     directory,
     "vite.config.ts",
@@ -48,11 +55,11 @@ const writeConfig = (directory, patterns) =>
     })};\n`,
   );
 
-const createFixture = async (name, files, ignores) => {
+const createFixture = async (name: string, files: string[], ignores: Record<string, string>) => {
   const directory = resolve(temporary, name);
   await mkdir(directory);
-  assert.equal(run("git", ["init", "--quiet"], directory).status, 0);
-  assert.equal(run("git", ["config", "core.ignoreCase", "false"], directory).status, 0);
+  expect(run("git", ["init", "--quiet"], directory).status).toBe(0);
+  expect(run("git", ["config", "core.ignoreCase", "false"], directory).status).toBe(0);
   // A separate Git repository alone does not isolate VitePlus from the parent workspace.
   await write(directory, "pnpm-workspace.yaml", "packages: []\n");
   await write(directory, "package.json", '{"private":true,"type":"module"}\n');
@@ -65,19 +72,23 @@ const createFixture = async (name, files, ignores) => {
   return directory;
 };
 
-const gitSelected = (directory, files) => {
+const gitSelected = (directory: string, files: string[]) => {
   const result = run(
     "git",
     ["check-ignore", "--no-index", "--stdin", "-z"],
     directory,
     `${files.join("\0")}\0`,
   );
-  assert.ok(result.status === 0 || result.status === 1, result.stderr);
+  expect([0, 1], result.stderr).toContain(result.status);
   const ignored = new Set(result.stdout.split("\0"));
   return files.filter((file) => !ignored.has(file));
 };
 
-const moveIgnores = async (directory, ignores, disable) => {
+const moveIgnores = async (
+  directory: string,
+  ignores: Record<string, string>,
+  disable: boolean,
+) => {
   for (const file of Object.keys(ignores)) {
     const original = resolve(directory, file);
     const disabled = `${original}.disabled-for-acceptance`;
@@ -86,24 +97,35 @@ const moveIgnores = async (directory, ignores, disable) => {
 };
 
 // Both CLIs display POSIX backslashes as slashes. Keep fixture names unambiguous after normalization.
-const displayPath = (file) => file.replaceAll("\\", "/");
-const sortedDisplayPaths = (files) => files.map(displayPath).sort();
+const displayPath = (file: string) => file.replaceAll("\\", "/");
+const sortedDisplayPaths = (files: string[]) => files.map(displayPath).sort();
 
-const assertCliSelection = (directory, files, expected, label) => {
+const assertCliSelection = (
+  directory: string,
+  files: string[],
+  expected: string[],
+  label: string,
+) => {
   const candidates = new Set(files.map(displayPath));
-  assert.equal(candidates.size, files.length, "Fixture display paths must be unambiguous");
+  expect(candidates.size, "Fixture display paths must be unambiguous").toBe(files.length);
   for (const [tool, flags] of [
     ["fmt", ["--list-different"]],
     ["lint", ["--debug=files"]],
-  ]) {
+  ] as const) {
     const result = run(executable, [tool, ".", ...flags], directory);
-    assert.equal(result.status, tool === "fmt" ? 1 : 0, result.stderr || result.stdout);
+    expect(result.status, result.stderr || result.stdout).toBe(tool === "fmt" ? 1 : 0);
     const selected = result.stdout.split(/\r?\n/).filter((file) => candidates.has(file));
-    assert.deepEqual(selected.sort(), sortedDisplayPaths(expected), `${label}: vp ${tool}`);
+    expect(selected.sort(), `${label}: vp ${tool}`).toEqual(sortedDisplayPaths(expected));
   }
 };
 
-const cases = [
+interface Scenario {
+  name: string;
+  ignores: Record<string, string>;
+  ignored: string[];
+  allowed: string[];
+}
+const cases: Scenario[] = [
   {
     name: "scoped-patterns",
     ignores: {
@@ -219,21 +241,19 @@ if (process.platform !== "win32") {
   });
 }
 
-try {
-  for (const scenario of cases) {
+test.each(cases)(
+  "$name: generated exclusions agree with Git and real VitePlus CLIs",
+  async (scenario) => {
     const files = [...scenario.ignored, ...scenario.allowed];
     const directory = await createFixture(scenario.name, files, scenario.ignores);
-    assert.deepEqual(gitSelected(directory, files).sort(), [...scenario.allowed].sort());
+    expect(gitSelected(directory, files).sort()).toEqual([...scenario.allowed].sort());
     const patterns = await generateIgnorePatterns(pathToFileURL(`${directory}/`), {
       ignoreCase: false,
     });
-    assert.ok(patterns.every((pattern) => pattern.startsWith("/")));
+    expect(patterns.every((pattern) => pattern.startsWith("/"))).toBe(true);
     if (scenario.name === "negation-and-parent-pruning") {
-      assert.ok(
-        patterns.includes("/blocked/"),
-        "An excluded parent must become a directory literal",
-      );
-      assert.ok(!patterns.some((pattern) => pattern.startsWith("/blocked/keep")));
+      expect(patterns, "An excluded parent must become a directory literal").toContain("/blocked/");
+      expect(patterns.some((pattern) => pattern.startsWith("/blocked/keep"))).toBe(false);
     }
     // Native .gitignore discovery would mask a broken generator and has different brace semantics.
     // Remove only fixture ignore files after generation, then prove both the baseline and exclusions.
@@ -243,19 +263,22 @@ try {
     await writeConfig(directory, patterns);
     assertCliSelection(directory, files, scenario.allowed, scenario.name);
     const lint = run(executable, ["lint", ".", "-D", "no-debugger", "--format=json"], directory);
-    assert.equal(lint.status, 1, lint.stderr || lint.stdout);
-    const diagnostics = JSON.parse(lint.stdout).diagnostics;
-    assert.deepEqual(
+    expect(lint.status, lint.stderr || lint.stdout).toBe(1);
+    const diagnostics = (
+      JSON.parse(lint.stdout) as { diagnostics: { code: string; filename: string }[] }
+    ).diagnostics;
+    expect(
       diagnostics
         .filter((diagnostic) => diagnostic.code === "eslint(no-debugger)")
         .map((diagnostic) => diagnostic.filename)
         .sort(),
-      sortedDisplayPaths(scenario.allowed),
       `${scenario.name}: actual lint diagnostics`,
-    );
-    console.log(`Verified generated ignorePatterns through real vp fmt/lint: ${scenario.name}`);
-  }
+    ).toEqual(sortedDisplayPaths(scenario.allowed));
+  },
+  60_000,
+);
 
+test("refreshes snapshots while directory exclusions cover new descendants", async () => {
   const ignores = { ".gitignore": "future-*.js\n/generated/\n" };
   const initialFiles = ["keep.js", "future-now.js", "generated/old.js"];
   const directory = await createFixture("snapshot-refresh", initialFiles, ignores);
@@ -272,7 +295,4 @@ try {
   await moveIgnores(directory, ignores, true);
   await writeConfig(directory, refreshed);
   assertCliSelection(directory, files, ["keep.js"], "snapshot after refresh");
-  console.log("Verified snapshot reload and coverage of new descendants in excluded directories");
-} finally {
-  await rm(temporary, { recursive: true, force: true });
-}
+}, 60_000);

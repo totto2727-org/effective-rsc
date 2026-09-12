@@ -8,7 +8,7 @@ import { generateIgnorePatterns } from "./index.ts";
 const roots: string[] = [];
 
 const createRoot = (): string => {
-  const temporary = fileURLToPath(new URL("../../../tmp/", import.meta.url));
+  const temporary = fileURLToPath(new URL("../tmp/", import.meta.url));
   mkdirSync(temporary, { recursive: true });
   const root = mkdtempSync(join(temporary, "gitignore-patterns-"));
   const initialized = spawnSync("git", ["init", "--quiet", root]);

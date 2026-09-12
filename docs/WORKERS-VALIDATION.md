@@ -30,10 +30,10 @@ vp fmt --check
 vp lint
 vp run typecheck
 vp test run
-vp run test:e2e
+(cd packages/e2e && vp run test)
 ```
 
-Final coordinator execution of `vp run test:e2e` exited with status 0.
+Final coordinator execution of `(cd packages/e2e && vp run test)` exited with status 0.
 It ran the real build followed by 9 passing browser cases: 3 development, 3 default Wrangler, and 3 overridden Wrangler.
 The focused Fetch test is one scenario containing the lifecycle and isolation assertions listed above and passed with `vp test run`.
 These adapter checks complement, rather than replace, the real Workers browser acceptance path.
@@ -73,7 +73,7 @@ Verification after the final cleanup:
 - Frozen-lockfile installation passed with VitePlus.
 - Default VitePlus formatting, lint, and whole-tree type checking passed.
 - `vp test run` passed all 156 tests in 26 files, including the now-portable route-scaling test.
-- `vp run test:e2e` passed all 9 real browser cases against Vite/workerd, standalone Wrangler, and the same Wrangler artifact with overridden runtime bindings.
+- `(cd packages/e2e && vp run test)` passed all 9 real browser cases against Vite/workerd, standalone Wrangler, and the same Wrangler artifact with overridden runtime bindings.
 - A local `vp pm pack` audit found 52 package files, all public export targets, resolved catalog versions, and no obsolete runtime, build, vendor, or test directories.
 - The required third-party MIT notice was preserved verbatim apart from whitespace and verified inside the tarball.
 - Local Markdown links resolved successfully.

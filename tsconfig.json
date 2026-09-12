@@ -23,18 +23,5 @@
     "types": ["node", "vite-plus/client"],
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "allowImportingTsExtensions": true
-  },
-  "exclude": ["node_modules", "examples/workers/dist"],
-  "include": [
-    "vite.config.ts",
-    "playwright.config.ts",
-    "tests/**/*.ts",
-    "examples/workers/**/*.ts",
-    "examples/workers/**/*.tsx",
-    "packages/effective-rsc/src/**/*.ts",
-    "packages/effective-rsc/src/**/*.tsx",
-    "packages/effective-rsc/tests/**/*.ts",
-    "packages/effective-rsc/tests/**/*.tsx",
-    "packages/gitignore-patterns/src/**/*.ts"
-  ]
+  }
 }

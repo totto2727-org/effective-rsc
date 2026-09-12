@@ -4,7 +4,8 @@
 
 - `packages/effective-rsc/`: fetch-based framework and Vite integration.
 - `examples/workers/`: consumer using the public package exports, Workers `fetch`, and runtime `env`.
-- `tests/`: end-to-end acceptance against the real consumer.
+- `packages/e2e/`: independently managed Playwright acceptance against the real consumer.
+- `packages/gitignore-patterns/`: Gitignore generator and its colocated unit / package-owned Vitest CLI integration tests.
 - `docs/`: current architecture and verification documentation.
 - Removed upstream implementations and references remain available in Git history, not in the working tree.
 
@@ -28,7 +29,8 @@ From the repository root:
 - `vp lint` uses default VitePlus lint rules.
 - `vp run typecheck` checks all framework source, the example, and retained tests.
 - `vp test run` runs the retained unit/integration tests.
-- `vp run test:e2e` runs real browser acceptance.
+- Run `vp run test` from `packages/e2e/` for real browser acceptance.
+- Run `vp run test` from `packages/gitignore-patterns/` for that package's unit and real CLI integration tests.
 
 To run the example, enter `examples/workers/` and use `vp dev`, `vp build`, or `vp run local`.
 The repository root intentionally provides no example dev, build, or local-hosting script.
