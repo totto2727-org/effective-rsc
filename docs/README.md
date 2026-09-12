@@ -1,5 +1,6 @@
 # effective-rsc documentation
 
+- [SSR documentation site](DOCS-SITE.md): local Guide and upstream-comparison site, authoring, and browser checks.
 - [Upstream baseline](UPSTREAM.md): original effective-rsc version, immutable commit, and future incorporation log.
 - [Workers architecture](WORKERS.md): Fetch runtime, Effect context, RSC/SSR/browser boundaries, Vite configuration, and local hosting.
 - [Verification results](WORKERS-VALIDATION.md): requirements, observed checks, and reproducible acceptance commands.

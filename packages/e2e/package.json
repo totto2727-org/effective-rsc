@@ -4,10 +4,11 @@
   "type": "module",
   "scripts": {
     "test": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "test:docs": "playwright test --config docs.playwright.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
+    "@tailwindcss/vite": "catalog:",
     "@tsconfig/strictest": "2.0.8",
     "@types/node": "22.20.2",
     "effective-rsc": "workspace:*",

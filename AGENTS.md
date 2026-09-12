@@ -4,6 +4,7 @@
 
 - `packages/effective-rsc/`: fetch-based framework and Vite integration.
 - `examples/workers/`: consumer using the public package exports, Workers `fetch`, and runtime `env`.
+- `packages/docs/`: SSR Guide and upstream-comparison site, using the framework itself with shadcn/ui and Tailwind Typography.
 - `packages/e2e/`: independently managed Playwright acceptance against the real consumer.
 - `packages/gitignore-patterns/`: Gitignore generator and its colocated unit / package-owned Vitest CLI integration tests.
 - `docs/`: current architecture and verification documentation.
@@ -27,10 +28,13 @@ From the repository root:
 - `vp install` installs the pinned pnpm workspace dependencies.
 - `vp fmt` formats with VitePlus.
 - `vp lint` uses default VitePlus lint rules.
-- `vp run typecheck` checks all framework source, the example, and retained tests.
+- `vp check` checks all framework source, the example, and retained tests.
 - `vp test run` runs the retained unit/integration tests.
 - Run `vp run test` from `packages/e2e/` for real browser acceptance.
 - Run `vp run test` from `packages/gitignore-patterns/` for that package's unit and real CLI integration tests.
+
+For the documentation site, enter `packages/docs/` and use `vp dev`, `vp build`, or `vp run local`; see [site operations](docs/DOCS-SITE.md).
+Run `vp run test:docs` from `packages/e2e/` for its independent browser acceptance.
 
 To run the example, enter `examples/workers/` and use `vp dev`, `vp build`, or `vp run local`.
 The repository root intentionally provides no example dev, build, or local-hosting script.
