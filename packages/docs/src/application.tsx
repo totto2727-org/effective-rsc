@@ -7,7 +7,7 @@ const ERSC = Application.ersc();
 const RootLayout = ERSC.Layout.make({
   render: ({ children }) =>
     Effect.succeed(
-      <html lang="ja">
+      <html lang="ja" className="dark">
         <head>
           <meta charSet="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -31,7 +31,10 @@ function documentPage(slug: string) {
             navigation={navigation}
             headings={page.headings}
           >
-            <article className="prose prose-neutral max-w-none" data-doc-page={page.slug}>
+            <article
+              className="prose prose-neutral max-w-none dark:prose-invert"
+              data-doc-page={page.slug}
+            >
               <header className="not-prose mb-10 border-b pb-8">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-emerald-700">
                   {page.section}
