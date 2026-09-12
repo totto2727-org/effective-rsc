@@ -1,0 +1,10 @@
+/* React's disabled page classes can still leave native root snapshot animations.
+   Suppress that fallback without affecting application-owned named transitions. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(root),
+  ::view-transition-image-pair(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}

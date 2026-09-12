@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { isValidElement, ViewTransition, type ViewTransitionProps } from "react";
 
@@ -37,13 +39,31 @@ describe("PageViewTransitionBoundary policy", () => {
     ).toBe("page content");
   });
 
-  it("omits the entire React boundary for reduced motion, even with custom classes", () => {
+  it("keeps the React boundary stable with animation classes disabled for reduced motion", () => {
     media.reduced = true;
-    expect(
-      PageViewTransitionBoundary({
-        config: { enabled: true, default: "custom", share: "custom-share" },
-        children: "page content",
-      }),
-    ).toBe("page content");
+    const element = PageViewTransitionBoundary({
+      config: { enabled: true, default: "custom", share: "custom-share" },
+      children: "page content",
+    });
+    expect(isValidElement(element) && element.type).toBe(ViewTransition);
+    if (!isValidElement<ViewTransitionProps>(element)) {
+      throw new TypeError("Expected a ViewTransition element.");
+    }
+    expect(element.props).toEqual({
+      name: "effront-page",
+      default: "none",
+      enter: "none",
+      exit: "none",
+      share: "none",
+      update: "none",
+      children: "page content",
+    });
+    const css = readFileSync(new URL("./page-view-transition.css", import.meta.url), "utf8");
+    expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+    for (const pseudo of ["group", "image-pair", "old", "new"]) {
+      expect(css).toContain(`::view-transition-${pseudo}(root)`);
+    }
+    expect(css).toContain("animation: none !important");
+    expect(css).not.toContain("(*)");
   });
 });

@@ -4,6 +4,8 @@ import { useSyncExternalStore, ViewTransition, type ReactNode } from "react";
 
 import type { PageViewTransitionConfig } from "../application/page-view-transition";
 
+import "./page-view-transition.css";
+
 const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
 const subscribe = (onChange: () => void) => {
   const query = window.matchMedia(reducedMotionQuery);
@@ -21,18 +23,18 @@ export function PageViewTransitionBoundary({
   readonly config: PageViewTransitionConfig;
 }) {
   const reducedMotion = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  if (config.enabled === false || reducedMotion) {
+  if (config.enabled === false) {
     return children;
   }
 
   return (
     <ViewTransition
       name="effront-page"
-      default={config.default}
-      enter={config.enter}
-      exit={config.exit}
-      share={config.share}
-      update={config.update}
+      default={reducedMotion ? "none" : config.default}
+      enter={reducedMotion ? "none" : config.enter}
+      exit={reducedMotion ? "none" : config.exit}
+      share={reducedMotion ? "none" : config.share}
+      update={reducedMotion ? "none" : config.update}
     >
       {children}
     </ViewTransition>
