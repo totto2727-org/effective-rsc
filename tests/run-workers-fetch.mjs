@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const viteConfig = resolve(root, "examples/workers/vite.config.ts");
+const exampleRoot = resolve(root, "examples/workers");
 const generatedWranglerConfig = resolve(root, "examples/workers/dist/rsc/wrangler.json");
 const testEnvironmentFile = resolve(root, "tmp/.workers-fetch.env");
 const devOrigin = "http://127.0.0.1:5174";
@@ -12,9 +12,9 @@ const wranglerOrigin = "http://127.0.0.1:8788";
 
 const executable = (name) => resolve(root, "node_modules/.bin", name);
 
-const run = (name, args) =>
+const run = (name, args, cwd = root) =>
   new Promise((resolveRun, rejectRun) => {
-    const child = spawn(executable(name), args, { cwd: root, stdio: "inherit" });
+    const child = spawn(executable(name), args, { cwd, stdio: "inherit" });
     child.once("error", rejectRun);
     child.once("exit", (code, signal) => {
       if (code === 0) {
@@ -25,8 +25,8 @@ const run = (name, args) =>
     });
   });
 
-const start = (label, name, args) => {
-  const child = spawn(executable(name), args, { cwd: root, detached: true, stdio: "inherit" });
+const start = (label, name, args, cwd) => {
+  const child = spawn(executable(name), args, { cwd, detached: true, stdio: "inherit" });
   child.once("error", (error) => {
     throw new Error(`${label} failed to start: ${error.message}`);
   });
@@ -85,8 +85,8 @@ const testProject = (project) =>
   run("playwright", ["test", "--config", "playwright.config.ts", "--project", project]);
 
 let active;
-const withServer = async (label, name, args, origin, project) => {
-  active = start(label, name, args);
+const withServer = async (label, name, args, origin, project, cwd = root) => {
+  active = start(label, name, args, cwd);
   try {
     await waitForServer(origin, label);
     await testProject(project);
@@ -97,7 +97,7 @@ const withServer = async (label, name, args, origin, project) => {
 };
 
 try {
-  await run("vp", ["build", "--config", viteConfig]);
+  await run("vp", ["build"], exampleRoot);
   await access(generatedWranglerConfig);
   await mkdir(dirname(testEnvironmentFile), { recursive: true });
   await writeFile(testEnvironmentFile, "");
@@ -106,9 +106,10 @@ try {
   await withServer(
     "VitePlus development server",
     "vp",
-    ["dev", "--config", viteConfig, "--host", "127.0.0.1", "--port", "5174"],
+    ["dev", "--host", "127.0.0.1", "--port", "5174", "--strictPort"],
     devOrigin,
     "workers-dev",
+    exampleRoot,
   );
   await verifyStopped(devOrigin, "VitePlus development server");
 

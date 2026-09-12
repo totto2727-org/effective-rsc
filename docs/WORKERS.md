@@ -42,18 +42,25 @@ The browser graph uses the plugin's browser Flight client and hydration entry.
 
 ## Host and build ownership
 
-`effective-rsc/vite` exports `ersc()` and owns the RSC and React plugins.
-Applications must not register those plugins twice.
+`effective-rsc/cloudflare` exports `erscCloudflare()`, which composes the portable `ersc()` plugin and Cloudflare integration.
+Applications only need `plugins: [erscCloudflare()]` and must not register the RSC, React, or Cloudflare plugins twice.
+`effective-rsc/vite` continues to export the lower-level, host-independent `ersc()`.
 The default RSC entry is the application's `src/worker.ts`, which exports the Workers Fetch object.
 The framework provides the SSR and browser entries.
-Cloudflare's plugin remains application-owned with `viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] }`.
+The Cloudflare wrapper owns the required `viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] }`.
+Other Cloudflare options can be supplied through its `cloudflare` option and are forwarded without disabling state persistence or remote bindings.
+The wrapper does not set server host, port, strict-port mode, project root, or a Wrangler config path.
+Vite runs from the application directory and uses normal configuration discovery.
 
 VitePlus drives Vite and builds the graph-specific outputs.
 Wrangler runs the generated `examples/workers/dist/rsc/wrangler.json` using `--local --no-bundle`.
-The consumer sets `environments.ssr.build.outDir` to `./dist/rsc/ssr` so every dynamically loaded SSR module resides inside Wrangler's Worker upload root.
+The wrapper places SSR output inside the Worker upload root (by default `dist/rsc/ssr`) so dynamically loaded SSR modules are attached by Wrangler.
 Emitting SSR as a sibling `dist/ssr` builds successfully but fails in Wrangler at runtime because that module is not attached to the Worker.
 Workers assets are host-owned, not Bun filesystem middleware.
 The example's Cloudflare configuration owns the assets binding and runtime variables.
+It omits `run_worker_first` and relies on Cloudflare's default asset-first routing.
+The generated Wrangler configuration supplies the built client asset directory.
+Worker-first routing remains an explicit application choice for cases such as protecting asset requests or overriding a conflicting static URL.
 Changing Wrangler runtime variables must not require rebuilding the application.
 
 The package exposes TypeScript source exports for Vite bundling.

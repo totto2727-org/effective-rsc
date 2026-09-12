@@ -15,7 +15,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.54.7",
+    "@cloudflare/vite-plugin": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-rsc": "catalog:",

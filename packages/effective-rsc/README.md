@@ -22,7 +22,7 @@ vp install
 vp run dev
 ```
 
-Open <http://127.0.0.1:5173>.
+Open the URL reported by Vite (normally <http://localhost:5173>).
 This is Vite's development server with the Cloudflare plugin executing the application inside workerd, not a Node or Bun HTTP server emulating Workers.
 Alternatively, run `vp dev` directly from `examples/workers`.
 
@@ -87,26 +87,45 @@ A future Node/Bun adapter can invoke the same Fetch interface, but those adapter
 
 ## Vite integration
 
+For Cloudflare Workers, the configuration only needs one plugin:
+
 ```ts
-import { cloudflare } from "@cloudflare/vite-plugin";
-import { ersc } from "effective-rsc/vite";
+import { erscCloudflare } from "effective-rsc/cloudflare";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
-  environments: { ssr: { build: { outDir: "./dist/rsc/ssr" } } },
-  plugins: [
-    ersc(),
-    cloudflare({
-      viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
-    }),
-  ],
+  plugins: [erscCloudflare()],
 });
 ```
 
-`ersc()` owns the RSC and React plugins, so do not register those plugins a second time.
-It uses `src/worker.ts` as the default RSC input and supports `rsc` and `application` path options.
-Cloudflare configuration remains application-owned.
-See `examples/workers/vite.config.ts` for the complete runnable configuration.
+Install `@cloudflare/vite-plugin` in the consuming application alongside the framework and VitePlus.
+The Cloudflare dependency is an optional peer of the framework, so non-Cloudflare consumers do not need it.
+`erscCloudflare()` composes ERSC, React, Vite RSC, and Cloudflare integration.
+Do not register those plugins a second time.
+It configures the `rsc` Worker environment, `ssr` child environment, and SSR output inside the Worker upload directory.
+
+Run Vite from the application's directory so its normal root and Wrangler configuration discovery apply.
+The repository-root `dev` and `build` scripts do this automatically for `examples/workers`.
+No framework-specific `root`, `configPath`, or server host/port settings are necessary in the example.
+The acceptance runner supplies its own fixed host, port, and strict-port options solely for automated testing.
+
+`persistState` and `remoteBindings` are not overridden: Cloudflare's normal defaults apply.
+The example also omits `assets.run_worker_first`, using Cloudflare's default asset-first routing.
+Its application URLs do not collide with static files, so missing assets fall through to the Worker.
+Worker-first routing is only needed when an application intentionally wants the Worker to intercept asset requests or take precedence over conflicting asset URLs.
+The Vite plugin generates `assets.directory` in the built Wrangler configuration, so it need not be handwritten in the source configuration.
+Smart Placement is an optional production setting, not a prerequisite for local development.
+To customize Cloudflare configuration, pass its options under `cloudflare`:
+
+```ts
+erscCloudflare({
+  cloudflare: { configPath: "./wrangler.preview.jsonc" },
+});
+```
+
+The `rsc` entry and `application` alias options are the same as `ersc()` from `effective-rsc/vite`.
+That portable lower-level plugin remains available for other hosts.
+The Cloudflare integration owns its required environment names rather than exposing contradictory environment overrides.
 
 ## Quality checks
 

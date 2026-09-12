@@ -80,3 +80,25 @@ Verification after the final cleanup:
 
 The temporary tarball and test output were removed after verification.
 No package was published and no PR, push, or cloud deployment was performed.
+
+## Plugin-only configuration verification (2026-09-12)
+
+The Workers example now uses only `plugins: [erscCloudflare()]` in its Vite configuration.
+The factory composes ERSC and Cloudflare, owns the RSC/SSR environment wiring, and sets default SSR output inside the Worker directory before Cloudflare resolves its environment defaults.
+The host-independent `ersc()` entry remains available.
+
+Removed explicit example settings: Vite root, Wrangler config path, SSR output nesting, server host/port/strict-port, `persistState: false`, `remoteBindings: false`, and `assets.run_worker_first`.
+Root scripts enter the example directory for normal Vite and Wrangler discovery.
+Only the automated acceptance runner passes fixed dev-server host/port/strict-port flags.
+
+Observed checks:
+
+- `vp run build` from the repository root succeeded and emitted `dist/rsc/ssr/index.js`.
+- `vp run dev` with no server flags served HTTP 200 at Vite's default `http://localhost:5173` and rendered the Workers environment label.
+- Real Vite `resolveConfig` tests verified default SSR nesting, root output overrides, RSC output overrides, and explicit SSR overrides.
+- All 160 tests, formatting, default lint, and whole-tree type checking passed.
+- After removing `run_worker_first`, all 9 browser cases again passed in Vite/workerd, standalone Wrangler, and Wrangler with runtime variable overrides.
+  The checks included successful HTML/Flight requests, client script loading, hydration, navigation, unknown-route handling, and secret non-disclosure with default asset-first routing.
+
+The actual consumer build also caught two integration problems before acceptance: Node ESM required an explicit `.ts` import in the configuration entry, and the SSR nesting hook had to run before Cloudflare's configuration hook.
+Both were corrected and verified through the public package entry and real build, not just a custom hook harness.
