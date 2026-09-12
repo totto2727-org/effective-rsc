@@ -50,6 +50,9 @@ beforeAll(async () => {
     offlineMarkup = renderToStaticMarkup(
       CodeBlock({ code: 'const message = "日本語";\n', language: "typescript" }),
     );
+    for (const [language, code] of fixtures) {
+      expect(serializedCodeText(renderToStaticMarkup(CodeBlock({ code, language })))).toBe(code);
+    }
     expect(fetch).not.toHaveBeenCalled();
     expect(instantiate).not.toHaveBeenCalled();
     expect(compile).not.toHaveBeenCalled();
