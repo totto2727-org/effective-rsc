@@ -282,7 +282,9 @@ const HomePage = ERSC.Page.make({
         <p>
           イベントハンドラー、state、ブラウザー API が必要なファイルの先頭には{" "}
           <code>"use client"</code> を置きます。これは通常の React コンポーネントであり、
-          <code>ERSC.Component.make</code> では包みません。
+          <code>ERSC.Component.make</code> では包みません。<code>"use client"</code> は no-SSR
+          を意味しません。Client Component も初回表示用の HTML には SSR され、その後ブラウザーで
+          hydrate されます。
         </p>
         {code(`"use client";
 
