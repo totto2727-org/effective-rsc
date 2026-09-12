@@ -2,6 +2,7 @@ import { Effect } from "effect";
 import { Application } from "effront";
 import { DocsShell } from "./components/docs-shell";
 import { getPage, navigation } from "./content";
+import { architectureBaseline } from "./content/architecture-baseline";
 
 const EFFRONT = Application.effront();
 const RootLayout = EFFRONT.Layout.make({
@@ -27,7 +28,12 @@ function documentPage(slug: string) {
           <title>{`${page.title} | Effront`}</title>
           <meta name="description" content={page.description} />
           <DocsShell
-            current={{ slug: page.slug, title: page.title, section: page.section }}
+            current={{
+              slug: page.slug,
+              title: page.title,
+              section: page.section,
+              group: page.group,
+            }}
             navigation={navigation}
             headings={page.headings}
           >
@@ -42,6 +48,22 @@ function documentPage(slug: string) {
                 <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{page.title}</h1>
                 <p className="mt-4 text-base leading-8 text-muted-foreground">{page.description}</p>
               </header>
+              {page.section === "アーキテクチャ" && (
+                <aside
+                  className="not-prose mb-8 rounded-lg border p-4 text-sm leading-7 text-muted-foreground"
+                  data-architecture-baseline={architectureBaseline.commit}
+                >
+                  <p>
+                    解説対象: <code>effront@{architectureBaseline.version}</code>
+                  </p>
+                  <p>
+                    基準コミット: <code className="break-all">{architectureBaseline.commit}</code>
+                  </p>
+                  <p>
+                    確認日: {architectureBaseline.reviewedOn}。この版の実装を基準に解説しています。
+                  </p>
+                </aside>
+              )}
               <Content />
             </article>
           </DocsShell>
@@ -61,11 +83,53 @@ export default EFFRONT.make({
     .page("/platforms", documentPage("/platforms"))
     .page("/platforms/cloudflare", documentPage("/platforms/cloudflare"))
     .page("/guide/testing", documentPage("/guide/testing"))
-    .page("/core/overview", documentPage("/core/overview"))
-    .page("/core/application", documentPage("/core/application"))
-    .page("/core/routing", documentPage("/core/routing"))
-    .page("/core/request", documentPage("/core/request"))
-    .page("/core/rendering", documentPage("/core/rendering"))
-    .page("/core/navigation", documentPage("/core/navigation"))
-    .page("/core/server-functions", documentPage("/core/server-functions")),
+    .page("/guide/server-functions", documentPage("/guide/server-functions"))
+    .page("/guide/middleware", documentPage("/guide/middleware"))
+    .page("/guide/http", documentPage("/guide/http"))
+    .page("/advanced", documentPage("/advanced"))
+    .page(
+      "/advanced/request-runtime-and-lifetimes",
+      documentPage("/advanced/request-runtime-and-lifetimes"),
+    )
+    .page("/advanced/client-navigation", documentPage("/advanced/client-navigation"))
+    .page(
+      "/advanced/server-function-execution-and-refresh",
+      documentPage("/advanced/server-function-execution-and-refresh"),
+    )
+    .page("/advanced/production-startup", documentPage("/advanced/production-startup"))
+    .page("/api-reference", documentPage("/api-reference"))
+    .page("/api-reference/application", documentPage("/api-reference/application"))
+    .page("/api-reference/components", documentPage("/api-reference/components"))
+    .page("/api-reference/routing", documentPage("/api-reference/routing"))
+    .page("/api-reference/server-functions", documentPage("/api-reference/server-functions"))
+    .page("/api-reference/workers", documentPage("/api-reference/workers"))
+    .page("/api-reference/vite", documentPage("/api-reference/vite"))
+    .page(
+      "/architecture/implementation/overview",
+      documentPage("/architecture/implementation/overview"),
+    )
+    .page(
+      "/architecture/implementation/application",
+      documentPage("/architecture/implementation/application"),
+    )
+    .page(
+      "/architecture/implementation/routing",
+      documentPage("/architecture/implementation/routing"),
+    )
+    .page(
+      "/architecture/implementation/request",
+      documentPage("/architecture/implementation/request"),
+    )
+    .page(
+      "/architecture/implementation/rendering",
+      documentPage("/architecture/implementation/rendering"),
+    )
+    .page(
+      "/architecture/implementation/navigation",
+      documentPage("/architecture/implementation/navigation"),
+    )
+    .page(
+      "/architecture/implementation/server-functions",
+      documentPage("/architecture/implementation/server-functions"),
+    ),
 });

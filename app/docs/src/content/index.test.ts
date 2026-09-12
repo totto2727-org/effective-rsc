@@ -4,7 +4,7 @@ import { getPage, navigation, pages } from "./index";
 
 describe("documentation catalog", () => {
   it("keeps stable unique URLs and serializable navigation metadata", () => {
-    expect(pages.length).toBe(15);
+    expect(pages.length).toBe(30);
     expect(new Set(pages.map((page) => page.slug)).size).toBe(pages.length);
     expect(JSON.parse(JSON.stringify(navigation))).toEqual(navigation);
     for (const page of pages) {
@@ -14,15 +14,21 @@ describe("documentation catalog", () => {
         slug: page.slug,
         title: page.title,
         section: page.section,
+        ...(page.group ? { group: page.group } : {}),
       });
     }
   });
 
   it("keeps conceptual guides host-neutral and provides a complete host-specific quickstart", () => {
     const guides = pages.filter((page) => page.section === "Guide");
-    expect(guides.length).toBe(6);
-    expect(pages.filter((page) => page.section === "Core")).toHaveLength(7);
+    expect(guides.length).toBe(9);
+    expect(pages.filter((page) => page.section === "アーキテクチャ")).toHaveLength(7);
     expect(pages.some((page) => page.slug.startsWith("/reading/"))).toBe(false);
+    expect(pages.filter((page) => page.section === "API reference")).toHaveLength(7);
+    for (const page of pages.filter((page) => page.section === "アーキテクチャ")) {
+      expect(page.group).toBe("実装解説");
+      expect(page.slug).toMatch(/^\/architecture\/implementation\//);
+    }
     for (const page of guides.filter((page) => page.slug !== "/guide/getting-started")) {
       const text = renderToStaticMarkup(page.content()).replace(/<[^>]*>/g, "");
       expect(`${page.title} ${page.description} ${text}`).not.toMatch(
@@ -62,6 +68,28 @@ describe("documentation catalog", () => {
     for (const diagnostic of ["TS2769", "TS2345", "TS2322"]) {
       expect(text("/guide/effect")).toContain(diagnostic);
     }
+  });
+
+  it("covers upstream Guide and Advanced topics with host setup separated", () => {
+    for (const slug of [
+      "/guide/server-functions",
+      "/guide/effect",
+      "/guide/routes",
+      "/guide/middleware",
+      "/guide/http",
+    ]) {
+      expect(getPage(slug).section).toBe("Guide");
+    }
+    for (const slug of [
+      "/advanced",
+      "/advanced/request-runtime-and-lifetimes",
+      "/advanced/client-navigation",
+      "/advanced/server-function-execution-and-refresh",
+      "/advanced/production-startup",
+    ]) {
+      expect(getPage(slug).section).toBe("Advanced");
+    }
+    expect(pages.some((page) => page.slug.includes("deploying-to-vercel"))).toBe(false);
   });
 
   it("rejects missing content instead of silently rendering another page", () => {

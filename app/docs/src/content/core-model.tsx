@@ -118,11 +118,12 @@ export type CompiledRouteGraph<Services> = readonly [
 
 export const coreModelPages: readonly DocPage[] = [
   {
-    slug: "/core/overview",
+    slug: "/architecture/implementation/overview",
     title: "01. coreの処理を追う",
     description:
       "アプリケーション定義からFetch、Flight、HTML、ブラウザーまで、現在のcoreを読むための全体像をつかみます。",
-    section: "Core",
+    section: "アーキテクチャ",
+    group: "実装解説",
     headings: [
       { id: "responsibilities", title: "coreと統合パッケージの責務" },
       { id: "entries", title: "定義と起動の入口を分ける" },
@@ -218,20 +219,22 @@ export const coreModelPages: readonly DocPage[] = [
           <code>releaseResponseBody</code> は本文の終端・エラー・キャンセルで <code>dispose</code>{" "}
           を呼び、本文がない応答はすぐ解放します。
           この境界があることで、本文を作る間に必要なリクエスト用サービスの寿命を保てます。 詳細は{" "}
-          <a href="/core/request">04. リクエスト処理</a> へ進みます。
+          <a href="/architecture/implementation/request">04. リクエスト処理</a> へ進みます。
         </p>
         <h2 id="reading-order">依存関係に沿って読み進める</h2>
         <p>
-          まず <a href="/core/application">02. アプリケーション定義</a>{" "}
+          まず <a href="/architecture/implementation/application">02. アプリケーション定義</a>{" "}
           で定義を結び付けるidentityとサービスの型を読み、
-          <a href="/core/routing">03. ルートの組み立て</a>{" "}
+          <a href="/architecture/implementation/routing">03. ルートの組み立て</a>{" "}
           でRoutesがHTTP側へ渡すデータを確認します。 その後に{" "}
-          <a href="/core/request">リクエスト処理</a> と <a href="/core/rendering">描画</a>{" "}
+          <a href="/architecture/implementation/request">リクエスト処理</a> と{" "}
+          <a href="/architecture/implementation/rendering">描画</a>{" "}
           を読むと、宣言時の値がどこで実行されるかを追えます。
         </p>
         <p>
-          最後に <a href="/core/navigation">ナビゲーション</a> と{" "}
-          <a href="/core/server-functions">Server Functions</a> で、初回表示後の往復を追います。
+          最後に <a href="/architecture/implementation/navigation">ナビゲーション</a> と{" "}
+          <a href="/architecture/implementation/server-functions">Server Functions</a>{" "}
+          で、初回表示後の往復を追います。
           読むたびに「これは定義、リクエストのContext、転送するデータのどれか」を確かめてください。
           同じ画面を扱うコードでも、この3つは寿命と境界が違います。
         </p>
@@ -239,11 +242,12 @@ export const coreModelPages: readonly DocPage[] = [
     ),
   },
   {
-    slug: "/core/application",
+    slug: "/architecture/implementation/application",
     title: "02. アプリケーション定義",
     description:
       "Application.effrontが作るidentity、サービスの型、middlewareのスコープとリクエストContextの接続を読みます。",
-    section: "Core",
+    section: "アーキテクチャ",
+    group: "実装解説",
     headings: [
       { id: "identity", title: "同じアプリケーションに属すること" },
       { id: "service-contract", title: "定義が要求するサービスの型" },
@@ -345,20 +349,21 @@ export const coreModelPages: readonly DocPage[] = [
           はContextが存在しない描画と、必要なmiddlewareが有効でない描画をTypeErrorとして拒否します。
           つまり型でサービスが利用可能とされた定義を、別のリクエストや不足したスコープで実行してもよいわけではありません。
           identityは定義同士を結び付け、実行時Contextはその定義を今回のリクエストへ結び付けます。
-          次の <a href="/core/routing">03. ルートの組み立て</a>{" "}
+          次の <a href="/architecture/implementation/routing">03. ルートの組み立て</a>{" "}
           でmiddlewareと描画先がどうまとまるかを読み、寿命の管理は{" "}
-          <a href="/core/request">リクエスト処理</a>、Reactとの接続は{" "}
-          <a href="/core/rendering">描画</a> で追ってください。
+          <a href="/architecture/implementation/request">リクエスト処理</a>、Reactとの接続は{" "}
+          <a href="/architecture/implementation/rendering">描画</a> で追ってください。
         </p>
       </>
     ),
   },
   {
-    slug: "/core/routing",
+    slug: "/architecture/implementation/routing",
     title: "03. ルートの組み立て",
     description:
       "Routesの型と衝突検査、グラフの走査順、スコープの継承、Page Schemaによる404の境界を読みます。",
-    section: "Core",
+    section: "アーキテクチャ",
+    group: "実装解説",
     headings: [
       { id: "route-contract", title: "パスとPageを型で結び付ける" },
       { id: "collisions", title: "衝突と予約領域を定義時に検査する" },
@@ -478,10 +483,12 @@ export const coreModelPages: readonly DocPage[] = [
           Functionの入力や実行後の再描画まで、GETの404規則で説明しないことが重要です。
         </p>
         <p>
-          次は <a href="/core/request">04. リクエスト処理</a>{" "}
+          次は <a href="/architecture/implementation/request">04. リクエスト処理</a>{" "}
           で、登録したルートがどのContextと寿命で実行されるかを追います。
-          destinationのscopesがUIになる過程は <a href="/core/rendering">描画</a>、POST固有の分岐は{" "}
-          <a href="/core/server-functions">Server Functions</a> で読み進めてください。
+          destinationのscopesがUIになる過程は{" "}
+          <a href="/architecture/implementation/rendering">描画</a>、POST固有の分岐は{" "}
+          <a href="/architecture/implementation/server-functions">Server Functions</a>{" "}
+          で読み進めてください。
         </p>
       </>
     ),

@@ -46,7 +46,7 @@ For Cloudflare's execution context, use the Env-only factory from `@effront/clou
 - Host setup and supported environments are isolated under the site's **Platforms** section.
 - [Host architecture and current support](../../docs/WORKERS.md) documents the implemented adapter rather than imposing its setup on every application.
 - [Roadmap](../../docs/ROADMAP.md) records deferred work, including Page View Transitions.
-- The Core chapters explain the current application model, request lifecycle, rendering, navigation, and Server Functions.
+- The Architecture > Implementation chapters explain the current application model, request lifecycle, rendering, navigation, and Server Functions.
 - [Upstream provenance](../../docs/UPSTREAM.md) preserves the original version and commit records.
 
 The core currently uses the Vite RSC runtime protocol; alternative build integrations are not claimed to work without additional integration.

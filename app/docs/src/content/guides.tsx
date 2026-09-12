@@ -1,6 +1,7 @@
 import { CodeBlock } from "../components/code-block";
 import type { CodeLanguage } from "../components/code-block";
 import type { DocPage } from "./types";
+import { httpGuide, middlewareGuide, serverFunctionsGuide } from "./guide-topics";
 
 const code = (source: string, language: CodeLanguage) => (
   <CodeBlock code={source} language={language} />
@@ -45,7 +46,8 @@ export const guidePages: readonly DocPage[] = [
         <p>
           <a href="/guide/getting-started">はじめる</a> でアプリケーションの構成を確認し、
           <a href="/guide/routes">ルーティング</a> と <a href="/guide/effect">サービスの注入</a>{" "}
-          を読んでください。内部の処理を理解したい場合は <a href="/core/overview">Core の解説</a>
+          を読んでください。内部の処理を理解したい場合は{" "}
+          <a href="/architecture/implementation/overview">アーキテクチャの実装解説</a>
           を順に読み進めてください。
         </p>
       </>
@@ -188,7 +190,7 @@ vp exec wrangler dev --local --no-bundle --config dist/rsc/wrangler.json`,
     section: "Guide",
     headings: [
       { id: "pages", title: "静的ページとパラメーター" },
-      { id: "mount", title: "ネストした Routes" },
+      { id: "mount", title: "ネストした Routes と Loading" },
       { id: "matching", title: "マッチング時の注意" },
     ],
     content: () => (
@@ -218,7 +220,7 @@ const HomePage = EFFRONT.Page.make({
 });`,
           "tsx",
         )}
-        <h2 id="mount">ネストした Routes</h2>
+        <h2 id="mount">ネストした Routes と Loading</h2>
         <p>
           子 Routes を <code>mount</code> すると、その Layout と Loading
           の祖先関係を保ったままプレフィックスの下へ追加します。
@@ -243,11 +245,26 @@ const routes = EFFRONT.Routes.make({ layout: RootLayout })
   .mount("/articles", articles);`,
           "tsx",
         )}
+        <p>
+          Layout の <code>children</code> に子の表示が入り、Loading はそのスコープの Suspense
+          の待機表示になります。 Loading の <code>render</code> は Effect ではなく同期的な ReactNode
+          を返します。 最上位の Routes には HTML 文書を返す RootLayout を指定し、最後に{" "}
+          <code>EFFRONT.make({"{ routes }"})</code> へ渡します。
+        </p>
         <h2 id="matching">マッチング時の注意</h2>
         <p>
           GET と HEAD では、レンダリング前に Page のパスパラメーターを Schema で一度だけ decode
           します。 この Schema に適合しないパスは 404 を返します。予約済みの <code>/_effront</code>{" "}
-          名前空間はアプリケーションのルートに使えません。
+          名前空間はアプリケーションのルートに使えません。 ナビゲーション用の Flight
+          リクエストでも、decode 失敗時は空の 404 です。 decode には、そのルートで有効な Middleware
+          が提供するサービスを使えます。
+        </p>
+        <p>
+          Server Function の POST 後の再表示では、パラメーターの拒否を React
+          のレンダリングエラーとして扱い、完了した action の結果を保持します。 URL のマッチングは
+          Effect HTTP に任せ、Routes の構築時には同じ形のパスの重複や不正な合成を検出します。
+          たとえば <code>/articles/:slug</code> と <code>/articles/:id</code>{" "}
+          は別ルートとして重ねられません。
         </p>
         <details>
           <summary>ルートを分割したい場合</summary>
@@ -262,13 +279,13 @@ const routes = EFFRONT.Routes.make({ layout: RootLayout })
   },
   {
     slug: "/guide/components",
-    title: "Component と Server Function",
-    description: "Effront の Effectful Component、Server Function、Client boundary を接続します。",
+    title: "Server Component と Client Component",
+    description:
+      "Effectful なサーバー UI と、ブラウザーで操作する Client Component を組み合わせます。",
     section: "Guide",
     headings: [
       { id: "server", title: "Effectful な Server Component" },
       { id: "client-boundary", title: "Client boundary と CSS" },
-      { id: "mutations", title: "Server Function による更新" },
       { id: "boundary", title: "境界を守る" },
     ],
     content: () => (
@@ -299,47 +316,10 @@ const HomePage = EFFRONT.Page.make({
           Component から import します。 アプリケーション定義オブジェクトだけから import
           すると、Vite RSC が renderable な CSS 依存として 追跡できない場合があります。
         </p>
-        <h2 id="mutations">Server Function による更新</h2>
-        <p>
-          更新処理には <code>EFFRONT.ServerFn.make</code> を使います。input は schema で decode
-          され、handler は Effect を返します。<code>Schema.fromFormData</code> を使うと、戻り値を
-          native の <code>form action</code>
-          に渡せます。schema の詳細は{" "}
-          <a href="https://effect.website/docs/schema/introduction/">
-            Effect Schema documentation
-          </a>{" "}
-          を参照してください。
-        </p>
-        {code(
-          `"use server";
-
-import { Effect, Schema } from "effect";
-
-export const followAuthor = EFFRONT.ServerFn.make({
-  input: Schema.fromFormData(Schema.Struct({ authorId: Schema.NonEmptyString })),
-  handler: ({ authorId }) => Effect.logInfo("Followed author", { authorId }),
-});`,
-          "ts",
-        )}
-        {code(
-          `const FollowAuthorButton = EFFRONT.Component.make({
-  render: ({ authorId }: { readonly authorId: string }) =>
-    Effect.succeed(
-      <form action={followAuthor}>
-        <input name="authorId" type="hidden" value={authorId} />
-        <button type="submit">Follow author</button>
-      </form>,
-    ),
-});`,
-          "tsx",
-        )}
-        <p>
-          Server Function をサーバーグラフから通常の async
-          関数として直接呼び出すことはできません。React が 呼び出せる action
-          として渡してください。入力 decode と handler の失敗は action の失敗として React の
-          エラー処理へ届きます。フォーム state は{" "}
-          <a href="https://react.dev/reference/react/useActionState">useActionState reference</a>{" "}
-          を参照してください。
+        <p id="mutations">
+          フォームからサーバー処理を呼び出す方法は、
+          <a href="/guide/server-functions">Server Function</a> で説明します。 Server Component
+          は表示を組み立て、Server Function は入力を検証して更新処理を実行します。
         </p>
         <h2 id="boundary">境界を守る</h2>
         <p>
@@ -350,6 +330,7 @@ export const followAuthor = EFFRONT.ServerFn.make({
       </>
     ),
   },
+  serverFunctionsGuide,
   {
     slug: "/guide/effect",
     title: "Effect とアプリケーションサービス",
@@ -382,6 +363,25 @@ export const followAuthor = EFFRONT.ServerFn.make({
           <code>Application.effront&lt;Services&gt;()</code> と<code>EFFRONT.make</code> の{" "}
           <code>layer</code> です。
         </p>
+        <p>
+          <code>src/greeting.ts</code> にサービスの契約と実装を定義します。
+        </p>
+        {code(
+          `import { Context, Effect, Layer } from "effect";
+
+export class Greeting extends Context.Service<
+  Greeting,
+  { readonly message: (name: string) => Effect.Effect<string> }
+>()("app/services/Greeting") {
+  static readonly layer = Layer.succeed(Greeting, {
+    message: (name) => Effect.succeed(\`こんにちは、\${name} さん。\`),
+  });
+}`,
+          "ts",
+        )}
+        <p>
+          <code>src/application.tsx</code> で要求を宣言し、同じ境界で Layer を提供します。
+        </p>
         {code(
           `import { Effect } from "effect";
 import { Application } from "effront";
@@ -406,8 +406,10 @@ const HomePage = EFFRONT.Page.make({
   }),
 });
 
+const routes = EFFRONT.Routes.make({ layout: RootLayout }).page("/", HomePage);
+
 export default EFFRONT.make({
-  routes: EFFRONT.Routes.make({ layout: RootLayout }).page("/", HomePage),
+  routes,
   layer: Greeting.layer,
 });`,
           "tsx",
@@ -456,6 +458,8 @@ export default EFFRONT.make({
       </>
     ),
   },
+  middlewareGuide,
+  httpGuide,
   {
     slug: "/guide/testing",
     title: "アプリケーションのテスト",

@@ -197,11 +197,12 @@ export const isRoutedNavigation = (event: NavigateEvent) =>
 
 export const coreRuntimePages: readonly DocPage[] = [
   {
-    slug: "/core/request",
+    slug: "/architecture/implementation/request",
     title: "04. リクエストとサービスの寿命",
     description:
       "Fetchの入口からEffectのLayer構築、レスポンス本文の終了まで、リクエスト単位の所有権を追います。",
-    section: "Core",
+    section: "アーキテクチャ",
+    group: "実装解説",
     headings: [
       { id: "fetch-entry", title: "1. Fetchの呼び出しごとにLayerを構築する" },
       { id: "request-services", title: "2. HTTPのContextとアプリケーションサービスを接続する" },
@@ -211,8 +212,8 @@ export const coreRuntimePages: readonly DocPage[] = [
     content: () => (
       <>
         <p>
-          <a href="/core/application">アプリケーションの定義</a>と
-          <a href="/core/routing">ルートの組み立て</a>
+          <a href="/architecture/implementation/application">アプリケーションの定義</a>と
+          <a href="/architecture/implementation/routing">ルートの組み立て</a>
           が済むと、次はその定義を一件のHTTPリクエストに結び付けます。 この章では{" "}
           <code>packages/effront/src/workers.ts</code> から <code>server/application.ts</code>{" "}
           へ進み、サービスを取得する時点と解放する時点を分けて読みます。
@@ -224,7 +225,7 @@ export const coreRuntimePages: readonly DocPage[] = [
           <code>Promise&lt;Response&gt;</code> を返します。 最初に <code>bodyTooLarge</code> が
           Content-Length を確認し、安全な非負整数でない値や10 MiB超を413にします。
           この入口の検査はヘッダーがない本文の実測ではありません。Server Functionの本文には
-          <a href="/core/server-functions">別の読み取り上限</a>があります。
+          <a href="/architecture/implementation/server-functions">別の読み取り上限</a>があります。
         </p>
         <SourceExcerpt source={coreRuntimeSources.requestHandler} />
         <p>
@@ -271,7 +272,7 @@ export const coreRuntimePages: readonly DocPage[] = [
           <code>releaseOnce</code>{" "}
           のフラグはこれらの競合による重複解放を防ぎ、本文を得る前の例外は入口のcatchが{" "}
           <code>dispose</code> して再throwします。 Flightの子Scopeにも独自のreleaseがあり、
-          <a href="/core/rendering">次章</a>でHTTPの寿命との接続を追います。
+          <a href="/architecture/implementation/rendering">次章</a>でHTTPの寿命との接続を追います。
         </p>
         <p>
           ここはEffrontがFetchレスポンスの所有権をつなぐ実装であり、Cloudflareの転送処理そのものではありません。
@@ -298,18 +299,20 @@ export const coreRuntimePages: readonly DocPage[] = [
           <code>waitUntil(Promise&lt;unknown&gt;)</code> を持つ{" "}
           <code>CloudflareExecutionContext</code> に固定した薄いラッパーです。
           ビルド統合の入口とは分離されており、ここからenvやexecutionContextをFlightやHTMLへ自動で付加する処理はありません。
-          <a href="/core/overview">全体図</a>のホスト境界と、次の
-          <a href="/core/rendering">描画境界</a>を区別して読み進めてください。
+          <a href="/architecture/implementation/overview">全体図</a>のホスト境界と、次の
+          <a href="/architecture/implementation/rendering">描画境界</a>
+          を区別して読み進めてください。
         </p>
       </>
     ),
   },
   {
-    slug: "/core/rendering",
+    slug: "/architecture/implementation/rendering",
     title: "05. RSCからHTMLへ",
     description:
       "ルートツリーをFlightとして描画し、独立したSSR環境とブラウザーへ分岐するストリームを追います。",
-    section: "Core",
+    section: "アーキテクチャ",
+    group: "実装解説",
     headings: [
       { id: "route-to-flight", title: "1. ルートツリーをFlightの入力にする" },
       { id: "render-runtime", title: "2. Reactの描画をリクエストのEffectへ接続する" },
@@ -319,7 +322,7 @@ export const coreRuntimePages: readonly DocPage[] = [
     content: () => (
       <>
         <p>
-          <a href="/core/request">リクエストのサービス</a>がそろうと、
+          <a href="/architecture/implementation/request">リクエストのサービス</a>がそろうと、
           <code>server/application.ts</code> の <code>render</code> が{" "}
           <code>CompiledDestination</code> を描画します。 読む順序は{" "}
           <code>rsc/render-route-tree.tsx</code>、<code>server/flight-renderer.tsx</code>、
@@ -328,7 +331,8 @@ export const coreRuntimePages: readonly DocPage[] = [
         </p>
         <h2 id="route-to-flight">1. ルートツリーをFlightの入力にする</h2>
         <p>
-          HTTPのURLを絶対パスとして取り出し、<a href="/core/routing">ルートのパラメーター</a>
+          HTTPのURLを絶対パスとして取り出し、
+          <a href="/architecture/implementation/routing">ルートのパラメーター</a>
           を用意します。
           POST以外でparamsSchemaがある場合は先にSchemaで復号し、失敗を404の空レスポンスにします。
           <code>renderRouteTree</code>{" "}
@@ -361,7 +365,7 @@ export const coreRuntimePages: readonly DocPage[] = [
           Page、Layout、ComponentがEffectを実行する <code>run</code>{" "}
           はこの値を取得し、必要なMiddlewareが列にすべて含まれることを確認します。
           アプリケーションの描画Runtime外、または必要なMiddlewareのscope外ならTypeErrorです。
-          <a href="/core/application">定義時のサービス型</a>
+          <a href="/architecture/implementation/application">定義時のサービス型</a>
           だけに任せず、Reactの非同期描画時にも接続の不変条件を検査しています。
         </p>
         <h2 id="ssr-branch">3. SSRとブラウザーにFlightを分岐する</h2>
@@ -401,7 +405,8 @@ export const coreRuntimePages: readonly DocPage[] = [
           <code>{"</script"}</code> と <code>{"<!--"}</code> のescapeもあります。 ブラウザーの{" "}
           <code>client/initial-flight-stream.ts</code> は <code>self.__FLIGHT_DATA</code>{" "}
           の文字列を再encodeし、Uint8Arrayはそのまま流し、DOMContentLoadedで閉じます。
-          このストリームが<a href="/core/navigation">hydrationの入力</a>です。
+          このストリームが<a href="/architecture/implementation/navigation">hydrationの入力</a>
+          です。
         </p>
         <p>
           cancel時は外側のReadableStreamが先にFlight readerをcancelし、lockを解放してからHTML
@@ -409,17 +414,19 @@ export const coreRuntimePages: readonly DocPage[] = [
           <code>cancelFlight</code> はそのPromiseをawaitしません。
           flush中のFlight待ちと、リクエストScopeのabortを待つ描画が互いを待ち続けないための順序です。
           読み取り・flushのエラーもcontrollerへ伝え、最終的には
-          <a href="/core/request#response-lifetime">本文の所有者</a>がリクエストを解放します。
+          <a href="/architecture/implementation/request#response-lifetime">本文の所有者</a>
+          がリクエストを解放します。
         </p>
       </>
     ),
   },
   {
-    slug: "/core/navigation",
+    slug: "/architecture/implementation/navigation",
     title: "06. ブラウザーの遷移",
     description:
       "hydration後のNavigation API、Flight取得、Reactのcommitと履歴・キャッシュの寿命を分けて追います。",
-    section: "Core",
+    section: "アーキテクチャ",
+    group: "実装解説",
     headings: [
       { id: "browser-start", title: "1. 初期Flightでhydrateし、遷移を選別する" },
       { id: "flight-load", title: "2. Flightとドキュメント遷移を判別する" },
@@ -429,11 +436,13 @@ export const coreRuntimePages: readonly DocPage[] = [
     content: () => (
       <>
         <p>
-          <a href="/core/rendering">HTMLへ埋め込んだFlight</a>は初期表示だけで終わりません。
+          <a href="/architecture/implementation/rendering">HTMLへ埋め込んだFlight</a>
+          は初期表示だけで終わりません。
           <code>client/application.ts</code> を入口に、<code>RouteLoader</code> が取得し、
           <code>BrowserRenderer</code> が公開し、<code>ReactDOMRenderer</code>{" "}
           がcommitを通知する役割分担を読みます。 ルート構造の契約は
-          <a href="/core/routing">サーバー側のルーティング</a>と共有しています。
+          <a href="/architecture/implementation/routing">サーバー側のルーティング</a>
+          と共有しています。
         </p>
         <h2 id="browser-start">1. 初期Flightでhydrateし、遷移を選別する</h2>
         <p>
@@ -521,17 +530,19 @@ export const coreRuntimePages: readonly DocPage[] = [
           entryのdisposeでキャッシュを消し、refreshではMap自体を入れ替えるため、古い取得結果の遅延保存は新しいキャッシュを汚しません。
           描画のretirementにもreleaseを結び付け、キャッシュされたツリーと開いた通信資源を同一視しない構成です。
           同じ仕組みを使って現在画面を更新する
-          <a href="/core/server-functions">Server Functionの応答処理</a>へ進みます。
+          <a href="/architecture/implementation/server-functions">Server Functionの応答処理</a>
+          へ進みます。
         </p>
       </>
     ),
   },
   {
-    slug: "/core/server-functions",
+    slug: "/architecture/implementation/server-functions",
     title: "07. Server Functionの実行",
     description:
       "Reactの呼び出しをSchemaとMiddlewareへ接続し、フォーム送信・実行結果・画面更新の順序を追います。",
-    section: "Core",
+    section: "アーキテクチャ",
+    group: "実装解説",
     headings: [
       { id: "function-definition", title: "1. Schema付きの実行記述を作る" },
       { id: "request-decoding", title: "2. POSTを検査しReactの引数を復号する" },
@@ -544,8 +555,9 @@ export const coreRuntimePages: readonly DocPage[] = [
           この章では <code>application/server-fn.ts</code> で作った関数が{" "}
           <code>server/server-fn-request.ts</code> で認識され、<code>server/application.ts</code>{" "}
           の再描画を経て <code>client/call-server.ts</code> に戻るまでを追います。
-          <a href="/core/application">アプリケーションのidentity</a>、
-          <a href="/core/request">リクエストContext</a>、<a href="/core/rendering">Flight</a>
+          <a href="/architecture/implementation/application">アプリケーションのidentity</a>、
+          <a href="/architecture/implementation/request">リクエストContext</a>、
+          <a href="/architecture/implementation/rendering">Flight</a>
           が一つの呼び出しで接続される箇所です。
         </p>
         <h2 id="function-definition">1. Schema付きの実行記述を作る</h2>
@@ -650,7 +662,8 @@ export const coreRuntimePages: readonly DocPage[] = [
           で通信資源を閉じます。
           <code>client/route-refresh.ts</code>{" "}
           の再取得経路も遷移が落ち着くのを待ち、新たな遷移と競合させるため、更新が別画面を取り戻すことを防ぎます。
-          <a href="/core/navigation">遷移の寿命</a>と照合し、<a href="/core/overview">全体図</a>
+          <a href="/architecture/implementation/navigation">遷移の寿命</a>と照合し、
+          <a href="/architecture/implementation/overview">全体図</a>
           へ戻ると、定義・HTTP・Flight・ブラウザーが別々の所有権でつながっていることを確認できます。
         </p>
       </>

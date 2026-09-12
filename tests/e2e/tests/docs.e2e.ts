@@ -7,16 +7,31 @@ const requiredRoutes = [
   "/guide/getting-started",
   "/platforms",
   "/platforms/cloudflare",
-  "/core/overview",
+  "/guide/server-functions",
+  "/guide/middleware",
+  "/guide/http",
+  "/advanced",
+  "/advanced/request-runtime-and-lifetimes",
+  "/advanced/client-navigation",
+  "/advanced/server-function-execution-and-refresh",
+  "/advanced/production-startup",
+  "/api-reference",
+  "/api-reference/application",
+  "/api-reference/components",
+  "/api-reference/routing",
+  "/api-reference/server-functions",
+  "/api-reference/workers",
+  "/api-reference/vite",
+  "/architecture/implementation/overview",
 ];
 const coreRoutes = [
-  "/core/overview",
-  "/core/application",
-  "/core/routing",
-  "/core/request",
-  "/core/rendering",
-  "/core/navigation",
-  "/core/server-functions",
+  "/architecture/implementation/overview",
+  "/architecture/implementation/application",
+  "/architecture/implementation/routing",
+  "/architecture/implementation/request",
+  "/architecture/implementation/rendering",
+  "/architecture/implementation/navigation",
+  "/architecture/implementation/server-functions",
 ];
 const guideApplication = `import { Effect } from "effect";
 import { Application } from "effront";
@@ -357,7 +372,24 @@ test.describe("server-rendered public documentation", () => {
     );
     for (const route of coreRoutes) {
       await page.goto(route);
-      await expect(page.locator("main article header p").first()).toHaveText("Core");
+      await expect(page.locator("main article header p").first()).toHaveText("アーキテクチャ");
+      const architecture = page.getByRole("list", { name: "アーキテクチャ", exact: true });
+      const implementation = architecture.getByRole("list", { name: "実装解説", exact: true });
+      await expect(implementation.locator(":scope > li > a")).toHaveCount(7);
+      await expect(implementation.locator(`a[href="${route}"]`)).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
+      await expect(page.getByRole("navigation", { name: "パンくずリスト" })).toContainText(
+        "実装解説",
+      );
+      const baseline = page.locator("[data-architecture-baseline]");
+      await expect(baseline).toHaveAttribute(
+        "data-architecture-baseline",
+        "5141576d132be10aafc18a738cfb89ab3137f988",
+      );
+      await expect(baseline).toContainText("effront@0.1.4-workers.0");
+      await expect(baseline).toContainText("2026-09-12");
       const excerpts = page.locator("main article figure[data-core-source]");
       expect(await excerpts.count(), route).toBeGreaterThan(0);
       for (const excerpt of await excerpts.all()) {
@@ -453,16 +485,21 @@ test("hydrates desktop navigation with readable typography and working heading l
     .click();
   expect(new URL(page.url()).hash).toBe(href);
 
-  const coreLink = page.locator('a[href="/core/overview"]:visible').first();
+  const coreLink = page.locator('a[href="/architecture/implementation/overview"]:visible').first();
   const coreTitle = (await coreLink.innerText()).trim();
   await coreLink.click();
-  await expect(page).toHaveURL(/\/core\/overview$/);
+  await expect(page).toHaveURL(/\/architecture\/implementation\/overview$/);
   await expect(page.locator("main article").getByRole("heading", { level: 1 })).toHaveText(
     coreTitle,
   );
   await expectArticle(page);
   await expectTypography(page);
   await expectNoHorizontalOverflow(page);
+  const activeChapter = page
+    .getByRole("list", { name: "実装解説", exact: true })
+    .locator('a[aria-current="page"]');
+  await expect(activeChapter).toHaveAttribute("href", "/architecture/implementation/overview");
+  await activeChapter.scrollIntoViewIfNeeded();
   await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
   await page.screenshot({
     // Preserve input styles while deferred boundaries may still be hydrating.
@@ -517,10 +554,10 @@ test("supports mobile sidebar keyboard dismissal and link dismissal without over
 
   await toggle.click();
   await expect(sheet).toBeVisible();
-  const coreLink = sheet.locator('a[href="/core/overview"]');
+  const coreLink = sheet.locator('a[href="/architecture/implementation/overview"]');
   const coreTitle = (await coreLink.innerText()).trim();
   await coreLink.click();
-  await expect(page).toHaveURL(/\/core\/overview$/);
+  await expect(page).toHaveURL(/\/architecture\/implementation\/overview$/);
   await expect(sheet).toBeHidden();
   await expect(page.locator("main article").getByRole("heading", { level: 1 })).toHaveText(
     coreTitle,
@@ -534,7 +571,7 @@ test("supports mobile sidebar keyboard dismissal and link dismissal without over
     path: testInfo.outputPath("mobile-viewport.png"),
     fullPage: false,
   });
-  for (const route of coreRoutes) {
+  for (const route of new Set([...coreRoutes, ...requiredRoutes])) {
     await page.goto(route);
     await expectArticle(page);
     await expectNoHorizontalOverflow(page);
