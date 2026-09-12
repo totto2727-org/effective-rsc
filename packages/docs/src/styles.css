@@ -105,6 +105,29 @@ input {
   transform: translateY(0);
 }
 
+.docs-noscript-nav {
+  border-bottom: 1px solid var(--border);
+  padding: 1rem;
+  background: var(--sidebar);
+}
+.docs-noscript-nav p {
+  margin: 0 0 0.5rem;
+}
+.docs-noscript-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+.docs-noscript-nav a {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 [data-doc-page] :where(pre) {
   max-width: 100%;
   overflow-x: auto;
