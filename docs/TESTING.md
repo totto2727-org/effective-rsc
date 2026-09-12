@@ -29,7 +29,7 @@ Playwright explicitly selects the `.e2e.ts` suite, keeping it outside Vitest's s
 ## Verification
 
 - `vp test run` discovers both colocated unit tests and retained integration tests by default.
-- `vp run typecheck` checks all source and retained tests, including the colocated files.
+- `vp check` checks all source and retained tests, including the colocated files.
 - `(cd packages/gitignore-patterns && vp run test)` builds the generator and executes real formatter/linter acceptance.
 - `(cd packages/e2e && vp run test)` builds the Workers example and runs the real browser acceptance matrix.
 - Package archives must omit colocated tests; source-package file exclusions and the generator declaration-build exclusions enforce that boundary, not test-discovery exclusions.
@@ -44,7 +44,7 @@ Both package archives were inspected and contained no unit, integration, or brow
 
 `packages/e2e` owns its Playwright dependency, configuration, standard webServer settings, test environment file, browser suites, and generated reports.
 It references the existing `examples/workers` app without copying or relocating it.
-From that package, `vp run test` runs all three local-hosting variants and `vp run typecheck` checks its configuration and test source.
+From that package, `vp run test` runs all three local-hosting variants and `vp check` checks its configuration and test source.
 The root package has no E2E runner script or Playwright dependency.
 
 `packages/gitignore-patterns` owns both `src/index.test.ts` and `tests/cli.test.ts`.

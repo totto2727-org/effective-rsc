@@ -76,7 +76,7 @@ The workspace contains the framework and its Workers example.
 
 ## Verification contract
 
-- `vp run typecheck` checks every retained framework source file, the consumer, and test source.
+- `vp check` checks every retained framework source file, the consumer, and test source.
 - `vp test run` checks the retained framework tests, including the public Fetch adapter's request-context and lifecycle behavior.
 - `(cd packages/e2e && vp run test)` uses Playwright webServer to host the example source in VitePlus development mode and isolated Wrangler builds with default and overridden runtime variables.
 - Browser checks cover HTML, Flight, hydrated interaction, navigation, unknown routes, and secret non-disclosure.

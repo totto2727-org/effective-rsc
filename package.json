@@ -8,8 +8,7 @@
     "check": "vp check",
     "fmt": "vp fmt",
     "lint": "vp lint",
-    "test": "vp test run",
-    "typecheck": "tsc --noEmit"
+    "test": "vp test run"
   },
   "devDependencies": {
     "@effect/vitest": "4.0.0-rc.113",

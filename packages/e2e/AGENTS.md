@@ -12,7 +12,7 @@ After running `vp install` at the workspace root, enter this directory.
 If Chromium is not installed yet, run `vp exec playwright install chromium` here.
 
 - `vp run test` invokes `playwright test`, which starts Vite/workerd and standalone Wrangler with default and overridden bindings through `webServer`.
-- `vp run typecheck` checks this project's TypeScript with its own strictest-based configuration.
+- `vp check` checks this project's TypeScript with its own strictest-based configuration.
 
 The `test` script intentionally runs the Playwright E2E workflow, not the built-in `vp test` Vitest command.
 Browser suites use `.e2e.ts`, which the package's Playwright configuration selects and ordinary Vitest discovery does not.

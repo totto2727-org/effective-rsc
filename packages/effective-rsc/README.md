@@ -131,9 +131,7 @@ The Cloudflare integration owns its required environment names rather than expos
 ## Quality checks
 
 ```sh
-vp fmt --check
-vp lint
-vp run typecheck
+vp check
 vp test run
 vp run test:e2e
 ```
