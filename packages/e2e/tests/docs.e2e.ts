@@ -1,4 +1,6 @@
-import { expect, test as base, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { expect, test as base, type Locator, type Page } from "@playwright/test";
 
 const baseline = "ed886996d1d3780b94166af4f798c53416d547c8";
 const comparison = "9058a71dcb522ffed8eb838ef9aef3c69953dfe7";
@@ -10,12 +12,58 @@ const readingRoutes = [
   "/reading/tooling",
   "/reading/lifetimes",
 ];
+const guideApplication = `import { Effect } from "effect";
+import { Application } from "effective-rsc";
+
+const ERSC = Application.ersc();
+
+const RootLayout = ERSC.Layout.make({
+  render: ({ children }) =>
+    Effect.succeed(
+      <html lang="ja">
+        <body><main>{children}</main></body>
+      </html>,
+    ),
+});
+
+const HomePage = ERSC.Page.make({
+  render: () => Effect.succeed(<h1>Hello, Workers</h1>),
+});
+
+export default ERSC.make({
+  routes: ERSC.Routes.make({ layout: RootLayout }).page("/", HomePage),
+});`;
+const versionDiff = `diff --git a/packages/effective-rsc/package.json b/packages/effective-rsc/package.json
+index a6d8558e..06a7939e 100644
+--- a/packages/effective-rsc/package.json
++++ b/packages/effective-rsc/package.json
+@@ -3,2 +3,2 @@
+-  "version": "0.1.4",
+-  "description": "An experimental, Effect-native React Server Components framework for Bun.",
++  "version": "0.1.4-workers.0",
++  "description": "Effect-native React Server Components with a Web fetch core and Vite/Cloudflare Workers integration.",
+@@ -6 +6 @@
+-    "bun",
++    "cloudflare-workers",`;
 
 // Client failures must fail acceptance even when the visible server-rendered article looks correct.
 const test = base.extend({
-  page: async ({ page }, use) => {
+  page: async ({ page, baseURL }, use) => {
+    if (!baseURL) throw new TypeError("Docs acceptance requires a local host baseURL");
+    const origin = new URL(baseURL).origin;
     const pageErrors: string[] = [];
     const hydrationErrors: string[] = [];
+    const remoteRequests: string[] = [];
+    // External reference anchors are allowed. Rendering and internal navigation must stay local.
+    // This observes browser requests, not outbound requests made inside workerd.
+    await page.route("**/*", (route) => {
+      const url = new URL(route.request().url());
+      if (/^https?:$/.test(url.protocol) && url.origin !== origin) {
+        remoteRequests.push(url.href);
+        return route.abort("blockedbyclient");
+      }
+      return route.continue();
+    });
     page.on("pageerror", (error) => pageErrors.push(error.message));
     page.on("console", (message) => {
       if (/hydrat|server rendered html|did not match/i.test(message.text())) {
@@ -25,6 +73,10 @@ const test = base.extend({
     await use(page);
     expect(pageErrors, "Uncaught browser errors").toEqual([]);
     expect(hydrationErrors, "React hydration faults").toEqual([]);
+    expect(
+      remoteRequests,
+      "Rendering must not fetch GitHub, APIs, or other remote resources",
+    ).toEqual([]);
   },
 });
 
@@ -77,9 +129,136 @@ const expectTypography = async (page: Page) => {
   expect(styles.paragraphSpacing).toBeGreaterThan(0);
 };
 
+// Canvas normalizes computed oklch/rgb/theme colors to sRGB for WCAG luminance comparisons.
+const renderedColors = (element: Element) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 1;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("A canvas context is required for color measurements");
+  const rgba = (color: string) => {
+    context.clearRect(0, 0, 1, 1);
+    context.fillStyle = color;
+    context.fillRect(0, 0, 1, 1);
+    return [...context.getImageData(0, 0, 1, 1).data];
+  };
+  const style = getComputedStyle(element);
+  return {
+    background: rgba(style.backgroundColor),
+    foreground: rgba(style.color),
+    tokens:
+      element.tagName === "PRE"
+        ? [
+            ...new Set(
+              [...element.querySelectorAll(".line > span[style]")].map(
+                (token) => getComputedStyle(token).color,
+              ),
+            ),
+          ].map(rgba)
+        : [],
+  };
+};
+const luminance = (color: readonly number[]) => {
+  const channel = (value: number | undefined) => {
+    const normalized = (value ?? 0) / 255;
+    return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(color[0]) + 0.7152 * channel(color[1]) + 0.0722 * channel(color[2]);
+};
+const contrast = (first: readonly number[], second: readonly number[]) =>
+  (Math.max(luminance(first), luminance(second)) + 0.05) /
+  (Math.min(luminance(first), luminance(second)) + 0.05);
+
+const expectInitialDarkMode = async (page: Page) => {
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+  const colors = await page.locator("body").evaluate(renderedColors);
+  expect(colors.background[3], "The SSR body has an actual opaque background").toBe(255);
+  expect(luminance(colors.background), "Default background must be dark").toBeLessThan(0.15);
+  expect(luminance(colors.foreground)).toBeGreaterThan(luminance(colors.background));
+  expect(
+    contrast(colors.foreground, colors.background),
+    "Default text must be readable in dark mode",
+  ).toBeGreaterThanOrEqual(4.5);
+};
+
+const expectHighlightedCode = async (pre: Locator, language: string, source: string) => {
+  await expect(pre).toHaveClass(/\bshiki\b/);
+  await expect(pre).toHaveAttribute("data-code-block");
+  await expect(pre).toHaveAttribute("data-language", language);
+  // textContent preserves every newline, space, sign and angle bracket across token spans.
+  expect(await pre.locator("code").textContent()).toBe(source);
+  const tokens = pre.locator("code .line > span[style]");
+  expect(await tokens.count(), "Shiki must emit server-rendered syntax tokens").toBeGreaterThan(5);
+  const colors = await pre.evaluate(renderedColors);
+  expect(
+    colors.tokens.length,
+    "Syntax token colors must actually apply without JavaScript",
+  ).toBeGreaterThan(1);
+  expect(colors.background[3]).toBe(255);
+  expect(luminance(colors.background), "Code blocks must use the dark theme at SSR").toBeLessThan(
+    0.15,
+  );
+  for (const color of colors.tokens) {
+    expect(
+      contrast(color, colors.background),
+      "Syntax tokens must remain visible on the dark code background",
+    ).toBeGreaterThanOrEqual(3);
+  }
+};
+
+const expectUnclippedSidebarLabels = async (scope: Locator) => {
+  const labels = await scope.locator('a[data-sidebar="menu-button"]').evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const anchor = node as HTMLElement;
+      const bounds = anchor.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(anchor);
+      return {
+        title: anchor.innerText,
+        top: bounds.top,
+        bottom: bounds.bottom,
+        clipped:
+          anchor.scrollHeight > anchor.clientHeight + 1 ||
+          [...range.getClientRects()].some(
+            (rect) =>
+              rect.top < bounds.top - 1 ||
+              rect.bottom > bounds.bottom + 1 ||
+              rect.left < bounds.left - 1 ||
+              rect.right > bounds.right + 1,
+          ),
+      };
+    }),
+  );
+  expect(labels.length).toBeGreaterThan(0);
+  for (const [index, label] of labels.entries()) {
+    expect(label.clipped, `Sidebar label must fit its own link: ${label.title}`).toBe(false);
+    const previous = labels[index - 1];
+    if (previous)
+      expect(label.top, `Sidebar links must not overlap: ${label.title}`).toBeGreaterThanOrEqual(
+        previous.bottom - 1,
+      );
+  }
+};
+
+const expectServerOnlyHighlighter = async () => {
+  const runDirectory = process.env["ERSC_DOCS_E2E_RUN_DIR"];
+  if (!runDirectory) throw new TypeError("Docs acceptance requires its isolated run directory");
+  const graph: { modules: string[]; assets: string[] } = JSON.parse(
+    await readFile(
+      join(runDirectory, "docs-wrangler/dist/client/acceptance-client-graph.json"),
+      "utf8",
+    ),
+  );
+  expect(graph.modules.length, "Audit the real nonempty client build graph").toBeGreaterThan(10);
+  expect(graph.modules.some((id) => id.includes("/src/components/docs-shell.tsx"))).toBe(true);
+  expect(
+    [...graph.modules, ...graph.assets].filter((id) => /shiki|oniguruma|vscode-textmate/i.test(id)),
+    "The client bundle must not contain Shiki engines, grammars or themes",
+  ).toEqual([]);
+};
+
 // This uses the browser's HTML parser with JavaScript disabled, not a client-rendered DOM or a mock.
 test.describe("server-rendered public documentation", () => {
-  test.use({ javaScriptEnabled: false });
+  test.use({ javaScriptEnabled: false, colorScheme: "light" });
 
   test("serves complete articles and every local navigation/content link and heading anchor without JavaScript", async ({
     page,
@@ -104,6 +283,7 @@ test.describe("server-rendered public documentation", () => {
       expect(response?.status(), route).toBe(200);
       expect(response?.headers()["content-type"], route).toContain("text/html");
       const article = await expectArticle(page);
+      await expectInitialDarkMode(page);
       await expectTypography(page);
       await expectNoHorizontalOverflow(page);
       titles.set(route, (await article.getByRole("heading", { level: 1 }).innerText()).trim());
@@ -158,9 +338,15 @@ test.describe("server-rendered public documentation", () => {
     }
   });
 
-  test("renders genuine before/after excerpts with exact immutable Git provenance", async ({
+  test("renders server-highlighted guide and genuine before/after excerpts with exact immutable Git provenance", async ({
     page,
   }) => {
+    await page.goto("/guide/getting-started");
+    await expectHighlightedCode(
+      page.locator('main article pre[data-language="tsx"]'),
+      "tsx",
+      guideApplication,
+    );
     for (const route of readingRoutes) {
       await page.goto(route);
       const excerpts = page.locator("main article figure[data-reading-excerpt]");
@@ -182,6 +368,7 @@ test.describe("server-rendered public documentation", () => {
     const code = await diff.locator(":scope > pre > code").innerText();
     expect(code).toMatch(/^-(?!--).+/m);
     expect(code).toMatch(/^\+(?!\+\+).+/m);
+    await expectHighlightedCode(diff.locator(":scope > pre"), "diff", versionDiff);
   });
 });
 
@@ -213,6 +400,7 @@ test("hydrates desktop navigation with readable typography and working heading l
   await page.goto("/");
   await page.waitForLoadState("networkidle");
   const sidebar = page.locator('[data-sidebar="sidebar"]:visible');
+  await expectUnclippedSidebarLabels(sidebar);
   const navigationLinks = sidebar.locator('a[data-sidebar="menu-button"]');
   const navigationCount = await navigationLinks.count();
   expect(navigationCount).toBeGreaterThan(1);
@@ -268,6 +456,7 @@ test("hydrates desktop navigation with readable typography and working heading l
     path: testInfo.outputPath("desktop.png"),
     fullPage: true,
   });
+  if (testInfo.project.name === "docs-wrangler") await expectServerOnlyHighlighter();
 });
 
 test("supports mobile sidebar keyboard dismissal and link dismissal without overflow", async ({
@@ -290,6 +479,7 @@ test("supports mobile sidebar keyboard dismissal and link dismissal without over
   await toggle.click();
   const sheet = page.getByRole("dialog");
   await expect(sheet).toBeVisible();
+  await expectUnclippedSidebarLabels(sheet);
   await page.screenshot({
     animations: "disabled",
     path: testInfo.outputPath("mobile-sidebar.png"),
