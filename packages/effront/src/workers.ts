@@ -27,14 +27,27 @@ export const WorkersRequestContext = Context.Reference<WorkersRequestContext<unk
   },
 );
 
-export const getWorkersRequestContext = <Env, ExecutionContext>() =>
-  Effect.map(
-    WorkersRequestContext,
-    (context) => context as WorkersRequestContext<Env, ExecutionContext>,
-  );
+/**
+ * Creates typed readers for the existing request context, without creating a new service or Layer.
+ * Types describe host-supplied values; they do not validate them at runtime.
+ */
+export const createWorkersContextAccessors = <Env = unknown, ExecutionContext = unknown>() => {
+  const getWorkersRequestContext = () =>
+    Effect.map(
+      WorkersRequestContext,
+      (context) => context as WorkersRequestContext<Env, ExecutionContext>,
+    );
 
-export const getWorkersEnv = <Env>() =>
-  Effect.map(getWorkersRequestContext<Env, unknown>(), (context) => context.env);
+  const getWorkersEnv = () => Effect.map(getWorkersRequestContext(), (context) => context.env);
+
+  return { getWorkersEnv, getWorkersRequestContext };
+};
+
+export const getWorkersEnv = <Env = unknown>() =>
+  createWorkersContextAccessors<Env>().getWorkersEnv();
+
+export const getWorkersRequestContext = <Env = unknown, ExecutionContext = unknown>() =>
+  createWorkersContextAccessors<Env, ExecutionContext>().getWorkersRequestContext();
 
 export type FetchHandler<Env = unknown, ExecutionContext = unknown> = (
   request: Request,

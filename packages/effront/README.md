@@ -22,6 +22,24 @@ RSC produces Flight, SSR produces initial HTML, and the browser hydrates and nav
 The Vite integration provides browser hydration and SSR entry points.
 The application definition is not a browser-only module despite the client entry filename.
 
+## Typed host context
+
+```ts
+import { createWorkersContextAccessors } from "effront/workers";
+
+type Env = { APP_LABEL: string };
+type HostContext = { requestId: string };
+export const { getWorkersEnv, getWorkersRequestContext } = createWorkersContextAccessors<
+  Env,
+  HostContext
+>();
+```
+
+Use `yield* getWorkersEnv()` or `yield* getWorkersRequestContext()` in a request Effect.
+Factories read the same request-scoped Context without creating a new Layer or validating the host values.
+Omitting types leaves Env and ExecutionContext unknown; the standalone generic getters remain available.
+For Cloudflare's execution context, use the Env-only factory from `@effront/cloudflare/workers`.
+
 ## Documentation
 
 - Common guides cover application structure, routing, components, services, and testing.

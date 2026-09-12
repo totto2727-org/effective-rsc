@@ -1,8 +1,7 @@
 import { Effect } from "effect";
 import { Application } from "effront";
-import { getWorkersEnv } from "effront/workers";
+import { getWorkersEnv, getWorkersRequestContext } from "./host";
 import { Counter } from "./counter";
-import type { Env } from "./env";
 import "./styles.css";
 
 const EFFRONT = Application.effront();
@@ -26,7 +25,7 @@ const RootLayout = EFFRONT.Layout.make({
 
 const HomePage = EFFRONT.Page.make({
   render: Effect.fn("HomePage.render")(function* () {
-    const env = yield* getWorkersEnv<Env>();
+    const env = yield* getWorkersEnv();
     return (
       <>
         <h1>{env.APP_LABEL}</h1>
@@ -42,7 +41,9 @@ const HomePage = EFFRONT.Page.make({
 
 const AboutPage = EFFRONT.Page.make({
   render: Effect.fn("AboutPage.render")(function* () {
-    const env = yield* getWorkersEnv<Env>();
+    const context = yield* getWorkersRequestContext();
+    context.executionContext.waitUntil(Promise.resolve());
+    const env = yield* getWorkersEnv();
     return (
       <>
         <h1>About</h1>

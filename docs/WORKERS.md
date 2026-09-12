@@ -30,6 +30,12 @@ Both Layer acquisition and the handler's Effect context receive the same Workers
 The response body's EOF, error, or cancellation owns request-scope disposal.
 
 `getWorkersEnv<Env>()` and `getWorkersRequestContext<Env, ExecutionContext>()` retrieve typed host values without copying them into a serialization format.
+`createWorkersContextAccessors<Env, ExecutionContext>()` binds both types once and returns zero-argument Effect-producing readers of the same request Context.
+The generic defaults are unknown for both types.
+`@effront/cloudflare/workers` wraps the factory with a fixed `{ waitUntil(promise: Promise<unknown>): void }` execution context and accepts only Env.
+Its runtime export is separate from the package's Vite plugin entry.
+Factories create readers, not additional services or Layers, and preserve request/env/execution-context object identity.
+Type parameters are compile-time contracts rather than runtime validation.
 The latter exposes `request`, `env`, and `executionContext`.
 Type arguments are caller assertions, not validation of runtime bindings.
 Developers remain responsible for not explicitly rendering secrets or passing bindings into Client Components.

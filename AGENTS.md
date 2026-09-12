@@ -4,7 +4,7 @@
 
 - `packages/effront/`: application and Fetch runtime (`effront`).
 - `packages/vite/`: portable build integration (`@effront/vite`).
-- `packages/cloudflare/`: Vite-only Cloudflare integration (`@effront/cloudflare`).
+- `packages/cloudflare/`: Cloudflare Vite integration (`@effront/cloudflare`) and separate runtime accessors (`@effront/cloudflare/workers`).
 - `examples/workers/`: consumer using the public package exports, Workers `fetch`, and runtime `env`.
 - `app/docs/`: SSR Guide and upstream-comparison site, using the framework itself with shadcn/ui and Tailwind Typography.
 - `tests/e2e/`: independently managed Playwright acceptance against the real consumer.

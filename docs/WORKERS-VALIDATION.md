@@ -133,3 +133,16 @@ The test host now explicitly sets all three environment output directories, keep
 The E2E TypeScript config enables `allowImportingTsExtensions` because the public framework source export uses explicit `.ts` imports; it adds no include/exclude overrides.
 Builds, state, failure traces, and test logs remain in the package's ignored `tmp/` directory for diagnosis.
 These checks cover local workerd hosting, not cloud deployment.
+
+## Typed request-context factories
+
+The core factory accepts Env and ExecutionContext; the Cloudflare runtime wrapper accepts Env only and fixes the execution context to its waitUntil contract.
+Colocated type assertions run through vp check, including rejection of a second Cloudflare factory type argument.
+Runtime tests verify identical objects through independent readers of one Layer, reuse of pre-created Effects across distinct request contexts, missing-context failure, and forwarding of the original Promise to waitUntil.
+The existing real Fetch handler integration now uses factory-created readers during application Layer acquisition and middleware execution, retaining concurrent request isolation and EOF/cancel/error cleanup checks.
+The actual Workers example imports @effront/cloudflare/workers, binds Env once, and calls waitUntil while rendering its About page.
+All 250 tests in 35 files passed; Workers acceptance passed nine cases on Vite and independent default/overridden Wrangler hosts, and documentation acceptance passed ten cases.
+The Workers build additionally traverses actual module IDs and rejects Cloudflare's Vite entry and Vite/Wrangler tooling in the application graphs.
+Actual pnpm tarballs contain the workers exports and exclude colocated tests; the Cloudflare core peer is normalized to ^0.1.4-workers.0.
+The workspace pnpm peers check still reports VitePlus alias version and workspace:^ peer-range warnings; this command is not green, while the packaged core peer range and real host execution are verified above.
+No registry publication or remote deployment was performed.

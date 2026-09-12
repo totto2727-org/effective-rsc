@@ -298,6 +298,12 @@ importers:
       '@effront/vite':
         specifier: workspace:*
         version: link:../vite
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.113
+      effront:
+        specifier: workspace:*
+        version: link:../effront
       vitest:
         specifier: 4.1.11
         version: 4.1.11(@types/node@22.20.2)(@vitest/browser-preview@4.1.11)(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))

@@ -1,7 +1,7 @@
 {
   "name": "@effront/cloudflare",
   "version": "0.1.4-workers.0",
-  "description": "Effront Cloudflare Workers Vite integration.",
+  "description": "Effront Cloudflare Workers Vite integration and typed request context accessors.",
   "license": "MIT",
   "files": [
     "src",
@@ -13,17 +13,21 @@
   ],
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./workers": "./src/workers.ts"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "1.54.7"
   },
   "devDependencies": {
     "@effront/vite": "workspace:*",
+    "effect": "catalog:",
+    "effront": "workspace:*",
     "vitest": "4.1.11"
   },
   "peerDependencies": {
     "@effront/vite": "workspace:^",
+    "effront": "workspace:^",
     "vite": "*"
   }
 }

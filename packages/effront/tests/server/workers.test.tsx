@@ -3,7 +3,11 @@ import { Context, Effect, Layer, Stream } from "effect";
 import { HttpServerResponse } from "effect/unstable/http";
 
 import { Application } from "../../src/application/effront";
-import { createFetchHandler, getWorkersEnv, getWorkersRequestContext } from "../../src/workers";
+import {
+  createFetchHandler,
+  createWorkersContextAccessors,
+  getWorkersRequestContext,
+} from "../../src/workers";
 
 class RequestEnvironment extends Context.Service<RequestEnvironment, { readonly value: string }>()(
   "effront/tests/workers/RequestEnvironment",
@@ -16,6 +20,7 @@ class RequestLifetime extends Context.Service<
 
 type TestEnv = { readonly mode?: "empty" | "failure" | "stream"; readonly value: string };
 
+const accessors = createWorkersContextAccessors<TestEnv, { readonly requestId: string }>();
 const encoder = new TextEncoder();
 
 describe("createFetchHandler", () => {
@@ -29,10 +34,8 @@ describe("createFetchHandler", () => {
           Effect.gen(function* () {
             const environment = yield* RequestEnvironment;
             const lifetime = yield* RequestLifetime;
-            const requestContext = yield* getWorkersRequestContext<
-              TestEnv,
-              { readonly requestId: string }
-            >();
+            const requestContext = yield* accessors.getWorkersRequestContext();
+            expect(requestContext).toBe(yield* getWorkersRequestContext());
             if (requestContext.env.mode === "empty") {
               return HttpServerResponse.empty();
             }
@@ -78,7 +81,7 @@ describe("createFetchHandler", () => {
           layer: Layer.mergeAll(
             Layer.effect(
               RequestEnvironment,
-              Effect.map(getWorkersEnv<{ readonly value: string }>(), (env) =>
+              Effect.map(accessors.getWorkersEnv(), (env) =>
                 RequestEnvironment.of({ value: env.value }),
               ),
             ),

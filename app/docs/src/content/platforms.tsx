@@ -153,22 +153,32 @@ vp exec wrangler dev --local --no-bundle --config dist/rsc/wrangler.json`,
         </p>
         {code(
           `import { Effect } from "effect";
-import { getWorkersEnv, getWorkersRequestContext } from "effront/workers";
+import { createWorkersContextAccessors } from "@effront/cloudflare/workers";
 
 type Env = { APP_LABEL: string; SERVER_TOKEN?: string };
-type ExecutionContext = { waitUntil(promise: Promise<unknown>): void };
+export const { getWorkersEnv, getWorkersRequestContext } =
+  createWorkersContextAccessors<Env>();
 
 const requestInfo = Effect.gen(function* () {
-  const env = yield* getWorkersEnv<Env>();
-  const context = yield* getWorkersRequestContext<Env, ExecutionContext>();
+  const env = yield* getWorkersEnv();
+  const context = yield* getWorkersRequestContext();
   return { label: env.APP_LABEL, path: new URL(context.request.url).pathname };
 });`,
           "ts",
         )}
         <p>
-          これらの型パラメーターは runtime validation ではありません。binding
-          の検証が必要なら、自分の Layer で値を検査してください。helper は request の Effect context
-          の外では使用できません。
+          factory にアプリケーションの Env を一度指定すると、生成した取得関数がその型を返します。
+          ExecutionContext は <code>waitUntil(promise: Promise&lt;unknown&gt;): void</code>
+          を持つ型に設定済みです。個別の呼び出しで型を指定する場合は、同じモジュールが公開する
+          <code>getWorkersEnv&lt;Env&gt;()</code> と{" "}
+          <code>getWorkersRequestContext&lt;Env&gt;()</code>
+          も使えます。リクエスト処理中の Effect から取得してください。
+        </p>
+        <p>
+          どの factory も同じリクエスト用 Context を読みます。型指定はアプリケーション側の契約で、
+          binding の実行時検証は必要に応じて Layer で行います。
+          <code>@effront/cloudflare/workers</code> はランタイム用の入口で、Vite
+          プラグインとは分離されています。
         </p>
         <h2 id="secrets">環境値と秘密値</h2>
         <p>
