@@ -6,5 +6,5 @@ const ignorePatterns = await generateIgnorePatterns(new URL(".", import.meta.url
 
 export default defineConfig({
   fmt: { ignorePatterns },
-  lint: { ignorePatterns },
+  lint: { ignorePatterns, options: { typeAware: true, typeCheck: true } },
 });
