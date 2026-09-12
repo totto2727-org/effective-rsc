@@ -93,8 +93,8 @@ Only the automated acceptance runner passes fixed dev-server host/port/strict-po
 
 Observed checks:
 
-- `vp run build` from the repository root succeeded and emitted `dist/rsc/ssr/index.js`.
-- `vp run dev` with no server flags served HTTP 200 at Vite's default `http://localhost:5173` and rendered the Workers environment label.
+- `vp build` from `examples/workers` succeeded and emitted `dist/rsc/ssr/index.js`.
+- `vp dev` from `examples/workers` with no server flags served HTTP 200 at Vite's default `http://localhost:5173` and rendered the Workers environment label.
 - Real Vite `resolveConfig` tests verified default SSR nesting, root output overrides, RSC output overrides, and explicit SSR overrides.
 - All 160 tests, formatting, default lint, and whole-tree type checking passed.
 - After removing `run_worker_first`, all 9 browser cases again passed in Vite/workerd, standalone Wrangler, and Wrangler with runtime variable overrides.

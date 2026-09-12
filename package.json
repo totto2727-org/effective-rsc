@@ -5,9 +5,6 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "cd examples/workers && vp dev",
-    "build": "cd examples/workers && vp build",
-    "local": "wrangler dev --local --no-bundle --config examples/workers/dist/rsc/wrangler.json --port 8787",
     "check": "vp check",
     "fmt": "vp fmt",
     "lint": "vp lint",

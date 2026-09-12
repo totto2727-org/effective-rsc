@@ -10,7 +10,7 @@ Bun and containers are not required.
 - Dependencies pinned in `pnpm-workspace.yaml` and `pnpm-lock.yaml`, including React Canary and Effect v4 RC.
 - Local workerd support on your platform.
 
-The workspace contains `packages/effective-rsc` and `examples/workers`.
+The workspace contains `packages/effective-rsc`, the tooling utility `packages/gitignore-patterns`, and `examples/workers`.
 Obsolete upstream implementations, examples, tooling, and source snapshots have been removed from the working tree and remain available in Git history.
 
 ## Run locally
@@ -19,17 +19,18 @@ From the repository root:
 
 ```sh
 vp install
-vp run dev
+cd examples/workers
+vp dev
 ```
 
 Open the URL reported by Vite (normally <http://localhost:5173>).
 This is Vite's development server with the Cloudflare plugin executing the application inside workerd, not a Node or Bun HTTP server emulating Workers.
-Alternatively, run `vp dev` directly from `examples/workers`.
+Example commands run from `examples/workers`; the repository root has no startup wrapper.
 
-To serve a production build locally without Vite:
+To serve a production build locally without Vite, stay in `examples/workers`:
 
 ```sh
-vp run build
+vp build
 vp run local
 ```
 
@@ -43,7 +44,7 @@ Set ordinary local bindings in `examples/workers/wrangler.jsonc` under `vars`.
 For local secrets, copy `examples/workers/.dev.vars.example` to `.dev.vars` in that directory and change the example value.
 The `.dev.vars` file is ignored by Git.
 For built-output hosting, supply runtime values with Wrangler's `--var` or an explicit `--env-file` path instead of relying on discovery relative to the generated configuration.
-For example, from the repository root: `vp exec wrangler dev --local --no-bundle --config examples/workers/dist/rsc/wrangler.json --env-file examples/workers/.dev.vars --port 8787`.
+For example, from `examples/workers`: `vp exec wrangler dev --local --no-bundle --config dist/rsc/wrangler.json --env-file .dev.vars --port 8787`.
 Do not put secrets into Vite `define`, `import.meta.env`, Client Component props, or rendered output.
 
 The example reads `APP_LABEL` and reports whether `SERVER_TOKEN` is configured without displaying the token.

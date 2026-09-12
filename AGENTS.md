@@ -24,16 +24,14 @@
 From the repository root:
 
 - `vp install` installs the pinned pnpm workspace dependencies.
-- `vp run dev` runs the real Workers consumer through the Cloudflare Vite plugin.
-- `vp run build` produces the consumer's Worker and client assets.
-- `vp run local` serves the generated Worker using Wrangler locally without Vite.
 - `vp fmt` formats with VitePlus.
 - `vp lint` uses default VitePlus lint rules.
 - `vp run typecheck` checks all framework source, the example, and retained tests.
 - `vp test run` runs the retained unit/integration tests.
 - `vp run test:e2e` runs real browser acceptance.
 
-For direct Vite commands, enter `examples/workers/` and use `vp dev` or `vp build`.
+To run the example, enter `examples/workers/` and use `vp dev`, `vp build`, or `vp run local`.
+The repository root intentionally provides no example dev, build, or local-hosting script.
 The root `vite.config.ts` owns repository formatting, linting, and test configuration.
 
 ## Architecture
