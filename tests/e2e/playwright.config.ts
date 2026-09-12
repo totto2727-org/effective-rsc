@@ -28,7 +28,7 @@ const origin = (index: number) => `http://127.0.0.1:${ports[index]}`;
 
 export default defineConfig({
   testDir: "./tests",
-  testMatch: "workers-fetch.e2e.ts",
+  testMatch: ["workers-fetch.e2e.ts", "page-transitions.e2e.ts"],
   outputDir: join(runDirectory, "test-results"),
   fullyParallel: false,
   forbidOnly: true,

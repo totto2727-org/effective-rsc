@@ -46,7 +46,10 @@ export const apiReferencePages: readonly DocPage[] = [
           API、ビルド設定を分けて読み込みます。以下は現在の Effront パッケージの公開契約です。
         </p>
         {table([
-          ["effront", "Application を公開。実行時は react-server 条件の RSC グラフで使用します。"],
+          [
+            "effront",
+            "Application、PageViewTransition を公開。実行時は react-server 条件の RSC グラフで使用します。",
+          ],
           [
             "effront/workers",
             "Fetch ハンドラー、リクエストコンテキストと型付き reader を公開します。",
@@ -187,6 +190,7 @@ export default EFFRONT.make({
     headings: [
       { id: "render", title: "描画 API" },
       { id: "params", title: "Page の params" },
+      { id: "view-transition", title: "PageViewTransition" },
       { id: "loading", title: "Layout と Loading" },
     ],
     content: () => (
@@ -238,6 +242,41 @@ const Home = EFFRONT.Page.make({
           から、<code>EFFRONT</code>{" "}
           を共有するアプリケーションモジュールから読み込むものとします。Page は JSX
           コンポーネントとして直接呼ぶのではなく、Routes に登録します。
+        </p>
+        <h2 id="view-transition">PageViewTransition</h2>
+        <p>
+          <code>import {"{ PageViewTransition }"} from "effront"</code> で読み込む Effect
+          の既定値付きコンテキストです。
+          <code>Layer.succeed(PageViewTransition, config)</code> をアプリケーションの Layer
+          に組み合わせます。 各 Page の <code>viewTransition</code>{" "}
+          は指定したプロパティだけを上書きします。
+          遷移種別の対応表はプロパティごと置き換え、表の中身はマージしません。
+        </p>
+        {table([
+          ["enabled", "既定は true。false はフレームワークの Page アニメーションを無効化します。"],
+          [
+            "default / enter / exit / update / share",
+            "React ViewTransition のクラス名、auto、none、または遷移種別とクラスの対応表。",
+          ],
+          [
+            "Page.make({ viewTransition: false, render })",
+            "この Page のアニメーションを無効化します。",
+          ],
+          ["Page.make({ viewTransition: config, render })", "この Page に個別の設定を指定します。"],
+        ])}
+        <p>
+          設定は Flight を通るシリアライズ可能な値です。 境界名 effront-page
+          はフレームワーク用に予約されています。独自の境界には React
+          の自動名か別の名前を使います。コールバックは設定に含めず、独自の React 境界で扱います。
+          利用例は{" "}
+          <a href="/advanced/client-navigation#transition-scope">ページ遷移のアニメーション</a>{" "}
+          を参照してください。
+        </p>
+        <p>
+          全体で無効にした場合も Page 側の enabled: true で有効にできます。 表示中に enabled
+          を切り替えると境界が追加・削除されるため、ページ内の状態が再初期化される場合があります。
+          継続して保持する状態は共有 Layout に置きます。 OS
+          の減速モーション設定の切替では境界を維持し、ページ内の入力状態を保持します。
         </p>
         <h2 id="params">Page の params</h2>
         {code(

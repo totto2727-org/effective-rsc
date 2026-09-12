@@ -10,6 +10,10 @@ Build an application from one `Application.effront()` identity using Page, Layou
 Provide required services with the application's Effect Layer.
 The runtime keeps request resources alive until the response body completes, fails, or is cancelled.
 RSC produces Flight, SSR produces initial HTML, and the browser hydrates and navigates the application.
+Routed Pages cross-fade by default while shared Layouts retain their state.
+Import `PageViewTransition` from `effront` and provide `Layer.succeed(PageViewTransition, config)` using Effect for application settings, or use `Page.make({ viewTransition: config, render })` for a page override.
+Set `viewTransition: false` to disable a page's animation.
+Reduced-motion preferences also suppress framework page animations.
 
 ## Package boundaries
 
@@ -45,7 +49,7 @@ For Cloudflare's execution context, use the Env-only factory from `@effront/clou
 - Common guides cover application structure, routing, components, services, and testing.
 - Host setup and supported environments are isolated under the site's **Platforms** section.
 - [Host architecture and current support](../../docs/WORKERS.md) documents the implemented adapter rather than imposing its setup on every application.
-- [Roadmap](../../docs/ROADMAP.md) records deferred work, including Page View Transitions.
+- [Roadmap](../../docs/ROADMAP.md) records planned host adapters and completed page-transition support.
 - The Architecture > Implementation chapters explain the current application model, request lifecycle, rendering, navigation, and Server Functions.
 - [Upstream provenance](../../docs/UPSTREAM.md) preserves the original version and commit records.
 

@@ -115,12 +115,13 @@ The removed Bun `ersc build` / `ersc start`, `start({ root, hostname, port })`, 
 Production startup therefore teaches the replacement build/host boundary rather than documenting those commands as usable.
 The old development warning panel is not part of the retained browser runtime, so its UI is not described as an available feature.
 Generic React and Effect concepts are linked to their official documentation, as requested, while Effront-specific Component usage and consumer testing remain useful additional guides.
-ViewTransition integration and future Node/Bun/Vercel hosting remain in ROADMAP.md rather than appearing as implemented capabilities.
+Page ViewTransition defaults and overrides are documented in Advanced and API reference.
+Future Node/Bun/Vercel hosting remains in ROADMAP.md.
 
 ## Architecture baseline and hierarchy
 
 The sidebar and breadcrumb hierarchy is `アーキテクチャ > 実装解説 > chapter`, with a nested semantic list rather than another peer section.
-Each implementation chapter displays `effront@0.1.4-workers.0`, baseline commit `5141576d132be10aafc18a738cfb89ab3137f988`, and review date `2026-09-12`.
+Each implementation chapter displays `effront@0.1.4-workers.0`, baseline commit `68f3dfc809ec11a881b9b857648a3541abd78503`, and review date `2026-09-12`.
 These values describe the implementation being explained, not the latest documentation commit or an assertion of npm publication.
 The authored baseline is in `src/content/architecture-baseline.ts`.
 Tests compare its package version and every implementation excerpt against that exact local Git object, in addition to comparing current source files.

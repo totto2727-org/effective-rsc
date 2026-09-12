@@ -499,7 +499,8 @@ export const coreRuntimePages: readonly DocPage[] = [
           <code>BrowserEffectRunner</code> を通してPromise境界に接続されます。
           <code>addTransitionType</code> はpush・replace・traverseや進行方向を付記し、リンクの{" "}
           <code>data-effront-transition-types</code> は予約語を除いて重複を除去します。
-          これはTransitionへの分類情報で、ここにViewTransitionコンポーネントや画面アニメーションの実装があるわけではありません。
+          これはTransitionへの分類情報です。Page の既定の ViewTransition
+          境界はこの情報を利用します。設定方法は Advanced のページ遷移の章で説明します。
         </p>
         <p>
           <code>client/browser-renderer.ts</code> の <code>navigate</code>{" "}

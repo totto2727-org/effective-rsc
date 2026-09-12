@@ -131,7 +131,7 @@ export const advancedPages: readonly DocPage[] = [
       { id: "native-navigation", title: "ブラウザーのナビゲーションを使う" },
       { id: "commit-and-stream", title: "最初の commit とストリーム完了" },
       { id: "history-cache", title: "履歴キャッシュとリダイレクト" },
-      { id: "transition-scope", title: "Transition と今後の画面アニメーション" },
+      { id: "transition-scope", title: "ページ遷移のアニメーション" },
     ],
     content: () => (
       <>
@@ -196,13 +196,59 @@ export const advancedPages: readonly DocPage[] = [
           の内容が増えるため、 履歴に記録される位置は fallback 表示中の位置になり得ます。
           ストリーム完了に合わせた独自のスクロール復元は実装されていません。
         </p>
-        <h2 id="transition-scope">Transition と今後の画面アニメーション</h2>
+        <h2 id="transition-scope">ページ遷移のアニメーション</h2>
         <p>
-          現在のルーターはツリーの公開に <code>startTransition</code> を使い、
-          <code>addTransitionType</code> で navigation、server-function、hmr-refresh
-          などの種別を付けます。 これと画面アニメーションの公開 API は別の話です。Page の
-          ViewTransition 境界、 Layer
-          による既定値やルート単位の上書きは今後の機能であり、現在利用できる設定としては案内しません。
+          Effront は Page の描画に React の ViewTransition
+          境界を追加し、既定でページの切り替えをクロスフェードします。 共有する Layout
+          は境界の外に残ります。アプリケーション全体の設定は PageViewTransition の Layer で、個々の
+          Page は viewTransition で上書きします。
+        </p>
+        <p>
+          既定のクラス対応は通常の遷移を auto、hmr-refresh と navigation-ua-visual-transition を
+          none にします。動きを減らす OS 設定では Page のアニメーションを抑制し、
+          設定が途中で変わっても入力値やフォーカスを保持します。
+        </p>
+        <CodeBlock
+          language="tsx"
+          code={`import { Effect, Layer } from "effect";
+import { PageViewTransition } from "effront";
+
+// EFFRONT.make の layer に渡す設定
+const transitions = Layer.succeed(PageViewTransition, {
+  default: {
+    default: "auto",
+    "hmr-refresh": "none",
+    "navigation-ua-visual-transition": "none",
+    "photo-next": "photo-fade",
+  },
+});
+
+// このページだけ無効化
+const QuietPage = EFFRONT.Page.make({
+  viewTransition: false,
+  render: () => Effect.succeed(<h1>Quiet page</h1>),
+});`}
+        />
+        <p>
+          全体を無効にする場合は{" "}
+          <code>Layer.succeed(PageViewTransition, {"{ enabled: false }"})</code> を使います。
+          無効化はその Page
+          の境界に適用します。有効なページから無効なページへ移動するときは、遷移元の終了アニメーションが残る場合があります。
+          独自のクラスを指定した場合は、アプリケーションの CSS で View Transition
+          の疑似要素を装飾します。 クラスと種別の対応は{" "}
+          <a href="https://react.dev/reference/react/ViewTransition">React の ViewTransition</a>{" "}
+          を参照してください。
+        </p>
+        <CodeBlock
+          language="tsx"
+          code={'<a href="/photos/2" data-effront-transition-types="photo-next">次の写真</a>'}
+        />
+        <p>
+          リンクの属性は push・replace に独自の種別を追加します。戻る・進むには再適用されません。
+          navigation と navigation-*、server-function、hmr-refresh
+          はフレームワークが付ける予約済みの種別です。 既存の startTransition と addTransitionType
+          を利用し、URL の確定を Flight の完了まで待たせません。 後から解決する Suspense
+          の表示には、アプリケーション側で個別の境界を追加できます。
         </p>
         <p>
           ネイティブ API の仕様は

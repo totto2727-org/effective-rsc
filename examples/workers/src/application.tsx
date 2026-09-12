@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import { Application } from "effront";
 import { getWorkersEnv, getWorkersRequestContext } from "./host";
 import { Counter } from "./counter";
-import "./styles.css";
+import { ExampleShell, PageNote, TransitionExampleLayout } from "./example-shell";
 
 const EFFRONT = Application.effront();
 
@@ -14,10 +14,7 @@ const RootLayout = EFFRONT.Layout.make({
           <title>Effront Workers</title>
         </head>
         <body>
-          <nav>
-            <a href="/">Home</a> <a href="/about">About</a>
-          </nav>
-          <main>{children}</main>
+          <ExampleShell>{children}</ExampleShell>
         </body>
       </html>,
     ),
@@ -54,6 +51,57 @@ const AboutPage = EFFRONT.Page.make({
   }),
 });
 
+const TransitionLayout = EFFRONT.Layout.make({
+  render: ({ children }) =>
+    Effect.succeed(<TransitionExampleLayout>{children}</TransitionExampleLayout>),
+});
+
+const transitionPage = (mode: "default" | "custom" | "typed" | "disabled", step: "a" | "b") =>
+  EFFRONT.Page.make({
+    ...(mode === "custom"
+      ? { viewTransition: { default: "demo-slide" } }
+      : mode === "typed"
+        ? { viewTransition: { default: { default: "demo-slide", "demo-navigation": "demo-lift" } } }
+        : mode === "disabled"
+          ? { viewTransition: false as const }
+          : {}),
+    render: () =>
+      Effect.succeed(
+        <section className={`transition-card transition-card-${step}`}>
+          <h1>{`${mode} page ${step.toUpperCase()}`}</h1>
+          <p>
+            {mode === "default"
+              ? "Effront animates this page with its built-in transition, without configuration."
+              : mode === "custom"
+                ? "This page selects a custom transition class and supplies its animation in CSS."
+                : mode === "typed"
+                  ? "The next link selects a lift animation. Browser history uses the fallback slide animation."
+                  : "This page opts out of the built-in page transition."}
+          </p>
+          <PageNote />
+          <a
+            href={`/transitions/${mode}-${step === "a" ? "b" : "a"}`}
+            data-effront-transition-types={mode === "typed" ? "demo-navigation" : undefined}
+          >
+            Next example page
+          </a>
+        </section>,
+      ),
+  });
+
+const transitionRoutes = EFFRONT.Routes.make({ layout: TransitionLayout })
+  .page("/default-a", transitionPage("default", "a"))
+  .page("/default-b", transitionPage("default", "b"))
+  .page("/custom-a", transitionPage("custom", "a"))
+  .page("/custom-b", transitionPage("custom", "b"))
+  .page("/typed-a", transitionPage("typed", "a"))
+  .page("/typed-b", transitionPage("typed", "b"))
+  .page("/disabled-a", transitionPage("disabled", "a"))
+  .page("/disabled-b", transitionPage("disabled", "b"));
+
 export default EFFRONT.make({
-  routes: EFFRONT.Routes.make({ layout: RootLayout }).page("/", HomePage).page("/about", AboutPage),
+  routes: EFFRONT.Routes.make({ layout: RootLayout })
+    .page("/", HomePage)
+    .page("/about", AboutPage)
+    .mount("/transitions", transitionRoutes),
 });

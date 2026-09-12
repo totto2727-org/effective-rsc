@@ -266,6 +266,11 @@ const routes = EFFRONT.Routes.make({ layout: RootLayout })
           たとえば <code>/articles/:slug</code> と <code>/articles/:id</code>{" "}
           は別ルートとして重ねられません。
         </p>
+        <p>
+          ページ遷移は既定でクロスフェードします。全体設定やページごとの変更・無効化は
+          <a href="/advanced/client-navigation#transition-scope">PageViewTransition の設定</a>{" "}
+          を参照してください。
+        </p>
         <details>
           <summary>ルートを分割したい場合</summary>
           <p>
