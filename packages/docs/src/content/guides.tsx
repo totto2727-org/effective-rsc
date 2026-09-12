@@ -1,9 +1,9 @@
+import { CodeBlock } from "../components/code-block";
+import type { CodeLanguage } from "../components/code-block";
 import type { DocPage } from "./types";
 
-const code = (source: string) => (
-  <pre>
-    <code>{source}</code>
-  </pre>
+const code = (source: string, language: CodeLanguage) => (
+  <CodeBlock code={source} language={language} />
 );
 
 export const guidePages: readonly DocPage[] = [
@@ -104,22 +104,26 @@ export const guidePages: readonly DocPage[] = [
         </p>
         <h2 id="setup">前提条件</h2>
         <p>リポジトリのルートで、まず workspace の固定済み依存関係をインストールします。</p>
-        {code(`vp install`)}
+        {code(`vp install`, "bash")}
         <p>
           Vite 設定は <a href="/guide/workers">Cloudflare Workers のホスト設定</a>
           で確認してください。
         </p>
         <h2 id="files">最小構成</h2>
-        {code(`src/
+        {code(
+          `src/
   application.tsx  # ERSC のルートグラフ
   worker.ts        # Cloudflare の fetch export
 vite.config.ts     # VitePlus の設定
-wrangler.jsonc     # Worker 名、vars、assets の設定`)}
+wrangler.jsonc     # Worker 名、vars、assets の設定`,
+          "text",
+        )}
         <p>
           <code>wrangler.jsonc</code> は source 側の Worker
           設定です。以下はこの例に対応する最小設定です。
         </p>
-        {code(`{
+        {code(
+          `{
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "my-effective-rsc-worker",
   "main": "src/worker.ts",
@@ -127,14 +131,17 @@ wrangler.jsonc     # Worker 名、vars、assets の設定`)}
   "compatibility_flags": ["nodejs_compat"],
   "vars": { "APP_LABEL": "My Workers app" },
   "assets": { "binding": "ASSETS" }
-}`)}
+}`,
+          "jsonc",
+        )}
         <h2 id="application">アプリケーションを書く</h2>
         <p>
           同じ <code>ERSC</code> 値から Layout、Page、Routes を作り、最後に <code>ERSC.make</code>{" "}
           で閉じます。以下の <code>src/application.tsx</code> はサービスを要求しないため{" "}
           <code>layer</code> は不要です。
         </p>
-        {code(`import { Effect } from "effect";
+        {code(
+          `import { Effect } from "effect";
 import { Application } from "effective-rsc";
 
 const ERSC = Application.ersc();
@@ -154,21 +161,29 @@ const HomePage = ERSC.Page.make({
 
 export default ERSC.make({
   routes: ERSC.Routes.make({ layout: RootLayout }).page("/", HomePage),
-});`)}
+});`,
+          "tsx",
+        )}
         <p>
           <code>src/worker.ts</code> は Cloudflare が呼ぶ export です。
         </p>
-        {code(`import { createFetchHandler } from "effective-rsc/workers";
+        {code(
+          `import { createFetchHandler } from "effective-rsc/workers";
 import application from "./application";
 
-export default { fetch: createFetchHandler(application) };`)}
+export default { fetch: createFetchHandler(application) };`,
+          "ts",
+        )}
         <h2 id="run">ローカルで動かす</h2>
-        {code(`cd examples/workers
+        {code(
+          `cd examples/workers
 vp dev
 
 # 本番ビルドを Vite なしで Workers として確認する場合
 vp build
-vp run local`)}
+vp run local`,
+          "bash",
+        )}
         <p>
           <code>vp dev</code> は Cloudflare Vite plugin を通じて workerd で実行します。
           <code>vp run local</code> はビルド後の <code>dist/rsc/wrangler.json</code> を Wrangler
@@ -199,7 +214,8 @@ vp run local`)}
           パラメーター付き Page は URL の文字列を Effect Schema で decode してから{" "}
           <code>render</code> に渡します。パスの <code>:slug</code> と Schema のキーは一致させます。
         </p>
-        {code(`import { Effect, Schema } from "effect";
+        {code(
+          `import { Effect, Schema } from "effect";
 
 const ArticlePage = ERSC.Page.make({
   params: Schema.Struct({ slug: Schema.NonEmptyString }),
@@ -209,13 +225,16 @@ const ArticlePage = ERSC.Page.make({
 
 const HomePage = ERSC.Page.make({
   render: () => Effect.succeed(<h1>ホーム</h1>),
-});`)}
+});`,
+          "tsx",
+        )}
         <h2 id="mount">ネストした Routes</h2>
         <p>
           子 Routes を <code>mount</code> すると、その Layout と Loading
           の祖先関係を保ったままプレフィックスの下へ追加します。
         </p>
-        {code(`const ArticleLayout = ERSC.Layout.make({
+        {code(
+          `const ArticleLayout = ERSC.Layout.make({
   render: ({ children }) =>
     Effect.succeed(<section><h1>記事</h1>{children}</section>),
 });
@@ -231,7 +250,9 @@ const articles = ERSC.Routes.make({
 
 const routes = ERSC.Routes.make({ layout: RootLayout })
   .page("/", HomePage)
-  .mount("/articles", articles);`)}
+  .mount("/articles", articles);`,
+          "tsx",
+        )}
         <h2 id="matching">マッチング時の注意</h2>
         <p>
           GET と HEAD では、レンダリング前にパラメーターを一度だけ decode します。decode に失敗した
@@ -268,7 +289,8 @@ const routes = ERSC.Routes.make({ layout: RootLayout })
           共有のサーバー UI には <code>ERSC.Component.make</code> を使えます。<code>render</code> は
           props を受け、<code>Effect&lt;ReactNode&gt;</code> を返します。
         </p>
-        {code(`import { Effect } from "effect";
+        {code(
+          `import { Effect } from "effect";
 
 const Welcome = ERSC.Component.make({
   render: ({ name }: { readonly name: string }) =>
@@ -277,7 +299,9 @@ const Welcome = ERSC.Component.make({
 
 const HomePage = ERSC.Page.make({
   render: () => Effect.succeed(<Welcome name="Ada" />),
-});`)}
+});`,
+          "tsx",
+        )}
         <h2 id="client">Client Component</h2>
         <p>
           イベントハンドラー、state、ブラウザー API が必要なファイルの先頭には{" "}
@@ -288,29 +312,36 @@ const HomePage = ERSC.Page.make({
           Component で import してください。アプリケーション定義オブジェクトだけから import
           すると、Vite RSC が renderable な CSS 依存として追跡できない場合があります。
         </p>
-        {code(`"use client";
+        {code(
+          `"use client";
 
 import { useState } from "react";
 
 export function Counter() {
   const [count, setCount] = useState(0);
   return <button onClick={() => setCount((n) => n + 1)}>Count: {count}</button>;
-}`)}
+}`,
+          "tsx",
+        )}
         <h2 id="mutations">Server Function による更新</h2>
         <p>
           更新処理には <code>ERSC.ServerFn.make</code> を使います。入力は Schema で検証・decode
           され、handler は Effect を返します。<code>Schema.fromFormData</code>{" "}
           を使うと、戻り値をそのまま native の <code>form action</code> に渡せます。
         </p>
-        {code(`"use server";
+        {code(
+          `"use server";
 
 import { Effect, Schema } from "effect";
 
 export const followAuthor = ERSC.ServerFn.make({
   input: Schema.fromFormData(Schema.Struct({ authorId: Schema.NonEmptyString })),
   handler: ({ authorId }) => Effect.logInfo("Followed author", { authorId }),
-});`)}
-        {code(`const FollowAuthorButton = ERSC.Component.make({
+});`,
+          "ts",
+        )}
+        {code(
+          `const FollowAuthorButton = ERSC.Component.make({
   render: ({ authorId }: { readonly authorId: string }) =>
     Effect.succeed(
       <form action={followAuthor}>
@@ -318,7 +349,9 @@ export const followAuthor = ERSC.ServerFn.make({
         <button type="submit">Follow author</button>
       </form>,
     ),
-});`)}
+});`,
+          "tsx",
+        )}
         <p>
           Server Function をサーバーグラフから通常の async
           関数として直接呼び出すことはできません。React が呼び出せる action
@@ -364,7 +397,8 @@ export const followAuthor = ERSC.ServerFn.make({
           <code>ERSC.make</code> の <code>layer</code> が必須です。
         </p>
         <h2 id="service">サービスを定義する</h2>
-        {code(`import { Context, Effect, Layer } from "effect";
+        {code(
+          `import { Context, Effect, Layer } from "effect";
 
 export class Greeting extends Context.Service<Greeting>()(
   "example/services/Greeting",
@@ -375,9 +409,12 @@ export class Greeting extends Context.Service<Greeting>()(
   },
 ) {
   static readonly layer = Layer.effect(this, this.make);
-}`)}
+}`,
+          "ts",
+        )}
         <h2 id="consume">Page から使う</h2>
-        {code(`import { Effect } from "effect";
+        {code(
+          `import { Effect } from "effect";
 import { Application } from "effective-rsc";
 import { Greeting } from "./greeting";
 
@@ -403,7 +440,9 @@ const HomePage = ERSC.Page.make({
 export default ERSC.make({
   routes: ERSC.Routes.make({ layout: RootLayout }).page("/", HomePage),
   layer: Greeting.layer,
-});`)}
+});`,
+          "tsx",
+        )}
         <h2 id="lifetime">リクエストごとの生存期間</h2>
         <p>
           Workers の <code>createFetchHandler</code> はアプリケーション Layer
@@ -438,12 +477,15 @@ export default ERSC.make({
           ERSC、React、Vite RSC、Cloudflare plugin の統合と、<code>rsc</code> Worker environment
           と子 <code>ssr</code> environment の配線を担当します。
         </p>
-        {code(`import { erscCloudflare } from "effective-rsc/cloudflare";
+        {code(
+          `import { erscCloudflare } from "effective-rsc/cloudflare";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   plugins: [erscCloudflare()],
-});`)}
+});`,
+          "ts",
+        )}
         <p>
           React plugin、Vite RSC plugin、Cloudflare plugin
           を重ねて登録しないでください。デフォルトでは RSC entry は <code>src/worker.ts</code>
@@ -454,7 +496,8 @@ export default defineConfig({
           Fetch export は <code>(request, env, executionContext)</code> を受けます。サーバー側
           Effect の中で型付きの host 値を取得できます。
         </p>
-        {code(`import { Effect } from "effect";
+        {code(
+          `import { Effect } from "effect";
 import { getWorkersEnv, getWorkersRequestContext } from "effective-rsc/workers";
 
 type Env = { APP_LABEL: string; SERVER_TOKEN?: string };
@@ -464,7 +507,9 @@ const requestInfo = Effect.gen(function* () {
   const env = yield* getWorkersEnv<Env>();
   const context = yield* getWorkersRequestContext<Env, ExecutionContext>();
   return { label: env.APP_LABEL, path: new URL(context.request.url).pathname };
-});`)}
+});`,
+          "ts",
+        )}
         <p>
           これらの型パラメーターは runtime validation ではありません。binding
           の検証が必要なら、自分の Layer で値を検査してください。helper は request の Effect context
@@ -497,7 +542,8 @@ const requestInfo = Effect.gen(function* () {
     content: () => (
       <>
         <h2 id="commands">標準チェック</h2>
-        {code(`vp check
+        {code(
+          `vp check
 vp test run
 
 # ブラウザーによる Workers 受け入れテスト
@@ -505,7 +551,9 @@ cd packages/e2e
 vp run test
 
 # ドキュメントサイトのブラウザー検証
-vp run test:docs`)}
+vp run test:docs`,
+          "bash",
+        )}
         <p>
           単体テストは実装の横に <code>*.test.ts</code> または <code>*.test.tsx</code>{" "}
           として置きます。複数モジュールや外部ツールの契約は統合テストにします。ブラウザー suite は{" "}
