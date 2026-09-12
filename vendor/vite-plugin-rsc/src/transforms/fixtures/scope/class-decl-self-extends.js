@@ -1,1 +1,0 @@
-class Self extends Self {}

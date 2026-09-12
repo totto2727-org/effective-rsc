@@ -1,0 +1,26 @@
+{
+  "name": "effront-workers-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "local": "wrangler dev --local --no-bundle --config dist/rsc/wrangler.json --port 8787"
+  },
+  "dependencies": {
+    "@effect/platform-browser": "catalog:",
+    "effect": "catalog:",
+    "effront": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@effront/cloudflare": "workspace:*",
+    "@effront/vite": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-rsc": "catalog:",
+    "vite-plus": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

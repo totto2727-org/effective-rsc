@@ -1,45 +1,99 @@
-## Dependencies
+# Effront Workers
 
-- Put a dependency version in the root catalog only when at least two package manifests reference
-  it, counting the workspace root; dependencies used by only one manifest declare their version
-  locally.
-- Workspace packages reference shared catalog versions with `catalog:`.
-- Pin React Canary, React DOM Canary, and `react-server-dom-rspack` to one exact compatible release.
+## Repository structure
 
-## References
+- `packages/effront/`: application and Fetch runtime (`effront`).
+- `packages/vite/`: portable build integration (`@effront/vite`).
+- `packages/cloudflare/`: Cloudflare Vite integration (`@effront/cloudflare`) and separate runtime accessors (`@effront/cloudflare/workers`).
+- `examples/workers/`: consumer using the public package exports, Workers `fetch`, and runtime `env`.
+- `app/docs/`: SSR Guide and upstream-comparison site, using the framework itself with shadcn/ui and Tailwind Typography.
+- `tests/e2e/`: independently managed Playwright acceptance against the real consumer.
+- `packages/gitignore-patterns/`: Gitignore generator and its colocated unit / package-owned Vitest CLI integration tests.
+- `docs/`: current architecture and verification documentation.
+- Removed upstream implementations and references remain available in Git history, not in the working tree.
 
-- Read `docs/README.md` and the relevant owning documents before planning or changing framework
-  behavior. Do not contradict an Accepted decision or silently resolve an Open question; surface
-  the conflict instead.
-- `vendor/` contains read-only references. Never edit or import from them; prefer them over web
-  sources.
-- Read `vendor/effect/LLMS.md` before writing Effect code.
+Workspace discovery uses `app/*`, `packages/*`, `tests/*`, and `examples/*`, without per-project entries.
 
-## Code
+## Development commands
 
-- Keep browser, RSC, SSR, and shared module graphs explicit. Code for one runtime must not depend on
-  another runtime's entry point or ambient globals.
-- Export deliberate public subpaths from package manifests; do not expose package roots as broad
-  barrels. Use direct-file exports for single-file modules and barrels only for real aggregates.
-- Use path-qualified Effect service identifiers and `layerTest` for reusable fakes. A service owns
-  `static readonly layer` when its contract and implementation share a runtime graph; a contract
-  shared across runtime graphs stays implementation-free and its owning runtime exports a `*Layer`.
-  Use `Effect.fn` for public operations implemented as `(params) => Effect.gen(...)` and
-  `Effect.fnUntraced` for internal operations with that shape.
-- Propagate request and navigation cancellation through Effect interruption and Web Streams. Do not
-  detach work from its request scope without an explicit lifetime owner.
-- Throw a plain `TypeError` for programmer error: a contract that only a wiring mistake can violate,
-  such as a value from another ERSC module or a concern rendered outside its request runtime. Model
-  anything reachable from request input, I/O, or application code as a typed Effect failure. A throw
-  that request data can trigger is a bug in the boundary, not a style choice.
-- Preserve React's native RSC and Server Function protocols. Framework APIs may add Effect typing,
-  validation, and lifecycle management but must not invent replacement transports.
-- Generated framework artifacts live under `.ersc/`; never hand-edit or import them across
-  package boundaries except through their documented generated entry points.
+### Execution rules
 
-## Verify
+- Work on this independent clone, not the parent virtual monorepo.
+- Do not create PRs, push commits, publish packages, or deploy to Cloudflare. The user requested local implementation and local Git history only.
+- Use VitePlus for formatting, linting, checks, package management, and test entry points.
+- Formatting follows the parent workspace's default VitePlus baseline. Lint rules stay at VitePlus defaults. Do not restore the upstream custom Effect/Oxlint rules or add unrelated lint overrides.
+- Keep temporary evidence under this repository's ignored `tmp/` directory. Never commit `.dev.vars` or real secrets.
+- Local acceptance must not require Cloudflare authentication or remote services.
 
-- Run `bun run check`, `bun run test`, and `bun run build` from the repository root outside managed
-  filesystem or seccomp sandboxes.
-- Keep protocol and compiler tests runtime-independent where possible. Integration tests own the
-  boundaries between Rspack compilation, RSC rendering, SSR, hydration, and browser navigation.
+### Standard tasks
+
+From the repository root:
+
+- `vp install` installs the pinned pnpm workspace dependencies.
+- `vp run fix` applies formatting and safe lint fixes through `js:fix` (`vp check --fix`).
+- `vp run check` verifies formatting, default lint rules, and types through `js:check` (`vp check`).
+- `vp run test` runs retained unit/integration tests through `js:test` (`vp test run`).
+- Root task definitions live in `vite.config.ts` `run.tasks`, not duplicated package scripts.
+- Do not add standalone formatter/linter tasks; use the fix/check workflow.
+- Run `vp run test` from `tests/e2e/` for real browser acceptance.
+- Run `vp run test` from `packages/gitignore-patterns/` for that package's unit and real CLI integration tests.
+
+For the documentation site, enter `app/docs/` and use `vp dev`, `vp build`, or `vp run local`; see [site operations](docs/DOCS-SITE.md).
+Run `vp run test:docs` from `tests/e2e/` for its independent browser acceptance.
+
+To run the example, enter `examples/workers/` and use `vp dev`, `vp build`, or `vp run local`.
+The repository root intentionally provides no example dev, build, or local-hosting script.
+The root `vite.config.ts` owns repository formatting, linting, and test configuration.
+
+## Architecture
+
+### Runtime boundary
+
+The user's 2026-09-11 requirements explicitly supersede the upstream Bun-only runtime, Rspack compilation, proprietary development server, Vercel packaging, and Bun verification commands.
+The common boundary is a Web `Request` to `Response` handler. The initial host is Cloudflare Workers.
+Workers-specific `env` and execution context stay behind the host adapter and in request-local Effect context, never implicitly in Flight or HTML.
+D1, KV, R2, database abstractions, Node/Bun host adapters, and hosted deployments are outside the current scope.
+
+### Graphs and lifetimes
+
+- Keep browser, RSC, SSR, and tooling graphs explicit. Only the RSC graph resolves React's `react-server` condition.
+- RSC and SSR execute in workerd through Cloudflare child environments. Do not fall back to Node SSR in development.
+- Scope application services to the request, and preserve their lifetime through response body completion, error, and cancellation.
+- Preserve React's native RSC and Server Function protocols. Do not invent a replacement transport.
+- Use the generated Wrangler config for built-local execution. Do not ask Wrangler to compile unprocessed RSC source.
+
+## Development tools
+
+- **VitePlus**: unified tooling with the Vite core and Vitest versions pinned in `pnpm-workspace.yaml`.
+- **Cloudflare Vite plugin / Wrangler**: local Workers runtime only.
+- **Playwright**: browser validation of actual built and development applications.
+- **Effect**: consult the installed version's source and official documentation before changing Effect APIs.
+- Keep all retained source and tests covered by root checks. Do not hide legacy files behind tooling exclusions.
+
+## Test placement
+
+- Place unit tests next to their implementation as `<module>.test.ts` or `<module>.test.tsx`.
+- Reserve `tests/` for integration or black-box contracts spanning multiple modules or external tools.
+- Use standard Vitest discovery without a root `test.include` override.
+- Name Playwright browser suites `*.e2e.ts` and select them in the Playwright configuration so Vitest does not collect them.
+- Keep colocated tests in source checks, but exclude them from shipped source packages and declaration builds.
+- See [test boundaries](docs/TESTING.md) for the retained integration suites.
+
+## Package-specific rules
+
+- Keep dependency versions in the shared catalog only when at least two active manifests reference them.
+- Preserve explicit public package subpaths rather than exporting internal modules indiscriminately.
+- Use path-qualified Effect service identifiers. Keep shared runtime contracts implementation-free.
+- Use typed failures for input and I/O errors, and plain `TypeError` only for violated wiring invariants.
+- Do not count a build, mock, or copied-source test as proof that the public Workers fetch path works. Test both `vp dev` and the Vite-independent Wrangler artifact.
+
+_This AGENTS.md was generated from the [share-artifact skill](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/SKILL.md) and [AGENTS template](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/agents/template.md)._
+
+## Public documentation audience
+
+- Write common Guide pages for npm package consumers, not contributors cloning this repository.
+- Describe Effront as a React meta-framework built on Web standards and Effect; distinguish extensible Fetch boundaries from tested adapter support.
+- Keep conceptual guides host-neutral. Getting started may choose a concrete host and must include a complete runnable configuration; put deeper host-specific details in Platforms.
+- Prefer affirmative instructions and working examples over statements of what something is not. Reserve negative warnings for necessary correctness, compatibility, or safety constraints.
+- Architecture > Implementation chapters explain the current packages/effront implementation. Display the reviewed package version and commit, and keep embedded source excerpts synchronized with both that baseline and current files; validate them locally; retain upstream provenance separately in docs/UPSTREAM.md.
+- Deferred features belong in docs/ROADMAP.md and must not be presented as implemented APIs.

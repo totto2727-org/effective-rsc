@@ -1,0 +1,39 @@
+{
+  "name": "@effront/docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "local": "wrangler dev --local --no-bundle --config dist/rsc/wrangler.json"
+  },
+  "dependencies": {
+    "@effect/platform-browser": "catalog:",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "effect": "catalog:",
+    "effront": "workspace:*",
+    "lucide-react": "^1.44.0",
+    "radix-ui": "^1.6.7",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "shiki": "^4.4.3",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@effront/cloudflare": "workspace:*",
+    "@effront/vite": "workspace:*",
+    "@tailwindcss/typography": "^0.5.20",
+    "@tailwindcss/vite": "catalog:",
+    "@tsconfig/strictest": "2.0.8",
+    "@types/node": "22.20.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-rsc": "catalog:",
+    "tailwindcss": "^4.3.3",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "7.0.2",
+    "vite-plus": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

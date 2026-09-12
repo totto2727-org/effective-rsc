@@ -1,0 +1,21 @@
+{
+  "name": "@effront/e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:docs": "playwright test --config docs.playwright.config.ts"
+  },
+  "devDependencies": {
+    "@effront/cloudflare": "workspace:*",
+    "@effront/vite": "workspace:*",
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/vite": "catalog:",
+    "@tsconfig/strictest": "2.0.8",
+    "@types/node": "22.20.2",
+    "effront": "workspace:*",
+    "typescript": "7.0.2",
+    "vite-plus": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

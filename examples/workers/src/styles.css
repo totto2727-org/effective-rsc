@@ -1,0 +1,83 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 2rem;
+  color: #172554;
+  background: #f8fafc;
+}
+nav {
+  display: flex;
+  gap: 1rem;
+}
+main {
+  max-width: 48rem;
+}
+button {
+  padding: 0.5rem 1rem;
+}
+
+.transition-card {
+  margin-top: 2rem;
+  padding: 2rem;
+  border-radius: 1rem;
+}
+
+.transition-card-a {
+  background: #dbeafe;
+}
+
+.transition-card-b {
+  background: #e0e7ff;
+}
+
+::view-transition-old(.demo-slide) {
+  animation: demo-slide-out 350ms ease-in both;
+}
+
+::view-transition-new(.demo-slide) {
+  animation: demo-slide-in 350ms ease-out both;
+}
+
+::view-transition-old(.demo-lift) {
+  animation: demo-lift-out 350ms ease-in both;
+}
+
+::view-transition-new(.demo-lift) {
+  animation: demo-lift-in 350ms ease-out both;
+}
+
+@keyframes demo-slide-out {
+  to {
+    opacity: 0;
+    transform: translateX(-2rem);
+  }
+}
+
+@keyframes demo-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(2rem);
+  }
+}
+
+@keyframes demo-lift-out {
+  to {
+    opacity: 0;
+    transform: translateY(-2rem);
+  }
+}
+
+@keyframes demo-lift-in {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.demo-slide),
+  ::view-transition-new(.demo-slide),
+  ::view-transition-old(.demo-lift),
+  ::view-transition-new(.demo-lift) {
+    animation: none;
+  }
+}

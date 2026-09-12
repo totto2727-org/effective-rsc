@@ -1,5 +1,4 @@
 {
-  "$schema": "./node_modules/@effect/tsgo/schema.json",
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -7,7 +6,6 @@
     "jsx": "react-jsx",
     "noEmit": true,
     "skipLibCheck": true,
-
     "strict": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
@@ -22,13 +20,8 @@
     "noUncheckedSideEffectImports": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-
-    "plugins": [
-      {
-        "name": "@effect/language-service",
-        "diagnostics": false
-      }
-    ]
-  },
-  "exclude": ["vendor"]
+    "types": ["node", "vite-plus/client"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "allowImportingTsExtensions": true
+  }
 }

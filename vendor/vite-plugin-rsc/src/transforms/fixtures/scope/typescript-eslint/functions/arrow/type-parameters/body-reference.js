@@ -1,3 +1,0 @@
-const foo = () => {
-    let x;
-};

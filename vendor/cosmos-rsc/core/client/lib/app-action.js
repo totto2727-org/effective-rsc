@@ -1,4 +1,0 @@
-export const APP_ACTION = {
-  NAVIGATE: 'NAVIGATE',
-  SERVER_ACTION: 'SERVER_ACTION',
-};

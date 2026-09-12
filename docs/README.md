@@ -1,26 +1,14 @@
-# effective-rsc documentation
+# Effront documentation
 
-Read this index before changing framework behavior.
+- [Roadmap](ROADMAP.md): deferred proposals and their acceptance criteria, including Page View Transitions.
+- [SSR documentation site](DOCS-SITE.md): local Guide and upstream-comparison site, authoring, and browser checks.
+- [Upstream baseline](UPSTREAM.md): original effective-rsc version, immutable commit, current Effront mapping, and future incorporation log.
+- [Workers architecture](WORKERS.md): Fetch runtime, Effect context, RSC/SSR/browser boundaries, Vite configuration, and local hosting.
+- [Verification results](WORKERS-VALIDATION.md): requirements, observed checks, and reproducible acceptance commands.
+- [Current Effront validation](EFFRONT-VALIDATION.md): current rename, plugin-composition, and local verification evidence.
+- [Gitignore-driven exclusions](GITIGNORE-VALIDATION.md): generated formatting/lint exclusions, verification, and native-tool limitations.
+- [Test boundaries](TESTING.md): colocated unit tests, retained integration suites, and standard discovery.
+- [Usage guide](../packages/effront/README.md): setup, public APIs, and example commands.
 
-## Status
-
-- **Accepted**: the umbrella for a settled decision, regardless of delivery state.
-- **Current**: implemented and authoritative.
-- **Planned**: accepted but not implemented.
-- **Deferred**: intentionally outside the current milestone.
-- **Open**: unresolved; do not choose silently.
-
-## Owners
-
-- [VISION.md](VISION.md): purpose, principles, and non-goals.
-- [ARCHITECTURE.md](ARCHITECTURE.md): authoritative architecture overview and limitations.
-  - [Build and runtime graphs](architecture/build.md)
-  - [Authoring and route model](architecture/authoring.md)
-  - [Request flows](architecture/request-flows.md)
-  - [Lifetimes, failures, and protocols](architecture/lifetimes-and-protocols.md)
-  - [Client-router lifecycle](architecture/client-router.md)
-- [DECISIONS.md](DECISIONS.md): Accepted choices grouped by delivery state.
-- [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md): open and explicitly deferred questions with their evidence.
-
-Only these files own framework behavior. Preserve historical investigation in Git history rather than
-as active agent context.
+The site Guide describes the common framework APIs. Platform-specific setup belongs in the Platforms section and the dedicated host architecture document.
+Superseded upstream designs and deleted reference snapshots are available in Git history.

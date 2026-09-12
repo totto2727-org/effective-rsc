@@ -1,0 +1,49 @@
+{
+  "name": "effront",
+  "version": "0.1.4-workers.0",
+  "description": "Effect-native React Server Components with a portable Web Fetch runtime.",
+  "keywords": [
+    "cloudflare-workers",
+    "effect",
+    "react-server-components"
+  ],
+  "license": "MIT",
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md",
+    "!src/**/*.test.ts",
+    "!src/**/*.test.tsx"
+  ],
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "react-server": "./src/index.ts",
+      "default": "./src/unsupported.ts"
+    },
+    "./workers": "./src/workers.ts",
+    "./internal/client-entry": "./src/client/entry.ts",
+    "./internal/ssr-entry": "./src/server/ssr.tsx"
+  },
+  "dependencies": {
+    "@vitejs/plugin-rsc": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/platform-browser": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vitest": "4.1.11"
+  },
+  "peerDependencies": {
+    "@effect/platform-browser": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
+}

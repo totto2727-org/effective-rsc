@@ -1,1 +1,1 @@
-packages/effective-rsc/README.md
+packages/effront/README.md
