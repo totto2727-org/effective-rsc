@@ -1,5 +1,6 @@
 # Effront documentation
 
+- [Roadmap](ROADMAP.md): deferred proposals and their acceptance criteria, including Page View Transitions.
 - [SSR documentation site](DOCS-SITE.md): local Guide and upstream-comparison site, authoring, and browser checks.
 - [Upstream baseline](UPSTREAM.md): original effective-rsc version, immutable commit, current Effront mapping, and future incorporation log.
 - [Workers architecture](WORKERS.md): Fetch runtime, Effect context, RSC/SSR/browser boundaries, Vite configuration, and local hosting.
@@ -9,5 +10,5 @@
 - [Test boundaries](TESTING.md): colocated unit tests, retained integration suites, and standard discovery.
 - [Usage guide](../packages/effront/README.md): setup, public APIs, and example commands.
 
-These documents describe the current Workers implementation.
+The site Guide describes the common framework APIs. Platform-specific setup belongs in the Platforms section and the dedicated host architecture document.
 Superseded upstream designs and deleted reference snapshots are available in Git history.

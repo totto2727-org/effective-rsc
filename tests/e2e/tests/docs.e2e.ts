@@ -4,7 +4,12 @@ import { expect, test as base, type Locator, type Page } from "@playwright/test"
 
 const baseline = "ed886996d1d3780b94166af4f798c53416d547c8";
 const comparison = "9058a71dcb522ffed8eb838ef9aef3c69953dfe7";
-const requiredRoutes = ["/", "/guide/getting-started", "/reading/overview"];
+const requiredRoutes = [
+  "/",
+  "/guide/getting-started",
+  "/platforms/cloudflare",
+  "/reading/overview",
+];
 const readingRoutes = [
   "/reading/overview",
   "/reading/runtime",
@@ -27,7 +32,7 @@ const RootLayout = EFFRONT.Layout.make({
 });
 
 const HomePage = EFFRONT.Page.make({
-  render: () => Effect.succeed(<h1>Hello, Workers</h1>),
+  render: () => Effect.succeed(<h1>Hello, Effront</h1>),
 });
 
 export default EFFRONT.make({
@@ -286,6 +291,13 @@ test.describe("server-rendered public documentation", () => {
       expect(response?.headers()["content-type"], route).toContain("text/html");
       const article = await expectArticle(page);
       await expect(page).toHaveTitle(/Effront/);
+      if (route === "/" || route.startsWith("/guide/")) {
+        await expect(article).not.toContainText(/Cloudflare|Workers|Wrangler|workerd|Vercel/);
+      }
+      if (route === "/platforms/cloudflare") {
+        await expect(article.locator("header p").first()).toHaveText("Platforms");
+        await expect(article).toContainText("wrangler.json");
+      }
       await expectInitialDarkMode(page);
       await expectTypography(page);
       await expectNoHorizontalOverflow(page);

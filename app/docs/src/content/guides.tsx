@@ -9,75 +9,43 @@ const code = (source: string, language: CodeLanguage) => (
 export const guidePages: readonly DocPage[] = [
   {
     slug: "/",
-    title: "Effront for Workers",
-    description:
-      "Cloudflare Workers 上で Effect と React Server Components を動かすための入門です。",
+    title: "Effront",
+    description: "Web標準とEffectベースで実装されたReactのメタフレームワークです。",
     section: "Guide",
     headings: [
-      { id: "overview", title: "このフレームワークがすること" },
-      { id: "boundaries", title: "実行境界" },
+      { id: "overview", title: "Effrontについて" },
+      { id: "boundaries", title: "Web標準を境界にする" },
       { id: "next", title: "次に読むもの" },
     ],
     content: () => (
       <>
+        <p>EffrontはWeb標準とEffectベースで実装されたReactのメタフレームワークです。</p>
         <p>
-          Effront は、Effect で記述したサーバー側の UI を React Server Components
-          としてレンダリングし、Cloudflare Workers の <code>fetch</code>{" "}
-          ハンドラーから返す実験的なフレームワークです。
+          Web標準の Request／Response とストリームを境界にすることで、
+          対応するホストアダプターを通じて、実行環境や既存フレームワークへ組み込める設計です。
         </p>
-        <h2 id="overview">このフレームワークがすること</h2>
+        <h2 id="overview">Effrontについて</h2>
         <p>
-          アプリケーションは Routes、Layout、Page、必要なら Component、Middleware、Server Function
-          から組み立てます。Page と Layout が返す Effect
-          の要求をアプリケーション定義に集約し、Request ごとの Layer で満たします。
+          React Server Components による UI と、Effect による依存関係・リソース管理を結び付けます。
+          アプリケーションを Routes、Layout、Page、Component、Middleware、Server Function
+          から組み立て、 必要なサービスをアプリケーションの Layer から注入します。
         </p>
-        <table>
-          <thead>
-            <tr>
-              <th>グラフ</th>
-              <th>役割</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>RSC</td>
-              <td>Page、Layout、Effect を Workers の workerd で実行し、Flight を生成します。</td>
-            </tr>
-            <tr>
-              <td>SSR</td>
-              <td>HTML と埋め込み Flight ストリームを生成します。</td>
-            </tr>
-            <tr>
-              <td>Browser</td>
-              <td>HTML を hydrate し、対応ブラウザーではクライアントナビゲーションを行います。</td>
-            </tr>
-          </tbody>
-        </table>
-        <h2 id="boundaries">実行境界</h2>
+        <h2 id="boundaries">Web標準を境界にする</h2>
         <p>
-          共通のホスト境界は <code>Request</code> から <code>Response</code> です。Workers 固有の{" "}
-          <code>env</code> と <code>executionContext</code> はリクエストローカルな Effect context
-          に置かれ、Flight や HTML へ自動では直列化されません。
+          リクエストから Flight と HTML を生成し、ブラウザーでは hydration
+          とナビゲーションを行います。
+          アプリケーションの定義と、ビルド統合・実行環境の接続を分けているため、
+          ページやサービスのコードにプラットフォームの起動処理を混ぜる必要はありません。
         </p>
         <p>
-          そのため、秘密値を安全に保つには、値を JSX に表示せず、Client Component の props
-          にも渡さないでください。明示的に渡した値は React によりクライアントへ届きます。
+          実行環境ごとの対応状況と必要な設定は、<a href="/platforms/cloudflare">Platforms</a>{" "}
+          にまとめています。
         </p>
         <h2 id="next">次に読むもの</h2>
         <p>
-          まず <a href="/guide/getting-started">はじめる</a> で最小の Worker を作り、続けて{" "}
-          <a href="/guide/routes">ルーティング</a> と <a href="/guide/effect">Effect とサービス</a>{" "}
-          を読んでください。
-        </p>
-        <p>
-          高度な実装詳細と API の網羅的な説明は、このローカルガイドではなく{" "}
-          <a href="https://github.com/nikhilsnayak/effective-rsc">
-            upstream の effective-rsc リポジトリ
-          </a>
-          、Workers のホスト仕様は{" "}
-          <a href="https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/">
-            Cloudflare の Fetch handler ドキュメント
-          </a>
+          <a href="/guide/getting-started">はじめる</a> でアプリケーションの構成を確認し、
+          <a href="/guide/routes">ルーティング</a> と <a href="/guide/effect">サービスの注入</a>{" "}
+          を読んでください。 上流からの変更を追う場合は <a href="/reading/overview">Code reading</a>{" "}
           を参照してください。
         </p>
       </>
@@ -86,51 +54,51 @@ export const guidePages: readonly DocPage[] = [
   {
     slug: "/guide/getting-started",
     title: "はじめる",
-    description:
-      "VitePlus、Cloudflare Vite plugin、Workers Fetch ハンドラーで最小のアプリケーションを起動します。",
+    description: "アプリケーション定義、エントリポイント、Vite統合の共通構成を示します。",
     section: "Guide",
     headings: [
-      { id: "setup", title: "前提条件" },
-      { id: "files", title: "最小構成" },
+      { id: "setup", title: "準備" },
+      { id: "files", title: "アプリケーションの構成" },
       { id: "application", title: "アプリケーションを書く" },
-      { id: "run", title: "ローカルで動かす" },
+      { id: "run", title: "ビルド統合と実行" },
     ],
     content: () => (
       <>
+        <h2 id="setup">準備</h2>
         <p>
-          このリポジトリの <code>examples/workers</code> は実行できる最小例です。ここでは公開 export
-          を使う構成を示します。パッケージ公開や npm からのインストールを前提にはしません。
+          VitePlusで管理するアプリケーションに、npmレジストリからEffrontとビルド統合を追加します。
+          VitePlusの導入方法は <a href="https://viteplus.dev/guide/">公式ガイド</a>{" "}
+          を参照してください。
         </p>
-        <h2 id="setup">前提条件</h2>
-        <p>リポジトリのルートで、まず workspace の固定済み依存関係をインストールします。</p>
-        {code(`vp install`, "bash")}
+        {code(
+          `vp add effront
+vp add -D @effront/vite @vitejs/plugin-rsc`,
+          "bash",
+        )}
         <p>
-          Vite 設定は <a href="/guide/workers">Cloudflare Workers のホスト設定</a>
-          で確認してください。
+          ReactとEffectは、インストールするEffrontのpeer dependenciesに合うバージョンを使います。
+          <code>@vitejs/plugin-rsc</code>{" "}
+          は開発時の依存最適化でアプリケーションから直接解決するため、明示的に追加します。
         </p>
-        <h2 id="files">最小構成</h2>
+        <h2 id="files">アプリケーションの構成</h2>
         {code(
           `src/
-  entry.server.ts  # fetch export
-  entry.client.ts  # アプリケーション定義の export
-  application.tsx   # JSX を含むルートグラフ
-vite.config.ts     # VitePlus の設定
-wrangler.jsonc     # Worker 名、vars、assets の設定`,
+  entry.server.ts  # ホストへ公開するサーバーエントリ
+  entry.client.ts  # アプリケーション定義のexport
+  application.tsx  # JSXを含むルートグラフ
+vite.config.ts    # ビルドとホスト統合`,
           "text",
         )}
         <p>
-          Worker 名、assets、bindings の設定は{" "}
-          <a href="https://developers.cloudflare.com/workers/wrangler/configuration/">
-            Cloudflare の Wrangler configuration
-          </a>
-          を参照してください。Effront は生成済みの Wrangler artifact を実行し、Wrangler に未処理の
-          RSC source をコンパイルさせません。
+          <code>entry.server.ts</code> とホスト固有の設定ファイルは
+          <a href="/platforms/cloudflare">Platforms</a>{" "}
+          で扱います。ここでは共通のアプリケーション定義を作ります。
         </p>
         <h2 id="application">アプリケーションを書く</h2>
         <p>
-          同じ <code>EFFRONT</code> 値から Layout、Page、Routes を作り、最後に{" "}
-          <code>EFFRONT.make</code> で閉じます。以下の <code>src/application.tsx</code>{" "}
-          はサービスを要求しないため <code>layer</code> は不要です。
+          同じ <code>EFFRONT</code> 値から Layout、Page、Routes を作り、<code>EFFRONT.make</code>{" "}
+          で閉じます。 次の <code>src/application.tsx</code> はサービスを要求しないため{" "}
+          <code>layer</code> は不要です。
         </p>
         {code(
           `import { Effect } from "effect";
@@ -148,7 +116,7 @@ const RootLayout = EFFRONT.Layout.make({
 });
 
 const HomePage = EFFRONT.Page.make({
-  render: () => Effect.succeed(<h1>Hello, Workers</h1>),
+  render: () => Effect.succeed(<h1>Hello, Effront</h1>),
 });
 
 export default EFFRONT.make({
@@ -157,35 +125,31 @@ export default EFFRONT.make({
           "tsx",
         )}
         <p>
-          <code>src/entry.client.ts</code> はアプリケーション定義を公開します。ブラウザーの
-          hydration entry は Effront が提供します。
+          <code>src/entry.client.ts</code> はアプリケーション定義を公開します。ブラウザーのhydration
+          entryはEffrontが提供します。
         </p>
         {code(`export { default } from "./application";`, "ts")}
+        <h2 id="run">ビルド統合と実行</h2>
         <p>
-          <code>src/entry.server.ts</code> は Cloudflare が呼ぶ export です。
+          共通のビルド統合は <code>@effront/vite</code> が担当します。
+          次の設定にホスト用プラグインとサーバーエントリを追加して実行します。
+          ホストなしで開発サーバーが完成する設定ではありません。
         </p>
         {code(
-          `import { createFetchHandler } from "effront/workers";
-import application from "./entry.client";
+          `import { effront } from "@effront/vite";
+import { defineConfig } from "vite-plus";
 
-export default { fetch: createFetchHandler(application) };`,
+export default defineConfig({
+  plugins: [effront()],
+});`,
           "ts",
         )}
-        <h2 id="run">ローカルで動かす</h2>
+        <p>ホスト設定を済ませたアプリケーションのディレクトリから実行します。</p>
         {code(
-          `cd examples/workers
-vp dev
-
-# 本番ビルドを Vite なしで Workers として確認する場合
-vp build
-vp run local`,
+          `vp dev
+vp build`,
           "bash",
         )}
-        <p>
-          <code>vp dev</code> は Cloudflare Vite plugin を通じて workerd で実行します。
-          <code>vp run local</code> はビルド後の <code>dist/rsc/wrangler.json</code> を Wrangler
-          に渡します。手書きの未処理 RSC ソースを Wrangler にコンパイルさせるものではありません。
-        </p>
       </>
     ),
   },
@@ -423,9 +387,8 @@ export default EFFRONT.make({
         )}
         <h2 id="lifetime">リクエストごとの生存期間</h2>
         <p>
-          Workers の <code>createFetchHandler</code> はアプリケーション Layer
-          をグローバルに一度だけ構築しません。各 request で取得し、Response body の
-          EOF、エラー、キャンセルまで scope
+          Fetch ランタイムはアプリケーション Layer をグローバルに一度だけ構築しません。各 request
+          で取得し、Response body の EOF、エラー、キャンセルまで scope
           を保持します。リクエスト固有の接続や値をモジュールグローバルにキャッシュしないでください。
         </p>
         <p>
@@ -437,84 +400,9 @@ export default EFFRONT.make({
     ),
   },
   {
-    slug: "/guide/workers",
-    title: "Cloudflare Workers のホスト設定",
-    description:
-      "Workers の env と execution context を安全に読む方法、および Vite と Wrangler の役割を説明します。",
-    section: "Guide",
-    headings: [
-      { id: "vite", title: "Vite 設定" },
-      { id: "context", title: "リクエストコンテキスト" },
-      { id: "secrets", title: "環境値と秘密値" },
-    ],
-    content: () => (
-      <>
-        <h2 id="vite">Vite 設定</h2>
-        <p>
-          Vite 統合と Cloudflare adapter は分けて登録します。<code>effront()</code> が React、Vite
-          RSC、 compiler を担当し、<code>effrontCloudflare()</code> は <code>rsc</code> Worker
-          environment、子
-          <code>ssr</code> environment、Workers 向け SSR 出力配置だけを担当します。
-        </p>
-        {code(
-          `import { effront } from "@effront/vite";
-import { effrontCloudflare } from "@effront/cloudflare";
-import { defineConfig } from "vite-plus";
-
-export default defineConfig({
-  plugins: [effront(), effrontCloudflare()],
-});`,
-          "ts",
-        )}
-        <p>
-          Cloudflare の option が必要な場合は{" "}
-          <code>effrontCloudflare(&#123; ...options &#125;)</code> と 直接渡します。通常の設定では
-          option は不要です。<code>cloudflare</code> で入れ子にせず、React plugin と Vite RSC plugin
-          は 重ねて登録しないでください。Cloudflare adapter を省けば将来の Node/Bun host adapter と
-          組み合わせられますが、それらはまだ実装されていません。デフォルトでは RSC entry は
-          <code>src/entry.server.ts</code>、アプリケーションの alias は{" "}
-          <code>src/entry.client.ts</code> です。
-        </p>
-        <h2 id="context">リクエストコンテキスト</h2>
-        <p>
-          Fetch export は <code>(request, env, executionContext)</code> を受けます。サーバー側
-          Effect の中で型付きの host 値を取得できます。
-        </p>
-        {code(
-          `import { Effect } from "effect";
-import { getWorkersEnv, getWorkersRequestContext } from "effront/workers";
-
-type Env = { APP_LABEL: string; SERVER_TOKEN?: string };
-type ExecutionContext = { waitUntil(promise: Promise<unknown>): void };
-
-const requestInfo = Effect.gen(function* () {
-  const env = yield* getWorkersEnv<Env>();
-  const context = yield* getWorkersRequestContext<Env, ExecutionContext>();
-  return { label: env.APP_LABEL, path: new URL(context.request.url).pathname };
-});`,
-          "ts",
-        )}
-        <p>
-          これらの型パラメーターは runtime validation ではありません。binding
-          の検証が必要なら、自分の Layer で値を検査してください。helper は request の Effect context
-          の外では使用できません。
-        </p>
-        <h2 id="secrets">環境値と秘密値</h2>
-        <p>
-          bindings と local secrets の設定は{" "}
-          <a href="https://developers.cloudflare.com/workers/configuration/environment-variables/">
-            Cloudflare environment variables documentation
-          </a>
-          を参照してください。Effront は env を HTML や Flight に自動直列化しませんが、JSX や Client
-          props に 明示的に渡した値は公開されます。
-        </p>
-      </>
-    ),
-  },
-  {
     slug: "/guide/testing",
-    title: "テストとローカル検証",
-    description: "型、ユニット、実際の Vite/workerd と Wrangler artifact を段階的に検証します。",
+    title: "テストと検証",
+    description: "共通の品質チェックと、アプリケーションの振る舞いを確認するための指針です。",
     section: "Guide",
     headings: [
       { id: "commands", title: "標準チェック" },
@@ -525,49 +413,30 @@ const requestInfo = Effect.gen(function* () {
       <>
         <h2 id="commands">標準チェック</h2>
         {code(
-          `vp check
-vp test run
-
-# ブラウザーによる Workers 受け入れテスト
-cd tests/e2e
-vp run test
-
-# ドキュメントサイトのブラウザー検証
-vp run test:docs`,
+          `vp check --fix
+vp check
+vp test run`,
           "bash",
         )}
         <p>
           単体テストは実装の横に <code>*.test.ts</code> または <code>*.test.tsx</code>{" "}
-          として置きます。複数モジュールや外部ツールの契約は統合テストにします。ブラウザー suite は{" "}
-          <code>*.e2e.ts</code> とし、Vitest の標準 discovery と分離します。
+          として置きます。
+          複数モジュールをまたぐ契約は統合テスト、実ブラウザーの操作は独立したE2Eプロジェクトで検証します。
         </p>
         <h2 id="acceptance">実行経路を分けて検証する</h2>
         <p>
-          ビルド成功だけでは RSC、hydration、Workers の request lifetime
-          は確認できません。少なくとも次の二つを実行してください。
+          ビルド成功だけでは、Flight、hydration、リクエストのリソース寿命は保証できません。
+          開発時とビルド済み成果物の両方で、選択したホストアダプターを通す必要があります。
+          起動方法は <a href="/platforms/cloudflare">プラットフォーム別の手順</a>{" "}
+          を参照してください。
         </p>
-        <ol>
-          <li>
-            <code>vp dev</code> で Vite と Cloudflare plugin による workerd 実行を確認する。
-          </li>
-          <li>
-            <code>vp build</code> 後に <code>vp run local</code> で生成済み{" "}
-            <code>dist/rsc/wrangler.json</code> を Wrangler が実行できることを確認する。
-          </li>
-        </ol>
         <h2 id="expectations">確認すべきふるまい</h2>
         <ul>
-          <li>HTML 表示、Flight 応答、hydrate 後の Client Component の操作。</li>
-          <li>リンク遷移、未知のルート、パラメーター decode 失敗時の応答。</li>
-          <li>
-            runtime binding の差し替えと、秘密値が HTML、Flight、Client props に現れないこと。
-          </li>
-          <li>Response の完了、エラー、キャンセル後にリクエスト scope が解放されること。</li>
+          <li>初期HTML、Flight応答、hydration後の操作。</li>
+          <li>リンク遷移、未知のルート、パラメーターdecode失敗時の応答。</li>
+          <li>サービスのリクエスト間の分離と、秘密値が公開データに混入しないこと。</li>
+          <li>Responseの完了・エラー・キャンセル後にリクエストscopeが解放されること。</li>
         </ul>
-        <p>
-          実際の Workers Fetch 経路を外部サービスなしで検証できます。Cloudflare
-          への認証、デプロイ、公開はローカル検証には必要ありません。
-        </p>
       </>
     ),
   },

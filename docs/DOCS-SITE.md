@@ -1,7 +1,7 @@
 # SSR documentation site
 
 `app/docs` is a private workspace application that uses the public `effront` and `effront/workers` entry points to render its own documentation.
-It combines seven introductory Guide pages and five upstream-comparison reading chapters in one shadcn/ui sidebar.
+It combines six platform-neutral Guide pages, one dedicated Platforms page, and five upstream-comparison reading chapters in one shadcn/ui sidebar.
 The content is Japanese, with source identifiers and commands preserved in English.
 
 ## Run locally
@@ -112,3 +112,13 @@ Compiler commands that emit package build artifacts remain build steps, not dupl
 - [Tailwind CSS Typography](https://github.com/tailwindlabs/tailwindcss-typography).
 - [Site third-party notices](../app/docs/THIRD-PARTY-NOTICES.md) for copied/adapted shadcn components.
 - [Upstream baseline](UPSTREAM.md) for the original effective-rsc source and license provenance.
+
+## Audience and content boundaries
+
+The public Guide is written for npm package consumers, not contributors cloning this workspace.
+Its installation commands assume the planned registry distribution; this documentation change does not publish packages or verify a registry installation before release.
+Platform-specific setup is isolated at `/platforms/cloudflare`; common Guide pages do not prescribe a runtime or contain host-specific commands.
+The homepage presents Effront as a React meta-framework built on Web standards and Effect, while the Platforms page states which adapters are actually available.
+Contributor installation and E2E commands remain in this operations document and AGENTS.md.
+Code-reading excerpts retain their fixed historical comparison, including host-specific changes in that comparison.
+Deferred ViewTransition work is recorded in [the roadmap](ROADMAP.md), not presented as an implemented API.

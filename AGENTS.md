@@ -88,3 +88,11 @@ D1, KV, R2, database abstractions, Node/Bun host adapters, and hosted deployment
 - Do not count a build, mock, or copied-source test as proof that the public Workers fetch path works. Test both `vp dev` and the Vite-independent Wrangler artifact.
 
 _This AGENTS.md was generated from the [share-artifact skill](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/SKILL.md) and [AGENTS template](https://raw.githubusercontent.com/totto2727-org/agent/refs/heads/main/plugins/totto2727-coding/skills/share-artifact/agents/template.md)._
+
+## Public documentation audience
+
+- Write common Guide pages for npm package consumers, not contributors cloning this repository.
+- Describe Effront as a React meta-framework built on Web standards and Effect; distinguish extensible Fetch boundaries from tested adapter support.
+- Keep runtime-specific setup, bindings, and hosting commands in the Platforms section, not the shared Guide.
+- Preserve the immutable Code reading comparison even when current platform guidance changes.
+- Deferred features belong in docs/ROADMAP.md and must not be presented as implemented APIs.

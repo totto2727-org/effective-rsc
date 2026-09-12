@@ -18,6 +18,31 @@ describe("documentation catalog", () => {
     }
   });
 
+  it("keeps shared guides free of host-specific setup and separates Platforms", () => {
+    const guides = pages.filter((page) => page.section === "Guide");
+    expect(guides.length).toBe(6);
+    for (const page of guides) {
+      const text = renderToStaticMarkup(page.content()).replace(/<[^>]*>/g, "");
+      expect(`${page.title} ${page.description} ${text}`).not.toMatch(
+        /Cloudflare|Workers|Wrangler|workerd|Vercel/,
+      );
+    }
+    const gettingStarted = renderToStaticMarkup(
+      getPage("/guide/getting-started").content(),
+    ).replace(/<[^>]*>/g, "");
+    expect(gettingStarted).toContain("vp add effront");
+    expect(gettingStarted).not.toMatch(
+      /vp install|チェックアウト|workspace依存|公開は前提にしません/,
+    );
+    expect(getPage("/platforms/cloudflare").section).toBe("Platforms");
+    expect(renderToStaticMarkup(getPage("/platforms/cloudflare").content())).toContain(
+      "wrangler.json",
+    );
+    expect(getPage("/").description).toBe(
+      "Web標準とEffectベースで実装されたReactのメタフレームワークです。",
+    );
+  });
+
   it("rejects missing content instead of silently rendering another page", () => {
     expect(() => getPage("/not-a-document")).toThrow("Documentation route is missing content");
   });
