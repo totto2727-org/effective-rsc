@@ -53,10 +53,17 @@ Application code can still explicitly leak values by rendering or passing them t
 
 ## Fetch API
 
+`src/entry.client.ts` exports the application defined in `application.tsx`:
+
 ```ts
-// src/worker.ts
+export { default } from "./application";
+```
+
+`src/entry.server.ts` exports the host Fetch handler:
+
+```ts
 import { createFetchHandler } from "effront/workers";
-import application from "./application";
+import application from "./entry.client";
 
 export default {
   fetch: createFetchHandler(application),
@@ -88,27 +95,26 @@ A future Node/Bun adapter can invoke the same Fetch interface, but those adapter
 
 ## Vite integration
 
-For Cloudflare Workers, the configuration only needs one plugin:
+Register the portable framework plugin and the independent Cloudflare adapter:
 
 ```ts
+import { effront } from "effront/vite";
 import { effrontCloudflare } from "effront/cloudflare";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
-  plugins: [effrontCloudflare()],
+  plugins: [effront(), effrontCloudflare()],
 });
 ```
 
-Install `@cloudflare/vite-plugin` in the consuming application alongside the framework and VitePlus.
-The Cloudflare dependency is an optional peer of the framework, so non-Cloudflare consumers do not need it.
-`effrontCloudflare()` composes EFFRONT, React, Vite RSC, and Cloudflare integration.
-Do not register those plugins a second time.
-It configures the `rsc` Worker environment, `ssr` child environment, and SSR output inside the Worker upload directory.
+`effront()` owns React, the native React Compiler, Vite RSC, and the default `src/entry.server.ts` and `src/entry.client.ts` entries.
+The application entry remains part of the RSC graph, not the browser hydration bootstrap, which the framework supplies.
+`effrontCloudflare()` only adds host integration, including the `rsc` Worker environment, `ssr` child environment, and nested SSR output.
+Install its optional peer `@cloudflare/vite-plugin` in Cloudflare consumers.
+Other future hosts can omit the Cloudflare adapter.
 
-Run Vite from the application's directory so its normal root and Wrangler configuration discovery apply.
-The repository-root `dev` and `build` scripts do this automatically for `examples/workers`.
-No framework-specific `root`, `configPath`, or server host/port settings are necessary in the example.
-The acceptance runner supplies its own fixed host, port, and strict-port options solely for automated testing.
+Run Vite from the application's directory so normal root and Wrangler configuration discovery apply.
+No root startup wrapper or framework-specific server host/port settings are required.
 
 `persistState` and `remoteBindings` are not overridden: Cloudflare's normal defaults apply.
 The example also omits `assets.run_worker_first`, using Cloudflare's default asset-first routing.
@@ -116,24 +122,22 @@ Its application URLs do not collide with static files, so missing assets fall th
 Worker-first routing is only needed when an application intentionally wants the Worker to intercept asset requests or take precedence over conflicting asset URLs.
 The Vite plugin generates `assets.directory` in the built Wrangler configuration, so it need not be handwritten in the source configuration.
 Smart Placement is an optional production setting, not a prerequisite for local development.
-To customize Cloudflare configuration, pass its options under `cloudflare`:
+Pass Cloudflare options directly to the adapter:
 
 ```ts
-effrontCloudflare({
-  cloudflare: { configPath: "./wrangler.preview.jsonc" },
-});
+effrontCloudflare({ configPath: "./wrangler.preview.jsonc" });
 ```
 
-The `rsc` entry and `application` alias options are the same as `effront()` from `effront/vite`.
-That portable lower-level plugin remains available for other hosts.
-The Cloudflare integration owns its required environment names rather than exposing contradictory environment overrides.
+Override the framework entries separately with `effront({ rsc: "./custom/server.ts", application: "./custom/application.tsx" })`.
+The Cloudflare adapter owns its required environment names.
 
 ## Quality checks
 
 ```sh
 vp check
 vp test run
-vp run test:e2e
+cd packages/e2e
+vp run test
 ```
 
 Formatting uses the same default VitePlus baseline as the source monorepo.

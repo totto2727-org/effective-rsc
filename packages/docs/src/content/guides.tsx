@@ -111,8 +111,9 @@ export const guidePages: readonly DocPage[] = [
         <h2 id="files">最小構成</h2>
         {code(
           `src/
-  application.tsx  # EFFRONT のルートグラフ
-  worker.ts        # Cloudflare の fetch export
+  entry.server.ts  # fetch export
+  entry.client.ts  # アプリケーション定義の export
+  application.tsx   # JSX を含むルートグラフ
 vite.config.ts     # VitePlus の設定
 wrangler.jsonc     # Worker 名、vars、assets の設定`,
           "text",
@@ -156,11 +157,16 @@ export default EFFRONT.make({
           "tsx",
         )}
         <p>
-          <code>src/worker.ts</code> は Cloudflare が呼ぶ export です。
+          <code>src/entry.client.ts</code> はアプリケーション定義を公開します。ブラウザーの
+          hydration entry は Effront が提供します。
+        </p>
+        {code(`export { default } from "./application";`, "ts")}
+        <p>
+          <code>src/entry.server.ts</code> は Cloudflare が呼ぶ export です。
         </p>
         {code(
           `import { createFetchHandler } from "effront/workers";
-import application from "./application";
+import application from "./entry.client";
 
 export default { fetch: createFetchHandler(application) };`,
           "ts",
@@ -466,8 +472,8 @@ export default defineConfig({
           option は不要です。<code>cloudflare</code> で入れ子にせず、React plugin と Vite RSC plugin
           は 重ねて登録しないでください。Cloudflare adapter を省けば将来の Node/Bun host adapter と
           組み合わせられますが、それらはまだ実装されていません。デフォルトでは RSC entry は
-          <code>src/worker.ts</code>、アプリケーションの alias は <code>src/application.tsx</code>{" "}
-          です。
+          <code>src/entry.server.ts</code>、アプリケーションの alias は{" "}
+          <code>src/entry.client.ts</code> です。
         </p>
         <h2 id="context">リクエストコンテキスト</h2>
         <p>

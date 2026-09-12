@@ -48,7 +48,9 @@ Workers applications register both explicitly: `plugins: [effront(), effrontClou
 Cloudflare options, when needed, are passed directly to `effrontCloudflare(...)` rather than nested beneath a `cloudflare` property; the ordinary configuration uses `effrontCloudflare()` with no options.
 Do not register React or Vite RSC plugins a second time.
 Omitting the Cloudflare adapter leaves the core available for a future Node or Bun host adapter, but neither adapter is implemented in this milestone.
-The default RSC entry is the application's `src/worker.ts`, which exports the Workers Fetch object.
+The default RSC entry is the application's `src/entry.server.ts`, which exports the Workers Fetch object.
+The application-definition entry defaults to `src/entry.client.ts`; it may re-export JSX definitions from `src/application.tsx`.
+Despite its name, this definition module stays in the RSC graph rather than becoming the browser hydration entry.
 The framework provides the SSR and browser entries.
 The Cloudflare wrapper owns the required `viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] }`.
 Other Cloudflare options can be supplied through its `cloudflare` option and are forwarded without disabling state persistence or remote bindings.
