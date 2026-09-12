@@ -4,7 +4,7 @@ export interface DocPage {
   readonly slug: string;
   readonly title: string;
   readonly description: string;
-  readonly section: "Guide" | "Platforms" | "Code reading";
+  readonly section: "Guide" | "Platforms" | "Core";
   readonly headings: readonly { readonly id: string; readonly title: string }[];
   readonly content: () => ReactNode;
 }

@@ -46,7 +46,8 @@ For Cloudflare's execution context, use the Env-only factory from `@effront/clou
 - Host setup and supported environments are isolated under the site's **Platforms** section.
 - [Host architecture and current support](../../docs/WORKERS.md) documents the implemented adapter rather than imposing its setup on every application.
 - [Roadmap](../../docs/ROADMAP.md) records deferred work, including Page View Transitions.
-- [Code-reading provenance](../../docs/UPSTREAM.md) identifies the exact upstream and comparison commits.
+- The Core chapters explain the current application model, request lifecycle, rendering, navigation, and Server Functions.
+- [Upstream provenance](../../docs/UPSTREAM.md) preserves the original version and commit records.
 
 The core currently uses the Vite RSC runtime protocol; alternative build integrations are not claimed to work without additional integration.
 The `internal/*` exports support matching integration packages and are not application authoring APIs.
@@ -65,4 +66,4 @@ Add the host adapter described in the Platforms documentation, then start your a
 
 Repository development and browser acceptance commands are documented in [the contributor instructions](../../AGENTS.md), not prerequisites for consuming the package.
 
-Effront retains the history and licensing of [nikhilsnayak/effective-rsc](https://github.com/nikhilsnayak/effective-rsc).
+Effront retains the history and licensing of [effective-rsc](https://effective-rsc.nikhilsnayak.dev/).

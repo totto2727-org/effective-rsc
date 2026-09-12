@@ -61,9 +61,11 @@ export default EFFRONT.make({
     .page("/platforms", documentPage("/platforms"))
     .page("/platforms/cloudflare", documentPage("/platforms/cloudflare"))
     .page("/guide/testing", documentPage("/guide/testing"))
-    .page("/reading/overview", documentPage("/reading/overview"))
-    .page("/reading/runtime", documentPage("/reading/runtime"))
-    .page("/reading/rendering", documentPage("/reading/rendering"))
-    .page("/reading/tooling", documentPage("/reading/tooling"))
-    .page("/reading/lifetimes", documentPage("/reading/lifetimes")),
+    .page("/core/overview", documentPage("/core/overview"))
+    .page("/core/application", documentPage("/core/application"))
+    .page("/core/routing", documentPage("/core/routing"))
+    .page("/core/request", documentPage("/core/request"))
+    .page("/core/rendering", documentPage("/core/rendering"))
+    .page("/core/navigation", documentPage("/core/navigation"))
+    .page("/core/server-functions", documentPage("/core/server-functions")),
 });

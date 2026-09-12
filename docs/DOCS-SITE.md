@@ -1,12 +1,12 @@
 # SSR documentation site
 
-`app/docs` is a private workspace application that uses the public `effront` and `effront/workers` entry points to render its own documentation.
-It combines six Guide pages, a Platforms overview and a dedicated Cloudflare page, and five upstream-comparison reading chapters in one shadcn/ui sidebar.
+`app/docs` is a private workspace application that uses the public Effront API to render its own documentation.
+It combines six Guide pages, two Platforms pages, and seven Core implementation chapters in one shadcn/ui sidebar.
 The content is Japanese, with source identifiers and commands preserved in English.
 
 ## Run locally
 
-Install dependencies with `vp install` from the repository root, then enter the site package:
+Install dependencies with `vp install` at the repository root, then enter the site application:
 
 ```sh
 cd app/docs
@@ -14,128 +14,79 @@ vp dev
 ```
 
 Open the URL printed by Vite.
-The root workspace intentionally has no site-startup wrapper.
-For Vite-independent local Workers hosting, run the following from the same package:
+For independent local hosting of the built artifact:
 
 ```sh
 vp build
-vp run local
+vp exec wrangler dev --local --no-bundle --config dist/rsc/wrangler.json
 ```
 
-Wrangler runs the generated `dist/rsc/wrangler.json` and its nested SSR modules in workerd.
-No Cloudflare account, remote binding, database, or deployment is required.
+Wrangler executes the generated Worker and nested SSR modules in workerd.
+Local hosting needs no remote account or deployment.
 
 ## Rendering and authoring
 
-There is no SSG, prerender job, static HTML export, MDX loader, or Markdown runtime parser.
-Pages are JSX functions in `src/content/guides.tsx` and `src/content/reading.tsx`, rendered through Effront Page definitions on an HTTP request.
-This keeps code-diff tables and annotated examples straightforward without introducing a content compiler.
-`@tailwindcss/typography` styles the server-rendered article through `prose`.
-The initial server-rendered document uses dark mode regardless of the operating-system preference; there is no theme-toggle or hydration-dependent theme initialization.
-Code and diff blocks use Shiki on the server with statically imported grammars and its JavaScript regex engine.
-No browser highlighter, remote grammar download, or WASM asset initialization is required.
-The hydrated shadcn/ui sidebar receives only navigation metadata and rendered children, not the content function registry.
+Pages are JSX functions in `src/content/guides.tsx`, `platforms.tsx`, `core-model.tsx`, and `core-runtime.tsx`.
+Effront renders them on each request; no SSG or Markdown parser is involved.
+Tailwind Typography styles articles, and the document starts in dark mode regardless of system preference.
+Shiki tokenizes code on the server with locally imported grammars and a JavaScript regex engine.
+The client receives rendered content and navigation metadata rather than the content registry or highlighter implementation.
 
-To add a page, add a `DocPage` to the appropriate content array, give its headings stable IDs, and register its explicit route in `src/application.tsx`.
-The framework's route typing and native unknown-route handling remain in use.
-Update the catalog count assertion when deliberately adding or removing a page.
-The colocated catalog test checks uniqueness and heading targets; the browser suite checks public navigation and SSR.
+To add a page, define its stable heading IDs and register its explicit route in `src/application.tsx`.
+Update the catalog count when deliberately changing the number of pages.
 
-## Comparison provenance
+## Core implementation chapters
 
-The reading material compares upstream `ed886996d1d3780b94166af4f798c53416d547c8` (version `0.1.4`) with the local pre-site revision `9058a71`.
-Those pinned comparisons predate the Effront rename, so their fixed source paths, package names, commands, and excerpts intentionally retain their historical `effective-rsc` spelling.
-They also predate the separation of the core Vite plugin and the Cloudflare adapter, so the pinned combined-factory snippet intentionally remains historical.
-For current code, use `effront` in place of `effective-rsc`, `Application.effront()` in place of `Application.ersc()`, and separately register `effront()` from `@effront/vite` with `effrontCloudflare()` from `@effront/cloudflare`.
-It includes concrete diff excerpts, changed file structure, reasons for the port, retained behavior, and commands to inspect the complete changes locally.
-Diffs and source excerpts are generated from local Git objects and embedded as fixed JSX data.
-Neither rendering nor navigation queries GitHub to obtain differences.
-Updating the comparison is an explicit authoring step using the recorded local reproduction commands.
-Local fork hashes are not presented as available upstream GitHub commits.
-Advanced topics and API reference are external navigation links, not additional reference implementations.
+- `/core/overview`: the core package's responsibilities and overall request flow.
+- `/core/application`: application identity, definitions, services, and middleware views.
+- `/core/routing`: route composition, compilation, and page parameter handling.
+- `/core/request`: Fetch context, application Layer acquisition, and response resource lifetime.
+- `/core/rendering`: Flight, SSR, HTML streaming, and payload embedding.
+- `/core/navigation`: browser navigation, publication, and retained render resources.
+- `/core/server-functions`: server-side action execution and UI refresh.
 
-## Checks
+The former upstream-comparison chapters and `/reading/*` routes have been removed.
+Upstream version, commit records, and license provenance remain in [UPSTREAM.md](UPSTREAM.md).
+The site links upstream only through its [official website](https://effective-rsc.nikhilsnayak.dev/).
 
-The site TypeScript configuration extends `@tsconfig/strictest` with `exactOptionalPropertyTypes: false` and no include/exclude overrides.
-Run `vp check` and `vp test run` from the repository root for static checks and normally discovered tests.
-From `tests/e2e`, run `vp run test:docs` for real Chromium acceptance through Vite/workerd and standalone Wrangler.
-That independent project owns the browser tests, random test ports, isolated builds/state, screenshots, and traces.
-Normal site configuration does not contain test-only port, inspector, or persistence overrides.
+Core excerpts are exact contiguous selections of the current `packages/effront/src` files, embedded as authored strings.
+`core.test.tsx` compares every excerpt with the current implementation during testing.
+The browser suite also compares the actual no-JavaScript SSR text against local source, including whitespace and Shiki output.
+Rendering performs no filesystem reads, Git execution, or GitHub requests to obtain code.
+When implementation changes, update the relevant explanation and excerpt together.
 
-## Integration findings
+## Audience
 
-The larger documentation pages exposed unsafe placement of embedded Flight scripts between arbitrary streamed HTML chunks.
-The framework now preserves the HTML byte stream and emits Flight payload scripts only after HTML EOF, before the closing document trailer.
-This delays the embedded hydration payload until HTML finishes, while keeping HTML streaming and preserving split UTF-8 and binary bytes.
-Cancellation during pending Flight flush also releases the render scope rather than deadlocking.
-The existing Workers example browser suite passed after this framework correction.
+Guide teaches application usage, with a complete Cloudflare-based getting-started example.
+Platforms owns host support and configuration.
+Core teaches the framework's current internals, without repeating generic React or Effect tutorials.
+Deferred features and alternative Node/Bun hosting designs remain in [ROADMAP.md](ROADMAP.md).
+Contributor workflow and framework-level acceptance requirements belong here and in AGENTS.md, not in the consumer testing guide.
 
-The site stylesheet is imported by the exported Client `DocsShell`, allowing the RSC plugin to associate it with the client reference and deliver it with the initial SSR page.
-The Effront application-definition object is not itself a renderable component export, so a stylesheet side-effect import there did not provide the required dependency boundary.
-Client Components still produce server-rendered initial HTML, including the sidebar.
+## Validation
 
-## Observed acceptance
+Run `vp run check` and `vp run test` at the repository root.
+From `tests/e2e`, run `vp run test:docs` for real Chromium acceptance against Vite/workerd and standalone Wrangler.
+That project owns random ports, isolated builds, screenshots, and traces.
+The suite checks all fifteen pages, local links and heading targets with JavaScript disabled, source excerpts, default dark contrast, Flight, hydration, sidebar filtering and mobile behavior, and removed-route 404 responses.
+A real client build graph excludes Shiki and compiler implementations; browser interception rejects unexpected external requests during rendering and navigation.
+Browser interception does not observe server-side outbound traffic; the source and highlighter architecture use only embedded local data.
 
-The final frozen-lockfile install and `vp check` passed, and `vp test run` passed all 235 tests in 31 files.
-The highlighter adds 26 tests covering initialization/rendering with network and WASM unavailable, supported language aliases, escaped markup, exact whitespace and line endings, and request-independent tokenization.
-The normal `app/docs` production build also passed.
-
-The final documentation browser run passed all 10 cases across actual Vite/workerd development and independently built Wrangler local hosting.
-It exercised the following public behavior, rather than substituting mocked framework modules:
-
-- Every local page, navigation link, and heading target renders and remains readable with JavaScript disabled.
-- The initial page is dark even when the browser system preference is light, with measured readable foreground and highlighted-token contrast.
-- Guide code and actual Git diff excerpts contain server-rendered Shiki tokens while preserving the expected source text.
-- Real client navigation, sidebar search, mobile open/Escape/focus restoration/link dismissal, and unknown routes work without hydration errors.
-- Desktop sidebar label geometry and desktop/mobile horizontal overflow checks pass; final screenshots were inspected, including a highlighted diff.
-- Browser rendering and internal navigation do not request GitHub/API resources.
-- The actual built client module graph contains 213 modules and two assets, with no Shiki, Oniguruma, or TextMate implementation modules or assets.
-
-Browser request interception does not observe server-side outbound requests.
-The server highlighter uses locally imported grammars and theme data, and the comparison content is embedded from local Git objects rather than fetched remotely.
-The final browser evidence is kept as ignored temporary artifacts under `tests/e2e/tmp/docs-run-0hLRSo/`.
-The existing Workers example's nine browser cases also passed after the stream-injection correction.
-No remote Cloudflare deployment was performed or required for this local-hosting acceptance.
-
-## Static-check entry point
-
-Use `vp check` rather than a separate typecheck script.
-The root VitePlus configuration enables `lint.options.typeAware` and `lint.options.typeCheck`, which are required for integrated TypeScript diagnostics.
-Temporary incompatible-assignment probes in the root, docs, and E2E projects were rejected with TS2322 by both `vp check` and `vp check --no-fmt --no-lint`; the probes were removed and the clean check passed.
-Compiler commands that emit package build artifacts remain build steps, not duplicate validation entry points.
+The stream injector preserves HTML chunk boundaries and emits embedded Flight payloads after HTML EOF, before the closing document trailer.
+Cancellation during a pending Flight flush is covered by the core stream tests.
+The stylesheet is imported by the exported Client DocsShell so initial SSR includes its CSS dependency.
 
 ## Sources and licenses
 
-- [shadcn/ui Sidebar](https://ui.shadcn.com/docs/components/sidebar) and the [official registry](https://ui.shadcn.com/r/styles/new-york-v4/sidebar.json).
+- [shadcn/ui Sidebar](https://ui.shadcn.com/docs/components/sidebar).
 - [Shiki](https://shiki.style/) and its [JavaScript regex engine](https://shiki.style/guide/regex-engines).
-- [VitePlus integrated checks](https://viteplus.dev/guide/check).
 - [Tailwind CSS Typography](https://github.com/tailwindlabs/tailwindcss-typography).
-- [Site third-party notices](../app/docs/THIRD-PARTY-NOTICES.md) for copied/adapted shadcn components.
-- [Upstream baseline](UPSTREAM.md) for the original effective-rsc source and license provenance.
+- [VitePlus integrated checks](https://viteplus.dev/guide/check).
+- [Third-party notices](../app/docs/THIRD-PARTY-NOTICES.md).
 
-## Audience and content boundaries
+## Core chapter replacement validation
 
-The public Guide is written for npm package consumers, not contributors cloning this workspace.
-Its installation commands assume the planned registry distribution; this documentation change does not publish packages or verify a registry installation before release.
-Conceptual guides stay host-neutral. Getting started uses Cloudflare as a complete runnable example, with deeper platform details at `/platforms/cloudflare`.
-The homepage presents Effront as a React meta-framework built on Web standards and Effect, while the Platforms page states which adapters are actually available.
-Contributor installation and E2E commands remain in this operations document and AGENTS.md.
-Code-reading excerpts retain their fixed historical comparison, including host-specific changes in that comparison.
-Deferred ViewTransition work is recorded in [the roadmap](ROADMAP.md), not presented as an implemented API.
-
-## Contributor verification ownership
-
-The public testing guide covers application behavior: business logic, page content, navigation, forms, and authorization.
-Effront contributors additionally verify Flight negotiation, hydration integration, request-service isolation, and scope cleanup at response EOF, failure, and cancellation on development and built hosts.
-Unit tests are colocated with implementation files, multi-module integration tests belong in package tests directories, and browser acceptance belongs in tests/e2e.
-Platform support is summarized at /platforms; /platforms/cloudflare documents only Cloudflare setup and operation.
-
-## Consumer-guide revision validation
-
-The five getting-started source blocks were extracted verbatim into an ignored local consumer and executed through Vite dev and the built Wrangler artifact.
-Both hosts returned the expected Hello, Effront HTML and Flight response with HTTP 200 and returned 404 for an unknown route.
-This validates the documented application files with local workspace packages; npm registry installation remains dependent on package publication.
-Real vp check probes produced TS2769 for an undeclared Greeting requirement, TS2345 for an omitted required layer, and TS2322 for Layer.empty failing to provide Greeting.
-The same probe accepted Layer.succeed(Greeting), and the temporary failing source was removed before normal checks.
-The revised thirteen-page site passed all ten browser acceptance cases across Vite and Wrangler, including JavaScript-disabled route/link/anchor crawling, dark styling, Shiki output, hydration, and desktop/mobile navigation.
-The immutable Code reading source remained unchanged.
+On 2026-09-12, `vp run check` passed formatting, lint, and type checks, and `vp run test` passed 273 tests across 36 files.
+The documentation acceptance suite passed all 10 cases against separate Vite development and built Wrangler hosts.
+The checks covered all 15 pages without JavaScript, all 14 current-source excerpts, navigation and heading links, dark typography, mobile sidebar behavior, and HTML/Flight 404 responses for all five removed Code Reading routes.
+The public sidebar links upstream only through its official website.

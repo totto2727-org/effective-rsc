@@ -2,20 +2,21 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, test as base, type Locator, type Page } from "@playwright/test";
 
-const baseline = "ed886996d1d3780b94166af4f798c53416d547c8";
-const comparison = "9058a71dcb522ffed8eb838ef9aef3c69953dfe7";
 const requiredRoutes = [
   "/",
   "/guide/getting-started",
+  "/platforms",
   "/platforms/cloudflare",
-  "/reading/overview",
+  "/core/overview",
 ];
-const readingRoutes = [
-  "/reading/overview",
-  "/reading/runtime",
-  "/reading/rendering",
-  "/reading/tooling",
-  "/reading/lifetimes",
+const coreRoutes = [
+  "/core/overview",
+  "/core/application",
+  "/core/routing",
+  "/core/request",
+  "/core/rendering",
+  "/core/navigation",
+  "/core/server-functions",
 ];
 const guideApplication = `import { Effect } from "effect";
 import { Application } from "effront";
@@ -38,19 +39,6 @@ const HomePage = EFFRONT.Page.make({
 export default EFFRONT.make({
   routes: EFFRONT.Routes.make({ layout: RootLayout }).page("/", HomePage),
 });`;
-const versionDiff = `diff --git a/packages/effective-rsc/package.json b/packages/effective-rsc/package.json
-index a6d8558e..06a7939e 100644
---- a/packages/effective-rsc/package.json
-+++ b/packages/effective-rsc/package.json
-@@ -3,2 +3,2 @@
--  "version": "0.1.4",
--  "description": "An experimental, Effect-native React Server Components framework for Bun.",
-+  "version": "0.1.4-workers.0",
-+  "description": "Effect-native React Server Components with a Web fetch core and Vite/Cloudflare Workers integration.",
-@@ -6 +6 @@
--    "bun",
-+    "cloudflare-workers",`;
-
 // Client failures must fail acceptance even when the visible server-rendered article looks correct.
 const test = base.extend({
   page: async ({ page, baseURL }, use) => {
@@ -291,6 +279,11 @@ test.describe("server-rendered public documentation", () => {
       expect(response?.headers()["content-type"], route).toContain("text/html");
       const article = await expectArticle(page);
       await expect(page).toHaveTitle(/Effront/);
+      await expect(page.locator('a[href*="github.com/nikhilsnayak/effective-rsc"]')).toHaveCount(0);
+      await expect(page.locator('a[href="https://effective-rsc.nikhilsnayak.dev/"]')).toHaveCount(
+        1,
+      );
+      await expect(page.locator('a[href^="/reading/"]')).toHaveCount(0);
       if (route === "/" || (route.startsWith("/guide/") && route !== "/guide/getting-started")) {
         await expect(article).not.toContainText(/Cloudflare|Workers|Wrangler|workerd|Vercel/);
       }
@@ -336,7 +329,7 @@ test.describe("server-rendered public documentation", () => {
       }
     }
 
-    for (const route of [...requiredRoutes, ...readingRoutes])
+    for (const route of [...requiredRoutes, ...coreRoutes])
       expect(visited.has(route), route).toBe(true);
     expect(articleLinks, "Articles should contain working content links").toBeGreaterThan(0);
     expect(headingLinks, "Documentation should expose heading anchors").toBeGreaterThan(0);
@@ -353,7 +346,7 @@ test.describe("server-rendered public documentation", () => {
     }
   });
 
-  test("renders server-highlighted guide and genuine before/after excerpts with exact immutable Git provenance", async ({
+  test("renders server-highlighted guide and current core excerpts matching actual implementation", async ({
     page,
   }) => {
     await page.goto("/guide/getting-started");
@@ -362,28 +355,31 @@ test.describe("server-rendered public documentation", () => {
       "tsx",
       guideApplication,
     );
-    for (const route of readingRoutes) {
+    for (const route of coreRoutes) {
       await page.goto(route);
-      const excerpts = page.locator("main article figure[data-reading-excerpt]");
+      await expect(page.locator("main article header p").first()).toHaveText("Core");
+      const excerpts = page.locator("main article figure[data-core-source]");
       expect(await excerpts.count(), route).toBeGreaterThan(0);
       for (const excerpt of await excerpts.all()) {
-        await expect(excerpt).toHaveAttribute("data-baseline", baseline);
-        await expect(excerpt).toHaveAttribute("data-comparison", comparison);
-        await expect(excerpt).toHaveAttribute("data-source-path", /.+/);
-        await expect(excerpt.locator(":scope > pre > code")).not.toBeEmpty();
+        const sourcePath = await excerpt.getAttribute("data-core-source");
+        if (!sourcePath || !/^packages\/effront\/src\/[a-z0-9/.-]+\.tsx?$/.test(sourcePath)) {
+          throw new Error(`Unexpected core source path: ${sourcePath}`);
+        }
+        const pre = excerpt.locator(":scope > pre");
+        const source = await pre.locator("code").textContent();
+        if (!source || source.length < 60)
+          throw new Error("Expected a substantive core source excerpt");
+        const implementation = await readFile(
+          new URL(`../../../${sourcePath}`, import.meta.url),
+          "utf8",
+        );
+        expect(implementation, sourcePath).toContain(source);
+        const language = await pre.getAttribute("data-language");
+        if (!language) throw new Error("Expected highlighted source language");
+        await expectHighlightedCode(pre, language, source);
+        await expect(excerpt.locator("figcaption")).toContainText(sourcePath);
       }
     }
-    await page.goto("/reading/overview");
-    const diff = page.locator('figure[data-reading-excerpt="package-version"]');
-    await expect(diff).toHaveAttribute("data-source-kind", "diff");
-    await expect(diff.locator("figcaption")).toContainText("Before");
-    await expect(diff.locator("figcaption")).toContainText(baseline);
-    await expect(diff.locator("figcaption")).toContainText("After");
-    await expect(diff.locator("figcaption")).toContainText(comparison);
-    const code = await diff.locator(":scope > pre > code").innerText();
-    expect(code).toMatch(/^-(?!--).+/m);
-    expect(code).toMatch(/^\+(?!\+\+).+/m);
-    await expectHighlightedCode(diff.locator(":scope > pre"), "diff", versionDiff);
   });
 });
 
@@ -402,10 +398,17 @@ test("negotiates native Flight for documentation and returns a real 404 for unkn
     expect(body).not.toMatch(/<!doctype html/i);
   }
   for (const accept of ["text/html", "text/x-component"]) {
-    const missing = await request.get("/__docs_acceptance_missing__", {
-      headers: { Accept: accept },
-    });
-    expect(missing.status()).toBe(404);
+    for (const path of [
+      "/__docs_acceptance_missing__",
+      "/reading/overview",
+      "/reading/runtime",
+      "/reading/rendering",
+      "/reading/tooling",
+      "/reading/lifetimes",
+    ]) {
+      const missing = await request.get(path, { headers: { Accept: accept } });
+      expect(missing.status(), path).toBe(404);
+    }
   }
 });
 
@@ -450,12 +453,12 @@ test("hydrates desktop navigation with readable typography and working heading l
     .click();
   expect(new URL(page.url()).hash).toBe(href);
 
-  const readingLink = page.locator('a[href="/reading/overview"]:visible').first();
-  const readingTitle = (await readingLink.innerText()).trim();
-  await readingLink.click();
-  await expect(page).toHaveURL(/\/reading\/overview$/);
+  const coreLink = page.locator('a[href="/core/overview"]:visible').first();
+  const coreTitle = (await coreLink.innerText()).trim();
+  await coreLink.click();
+  await expect(page).toHaveURL(/\/core\/overview$/);
   await expect(page.locator("main article").getByRole("heading", { level: 1 })).toHaveText(
-    readingTitle,
+    coreTitle,
   );
   await expectArticle(page);
   await expectTypography(page);
@@ -514,13 +517,13 @@ test("supports mobile sidebar keyboard dismissal and link dismissal without over
 
   await toggle.click();
   await expect(sheet).toBeVisible();
-  const readingLink = sheet.locator('a[href="/reading/overview"]');
-  const readingTitle = (await readingLink.innerText()).trim();
-  await readingLink.click();
-  await expect(page).toHaveURL(/\/reading\/overview$/);
+  const coreLink = sheet.locator('a[href="/core/overview"]');
+  const coreTitle = (await coreLink.innerText()).trim();
+  await coreLink.click();
+  await expect(page).toHaveURL(/\/core\/overview$/);
   await expect(sheet).toBeHidden();
   await expect(page.locator("main article").getByRole("heading", { level: 1 })).toHaveText(
-    readingTitle,
+    coreTitle,
   );
   await expectArticle(page);
   await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
@@ -531,7 +534,7 @@ test("supports mobile sidebar keyboard dismissal and link dismissal without over
     path: testInfo.outputPath("mobile-viewport.png"),
     fullPage: false,
   });
-  for (const route of readingRoutes) {
+  for (const route of coreRoutes) {
     await page.goto(route);
     await expectArticle(page);
     await expectNoHorizontalOverflow(page);
@@ -540,7 +543,7 @@ test("supports mobile sidebar keyboard dismissal and link dismissal without over
     // Preserve input styles while deferred boundaries may still be hydrating.
     caret: "initial",
     animations: "disabled",
-    path: testInfo.outputPath("mobile-reading.png"),
+    path: testInfo.outputPath("mobile-core.png"),
     fullPage: true,
   });
 });

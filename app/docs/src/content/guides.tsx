@@ -38,15 +38,15 @@ export const guidePages: readonly DocPage[] = [
           ページやサービスのコードにプラットフォームの起動処理を混ぜる必要はありません。
         </p>
         <p>
-          実行環境ごとの対応状況と必要な設定は、<a href="/platforms/cloudflare">Platforms</a>{" "}
+          実行環境ごとの対応状況と必要な設定は、<a href="/platforms">Platforms</a>{" "}
           にまとめています。
         </p>
         <h2 id="next">次に読むもの</h2>
         <p>
           <a href="/guide/getting-started">はじめる</a> でアプリケーションの構成を確認し、
           <a href="/guide/routes">ルーティング</a> と <a href="/guide/effect">サービスの注入</a>{" "}
-          を読んでください。 上流からの変更を追う場合は <a href="/reading/overview">Code reading</a>{" "}
-          を参照してください。
+          を読んでください。内部の処理を理解したい場合は <a href="/core/overview">Core の解説</a>
+          を順に読み進めてください。
         </p>
       </>
     ),

@@ -4,7 +4,7 @@ import { getPage, navigation, pages } from "./index";
 
 describe("documentation catalog", () => {
   it("keeps stable unique URLs and serializable navigation metadata", () => {
-    expect(pages.length).toBe(13);
+    expect(pages.length).toBe(15);
     expect(new Set(pages.map((page) => page.slug)).size).toBe(pages.length);
     expect(JSON.parse(JSON.stringify(navigation))).toEqual(navigation);
     for (const page of pages) {
@@ -21,6 +21,8 @@ describe("documentation catalog", () => {
   it("keeps conceptual guides host-neutral and provides a complete host-specific quickstart", () => {
     const guides = pages.filter((page) => page.section === "Guide");
     expect(guides.length).toBe(6);
+    expect(pages.filter((page) => page.section === "Core")).toHaveLength(7);
+    expect(pages.some((page) => page.slug.startsWith("/reading/"))).toBe(false);
     for (const page of guides.filter((page) => page.slug !== "/guide/getting-started")) {
       const text = renderToStaticMarkup(page.content()).replace(/<[^>]*>/g, "");
       expect(`${page.title} ${page.description} ${text}`).not.toMatch(

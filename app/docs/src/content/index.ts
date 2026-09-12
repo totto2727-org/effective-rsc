@@ -1,8 +1,8 @@
 import { guidePages } from "./guides";
 import { platformPages } from "./platforms";
-import { readingPages } from "./reading";
+import { corePages } from "./core";
 
-export const pages = [...guidePages, ...platformPages, ...readingPages];
+export const pages = [...guidePages, ...platformPages, ...corePages];
 export const navigation = pages.map(({ slug, title, section }) => ({ slug, title, section }));
 
 export function getPage(slug: string) {

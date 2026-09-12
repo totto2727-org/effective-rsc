@@ -101,27 +101,11 @@ function DocsNavigation({ current, navigation }: Pick<DocsShellProps, "current" 
       <SidebarFooter>
         <a
           className="flex items-center gap-2 rounded-md px-2 py-2 text-xs text-sidebar-foreground/65 outline-none hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-          href="https://github.com/nikhilsnayak/effective-rsc"
+          href="https://effective-rsc.nikhilsnayak.dev/"
           target="_blank"
           rel="noreferrer"
         >
-          GitHub <ExternalLinkIcon aria-hidden="true" className="size-3" />
-        </a>
-        <a
-          className="flex items-center gap-2 rounded-md px-2 py-2 text-xs text-sidebar-foreground/65 outline-none hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-          href="https://github.com/nikhilsnayak/effective-rsc/blob/main/docs/ARCHITECTURE.md"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Advanced architecture <ExternalLinkIcon aria-hidden="true" className="size-3" />
-        </a>
-        <a
-          className="flex items-center gap-2 rounded-md px-2 py-2 text-xs text-sidebar-foreground/65 outline-none hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-          href="https://github.com/nikhilsnayak/effective-rsc/tree/main/packages/effective-rsc/src"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Upstream API source <ExternalLinkIcon aria-hidden="true" className="size-3" />
+          effective-rsc 公式サイト <ExternalLinkIcon aria-hidden="true" className="size-3" />
         </a>
       </SidebarFooter>
     </>
