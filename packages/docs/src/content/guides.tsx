@@ -284,7 +284,9 @@ const HomePage = ERSC.Page.make({
           <code>"use client"</code> を置きます。これは通常の React コンポーネントであり、
           <code>ERSC.Component.make</code> では包みません。<code>"use client"</code> は no-SSR
           を意味しません。Client Component も初回表示用の HTML には SSR され、その後ブラウザーで
-          hydrate されます。
+          hydrate されます。グローバル CSS は、Layout から実際に render する export 済み Client
+          Component で import してください。アプリケーション定義オブジェクトだけから import
+          すると、Vite RSC が renderable な CSS 依存として追跡できない場合があります。
         </p>
         {code(`"use client";
 
