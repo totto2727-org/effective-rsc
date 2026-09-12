@@ -477,6 +477,9 @@ AFTER=${comparison}
 git show "$BASE:packages/effective-rsc/package.json"
 git diff --find-renames --name-status "$BASE" "$AFTER"
 git diff --stat "$BASE" "$AFTER"
+# 省略なしの全リポジトリ差分
+git diff "$BASE" "$AFTER"
+# 読解する runtime ソースだけに絞る場合
 git diff "$BASE" "$AFTER" -- packages/effective-rsc/src`}</code>
         </pre>
 
