@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema, SchemaTransformation } from "effect";
 
-import { Application } from "../../src/application/ersc";
-import { getRoutesState } from "../../src/application/routes";
+import { Application } from "./ersc";
+import { getRoutesState } from "./routes";
 
 const ERSC = Application.ersc();
 const Shell = ERSC.Layout.make({

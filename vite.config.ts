@@ -7,7 +7,4 @@ const ignorePatterns = await generateIgnorePatterns(new URL(".", import.meta.url
 export default defineConfig({
   fmt: { ignorePatterns },
   lint: { ignorePatterns },
-  test: {
-    include: ["packages/*/tests/**/*.test.{ts,tsx}"],
-  },
 });

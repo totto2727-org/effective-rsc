@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { afterEach, describe, expect, it } from "vite-plus/test";
-import { generateIgnorePatterns } from "../src/index.ts";
+import { generateIgnorePatterns } from "./index.ts";
 
 const roots: string[] = [];
 

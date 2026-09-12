@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Context, Effect, Ref, Schema } from "effect";
 
-import { Application } from "../../src/application/ersc";
-import { type ERSCIdentity, getERSCIdentity } from "../../src/application/ersc-identity";
-import { matchServerFnInvocation } from "../../src/application/server-fn";
+import { Application } from "./ersc";
+import { type ERSCIdentity, getERSCIdentity } from "./ersc-identity";
+import { matchServerFnInvocation } from "./server-fn";
 
 class Greeting extends Context.Service<Greeting, { readonly prefix: string }>()(
   "ersc/tests/application/server-fn/Greeting",

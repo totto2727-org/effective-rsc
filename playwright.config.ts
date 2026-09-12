@@ -5,7 +5,7 @@ const wranglerOrigin = "http://127.0.0.1:8788";
 
 export default defineConfig({
   testDir: "./tests",
-  testMatch: "workers-fetch.spec.ts",
+  testMatch: "workers-fetch.e2e.ts",
   fullyParallel: false,
   forbidOnly: true,
   retries: 0,

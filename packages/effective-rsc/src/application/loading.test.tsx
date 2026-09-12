@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 
-import { Application } from "../../src/application/ersc";
+import { Application } from "./ersc";
 
 const ERSC = Application.ersc();
 

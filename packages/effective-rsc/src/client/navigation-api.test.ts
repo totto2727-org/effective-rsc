@@ -2,7 +2,7 @@ import { afterEach, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
-import { NavigationApi } from "../../src/client/navigation-api";
+import { NavigationApi } from "./navigation-api";
 
 afterEach(() => vi.unstubAllGlobals());
 

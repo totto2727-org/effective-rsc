@@ -59,6 +59,15 @@ D1, KV, R2, database abstractions, Node/Bun host adapters, and hosted deployment
 - **Effect**: consult the installed version's source and official documentation before changing Effect APIs.
 - Keep all retained source and tests covered by root checks. Do not hide legacy files behind tooling exclusions.
 
+## Test placement
+
+- Place unit tests next to their implementation as `<module>.test.ts` or `<module>.test.tsx`.
+- Reserve `tests/` for integration or black-box contracts spanning multiple modules or external tools.
+- Use standard Vitest discovery without a root `test.include` override.
+- Name Playwright browser suites `*.e2e.ts` and select them in the Playwright configuration so Vitest does not collect them.
+- Keep colocated tests in source checks, but exclude them from shipped source packages and declaration builds.
+- See [test boundaries](docs/TESTING.md) for the retained integration suites.
+
 ## Package-specific rules
 
 - Keep dependency versions in the shared catalog only when at least two active manifests reference them.

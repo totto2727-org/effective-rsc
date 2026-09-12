@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Context, Effect } from "effect";
 
-import { makeRenderRuntimeContext, type RenderRuntime } from "../../src/application/render-runtime";
+import { makeRenderRuntimeContext, type RenderRuntime } from "./render-runtime";
 
 class RequestLabel extends Context.Service<RequestLabel, { readonly value: string }>()(
   "ersc/tests/application/render-runtime/RequestLabel",

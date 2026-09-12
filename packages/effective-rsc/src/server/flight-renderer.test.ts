@@ -1,7 +1,7 @@
 import { expect, it, vi } from "@effect/vitest";
 import { Deferred, Effect } from "effect";
 
-import type { RenderRuntimeContext } from "../../src/application/render-runtime";
+import type { RenderRuntimeContext } from "../application/render-runtime";
 
 let renderSignal: AbortSignal | undefined;
 
@@ -12,7 +12,7 @@ vi.doMock("@vitejs/plugin-rsc/rsc/server", () => ({
   },
 }));
 
-const { FlightRenderer } = await import("../../src/server/flight-renderer");
+const { FlightRenderer } = await import("./flight-renderer");
 
 it.effect("interrupts application work when its Flight render is released", () =>
   Effect.scoped(

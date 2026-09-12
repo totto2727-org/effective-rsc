@@ -2,8 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Context, Deferred, Effect, Exit, FiberSet, Layer, Ref, Scope } from "effect";
 import type { ReactNode } from "react";
 
-import { Application } from "../../src/application/ersc";
-import { getERSCIdentity } from "../../src/application/ersc-identity";
+import { Application } from "./ersc";
+import { getERSCIdentity } from "./ersc-identity";
 
 class ShellTitle extends Context.Service<ShellTitle, { readonly value: string }>()(
   "ersc/tests/application/layout/ShellTitle",

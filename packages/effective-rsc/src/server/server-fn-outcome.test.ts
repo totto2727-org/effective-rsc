@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect } from "effect";
 
-import { serverFnOutcome } from "../../src/server/server-fn-outcome";
+import { serverFnOutcome } from "./server-fn-outcome";
 
 describe("serverFnOutcome", () => {
   it.effect("preserves interruption instead of converting it to a 500 result", () =>

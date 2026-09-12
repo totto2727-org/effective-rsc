@@ -2,7 +2,7 @@ import { afterEach, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
-import { navigationMode } from "../../src/client/browser-capabilities";
+import { navigationMode } from "./browser-capabilities";
 
 afterEach(() => {
   vi.unstubAllGlobals();

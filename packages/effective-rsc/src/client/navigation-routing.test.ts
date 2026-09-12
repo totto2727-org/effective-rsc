@@ -4,7 +4,7 @@ import {
   isRoutedNavigation,
   NativeDocumentNavigationInfo,
   preserveRequestedHash,
-} from "../../src/client/navigation-routing";
+} from "./navigation-routing";
 
 type RoutingFields = Pick<
   NavigateEvent,

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { RouteOutlet, RouteTree } from "../../src/client/route-tree";
-import type { RouteTreeModel } from "../../src/rsc/route-tree";
+import { RouteOutlet, RouteTree } from "./route-tree";
+import type { RouteTreeModel } from "../rsc/route-tree";
 
 describe("RouteTree", () => {
   it("recursively renders a unary Layout ancestry", () => {

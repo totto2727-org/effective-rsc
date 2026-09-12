@@ -12,9 +12,9 @@ import {
   Scope,
 } from "effect";
 
-import { Application } from "../../src/application/ersc";
-import { getERSCIdentity } from "../../src/application/ersc-identity";
-import { getPageState } from "../../src/application/page";
+import { Application } from "./ersc";
+import { getERSCIdentity } from "./ersc-identity";
+import { getPageState } from "./page";
 
 class Greeting extends Context.Service<Greeting, { readonly value: string }>()(
   "ersc/tests/application/page/Greeting",

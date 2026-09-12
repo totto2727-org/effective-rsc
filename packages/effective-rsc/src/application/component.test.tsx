@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Context, Deferred, Effect, Exit, FiberSet, Ref, Scope } from "effect";
 
-import { Application } from "../../src/application/ersc";
-import { getERSCIdentity } from "../../src/application/ersc-identity";
-import type { RenderRuntime } from "../../src/application/render-runtime";
+import { Application } from "./ersc";
+import { getERSCIdentity } from "./ersc-identity";
+import type { RenderRuntime } from "./render-runtime";
 
 class Greeting extends Context.Service<Greeting, { readonly prefix: string }>()(
   "ersc/tests/application/component/Greeting",
