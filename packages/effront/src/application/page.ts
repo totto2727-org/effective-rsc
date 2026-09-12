@@ -1,5 +1,12 @@
 import { Effect, Schema, type Types } from "effect";
-import type { ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
+
+import { PageViewTransitionBoundary } from "../client/page-view-transition";
+import {
+  PageViewTransition,
+  type PageViewTransitionConfig,
+  resolvePageViewTransition,
+} from "./page-view-transition";
 
 import {
   type EFFRONTIdentity,
@@ -90,6 +97,7 @@ export type AnyPageDefinition<Services> =
 
 export type PageImplementationState<Services = unknown> = {
   readonly component: PageComponent;
+  readonly boundary: (props: { readonly children: ReactNode }) => Promise<ReactNode>;
   readonly paramsSchema: PageParamsSchema<Services> | null;
 };
 
@@ -113,16 +121,33 @@ class PageDefinitionImpl<
     return this;
   }
   readonly component: PageComponent;
+  readonly boundary: (props: { readonly children: ReactNode }) => Promise<ReactNode>;
   readonly paramsSchema: ParamsSchema;
 
   constructor(
     identity: EFFRONTIdentity<Services>,
     component: PageComponent,
     paramsSchema: ParamsSchema,
+    middleware: ReadonlyArray<AnyMiddleware<Services>>,
+    viewTransition: false | PageViewTransitionConfig | undefined,
   ) {
     this[EFFRONTIdentityTypeId] = identity;
     this.component = component;
     this.paramsSchema = paramsSchema;
+    this.boundary = ({ children }) =>
+      identity.renderRuntime.run(
+        "Page",
+        Effect.map(PageViewTransition, (defaults) =>
+          createElement(
+            PageViewTransitionBoundary,
+            {
+              config: resolvePageViewTransition(defaults, viewTransition),
+            },
+            children,
+          ),
+        ),
+        middleware,
+      );
     Object.freeze(this);
   }
 }
@@ -141,10 +166,12 @@ export function getPageState(page: AnyPageDefinition<unknown>): PageImplementati
 
 type StaticPageOptions<Error, Services> = {
   readonly params?: never;
+  readonly viewTransition?: false | PageViewTransitionConfig | undefined;
   readonly render: () => Effect.Effect<Awaited<ReactNode>, Error, Services>;
 };
 type ParameterizedPageOptions<ParamsSchema extends PageParamsSchema<Services>, Error, Services> = {
   readonly params: ParamsSchema;
+  readonly viewTransition?: false | PageViewTransitionConfig | undefined;
   readonly render: (props: {
     readonly params: ParamsSchema["Type"];
   }) => Effect.Effect<Awaited<ReactNode>, Error, Services>;
@@ -199,7 +226,7 @@ export const makePageFactory = <ApplicationServices, AvailableServices>(
         PageParamKeys<typeof paramsSchema>,
         "Parameterized",
         typeof paramsSchema
-      >(identity, component, paramsSchema);
+      >(identity, component, paramsSchema, middleware, options.viewTransition);
     }
 
     const { render } = options;
@@ -209,6 +236,8 @@ export const makePageFactory = <ApplicationServices, AvailableServices>(
       identity,
       component,
       null,
+      middleware,
+      options.viewTransition,
     );
   }
 

@@ -18,9 +18,14 @@ export const renderRouteTree = <Services,>({
   params,
 }: RenderRouteTreeOptions<Services>): RouteTreeModel => {
   const Page = destination.page.component;
+  const PageBoundary = destination.page.boundary;
   let tree: RouteTreeModel = {
     child: null,
-    content: <Page params={params} />,
+    content: (
+      <PageBoundary>
+        <Page params={params} />
+      </PageBoundary>
+    ),
     id: `page:${pathname}`,
   };
 

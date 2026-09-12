@@ -24,6 +24,11 @@ const asElement = <Props,>(node: ReactNode): ReactElement<Props> => {
   return node;
 };
 
+const pageContent = (node: RouteTreeModel) =>
+  asElement<PageRuntimeProps>(
+    asElement<{ readonly children: ReactNode }>(node.content).props.children,
+  );
+
 const requiredChild = (node: RouteTreeModel) => {
   if (node.child === null) {
     throw new Error(`Expected route node "${node.id}" to contain a child.`);
@@ -109,7 +114,7 @@ describe("EFFRONT.make", () => {
     expect(rootNode.id).not.toBe(pageNode.id);
     expect(root.type).toBe(RootLayout);
     expect(asElement(root.props.children).type).toBe(RouteOutlet);
-    expect(asElement(pageNode.content).type).toBe(pageComponent(HomePage));
+    expect(pageContent(pageNode).type).toBe(pageComponent(HomePage));
     expect(applicationRoutes(App).map(({ pattern }) => pattern)).toEqual(["/"]);
     expect(Object.getOwnPropertyDescriptor(App, "routes")).toMatchObject({
       configurable: false,
@@ -136,7 +141,7 @@ describe("EFFRONT.make", () => {
         day: "sunday",
       }),
     );
-    const saturdayElement = asElement<PageRuntimeProps>(saturdayPage.content);
+    const saturdayElement = pageContent(saturdayPage);
 
     expect(applicationRoutes(App).map(({ pattern }) => pattern)).toEqual(["/schedule/:day"]);
     expect(saturdayPage.id).not.toBe(sundayPage.id);
@@ -181,7 +186,7 @@ describe("EFFRONT.make", () => {
     expect(asElement(loadingBoundary.props.fallback).type).toBe(ScheduleLoading);
     expect(asElement(loadingBoundary.props.children).type).toBe(RouteOutlet);
     expect(pageNode.id).not.toBe(loadingNode.id);
-    expect(asElement(pageNode.content).type).toBe(pageComponent(SundayPage));
+    expect(pageContent(pageNode).type).toBe(pageComponent(SundayPage));
   });
 
   it("lets layoutless Routes group paths without adding a rendered node", () => {
@@ -194,7 +199,7 @@ describe("EFFRONT.make", () => {
     const rootNode = renderApplicationRoute(applicationRoutes(App), "/schedule/day-two");
     const pageNode = requiredChild(rootNode);
 
-    expect(asElement(pageNode.content).type).toBe(pageComponent(SundayPage));
+    expect(pageContent(pageNode).type).toBe(pageComponent(SundayPage));
   });
 
   it("supports a Loading scope without requiring a nested Layout", () => {
@@ -207,7 +212,7 @@ describe("EFFRONT.make", () => {
     const pageNode = requiredChild(loadingNode);
 
     expect(asElement(loadingNode.content).type).toBe(Suspense);
-    expect(asElement(pageNode.content).type).toBe(pageComponent(SaturdayPage));
+    expect(pageContent(pageNode).type).toBe(pageComponent(SaturdayPage));
   });
 
   it("compiles one Routes value mounted at more than one prefix", () => {
