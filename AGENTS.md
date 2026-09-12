@@ -30,10 +30,11 @@ Workspace discovery uses `app/*`, `packages/*`, `tests/*`, and `examples/*`, wit
 From the repository root:
 
 - `vp install` installs the pinned pnpm workspace dependencies.
-- `vp fmt` formats with VitePlus.
-- `vp lint` uses default VitePlus lint rules.
-- `vp check` checks all framework source, the example, and retained tests.
-- `vp test run` runs the retained unit/integration tests.
+- `vp run fix` applies formatting and safe lint fixes through `js:fix` (`vp check --fix`).
+- `vp run check` verifies formatting, default lint rules, and types through `js:check` (`vp check`).
+- `vp run test` runs retained unit/integration tests through `js:test` (`vp test run`).
+- Root task definitions live in `vite.config.ts` `run.tasks`, not duplicated package scripts.
+- Do not add standalone formatter/linter tasks; use the fix/check workflow.
 - Run `vp run test` from `tests/e2e/` for real browser acceptance.
 - Run `vp run test` from `packages/gitignore-patterns/` for that package's unit and real CLI integration tests.
 

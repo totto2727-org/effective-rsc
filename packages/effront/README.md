@@ -135,8 +135,9 @@ The Cloudflare adapter owns its required environment names.
 ## Quality checks
 
 ```sh
-vp check
-vp test run
+vp run fix
+vp run check
+vp run test
 cd tests/e2e
 vp run test
 ```

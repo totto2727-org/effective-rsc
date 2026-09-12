@@ -27,7 +27,10 @@ Current code uses `effront/*`, `Application.effront()`, and separate `effront()`
 | Type safety of active workflow                    | `vp run typecheck` passed for all retained framework source and tests, the example, Playwright config, and browser test source.                                                                                                                 |
 | New sibling directory, local changes only         | Implementation is in the cloned sibling directory with local commits. No PR, push, publishing, or cloud deployment was performed.                                                                                                               |
 
-## Reproduce
+## Historical reproduction commands
+
+For the current checkout, use `vp run fix`, `vp run check`, and `vp run test` from the root, then `vp run test` from `tests/e2e`.
+The following commands describe the original verification, not the current task interface.
 
 ```sh
 vp install

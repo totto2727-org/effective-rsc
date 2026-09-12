@@ -4,12 +4,7 @@
   "private": true,
   "license": "MIT",
   "type": "module",
-  "scripts": {
-    "check": "vp check",
-    "fmt": "vp fmt",
-    "lint": "vp lint",
-    "test": "vp test run"
-  },
+  "scripts": {},
   "devDependencies": {
     "@effect/vitest": "4.0.0-rc.113",
     "@effront/gitignore-patterns": "workspace:*",

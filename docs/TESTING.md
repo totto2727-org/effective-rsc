@@ -64,3 +64,15 @@ The Vite host configuration reuses the example source and public integration plu
 Three dynamically selected HTTP ports and one unique run directory keep simultaneous invocations separate.
 Both Wrangler hosts build their own isolated artifacts before starting; overrides are applied at Wrangler startup, not during compilation.
 See [the E2E project instructions](../tests/e2e/AGENTS.md) for commands and retained diagnostic artifacts.
+
+## Task entry points
+
+Root task definitions follow the reference monorepo's `vite.config.ts` `run.tasks` structure.
+Use `vp run fix`, `vp run check`, and `vp run test`, delegating to `js:fix`, `js:check`, and `js:test` respectively.
+The implementation commands are `vp check --fix`, `vp check`, and `vp test run`; format/lint configuration and rules are unchanged.
+These tasks disable caching so checks, fixes, and tests always examine the current filesystem, including newly created files.
+App-local dev/build and the independently owned E2E tasks remain package-local.
+The Gitignore CLI integration tests still invoke individual tool commands internally to prove each tool's exclusion behavior; those are test subjects, not user-facing workflow tasks.
+
+Validated the real task interface with a temporary source probe: `check` rejected malformed formatting, `fix` repaired it, `check` then passed, and a separate TypeScript mismatch caused `check` to fail before the restored source passed again.
+`vp run test` passed all 241 tests across 33 files.
