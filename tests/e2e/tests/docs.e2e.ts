@@ -291,7 +291,7 @@ test.describe("server-rendered public documentation", () => {
       expect(response?.headers()["content-type"], route).toContain("text/html");
       const article = await expectArticle(page);
       await expect(page).toHaveTitle(/Effront/);
-      if (route === "/" || route.startsWith("/guide/")) {
+      if (route === "/" || (route.startsWith("/guide/") && route !== "/guide/getting-started")) {
         await expect(article).not.toContainText(/Cloudflare|Workers|Wrangler|workerd|Vercel/);
       }
       if (route === "/platforms/cloudflare") {

@@ -93,6 +93,7 @@ _This AGENTS.md was generated from the [share-artifact skill](https://raw.github
 
 - Write common Guide pages for npm package consumers, not contributors cloning this repository.
 - Describe Effront as a React meta-framework built on Web standards and Effect; distinguish extensible Fetch boundaries from tested adapter support.
-- Keep runtime-specific setup, bindings, and hosting commands in the Platforms section, not the shared Guide.
+- Keep conceptual guides host-neutral. Getting started may choose a concrete host and must include a complete runnable configuration; put deeper host-specific details in Platforms.
+- Prefer affirmative instructions and working examples over statements of what something is not. Reserve negative warnings for necessary correctness, compatibility, or safety constraints.
 - Preserve the immutable Code reading comparison even when current platform guidance changes.
 - Deferred features belong in docs/ROADMAP.md and must not be presented as implemented APIs.

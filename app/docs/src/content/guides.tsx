@@ -54,7 +54,7 @@ export const guidePages: readonly DocPage[] = [
   {
     slug: "/guide/getting-started",
     title: "はじめる",
-    description: "アプリケーション定義、エントリポイント、Vite統合の共通構成を示します。",
+    description: "Cloudflareを実行環境に、アプリケーションの作成からローカル起動まで進めます。",
     section: "Guide",
     headings: [
       { id: "setup", title: "準備" },
@@ -66,13 +66,13 @@ export const guidePages: readonly DocPage[] = [
       <>
         <h2 id="setup">準備</h2>
         <p>
-          VitePlusで管理するアプリケーションに、npmレジストリからEffrontとビルド統合を追加します。
+          この入門ではCloudflareを実行環境に使います。VitePlusで管理するアプリケーションに、npmレジストリから必要なパッケージを追加します。
           VitePlusの導入方法は <a href="https://viteplus.dev/guide/">公式ガイド</a>{" "}
           を参照してください。
         </p>
         {code(
           `vp add effront
-vp add -D @effront/vite @vitejs/plugin-rsc`,
+vp add -D @effront/vite @effront/cloudflare @vitejs/plugin-rsc wrangler`,
           "bash",
         )}
         <p>
@@ -86,14 +86,10 @@ vp add -D @effront/vite @vitejs/plugin-rsc`,
   entry.server.ts  # ホストへ公開するサーバーエントリ
   entry.client.ts  # アプリケーション定義のexport
   application.tsx  # JSXを含むルートグラフ
-vite.config.ts    # ビルドとホスト統合`,
+vite.config.ts    # ビルドとホスト統合
+wrangler.jsonc    # Cloudflareの設定`,
           "text",
         )}
-        <p>
-          <code>entry.server.ts</code> とホスト固有の設定ファイルは
-          <a href="/platforms/cloudflare">Platforms</a>{" "}
-          で扱います。ここでは共通のアプリケーション定義を作ります。
-        </p>
         <h2 id="application">アプリケーションを書く</h2>
         <p>
           同じ <code>EFFRONT</code> 値から Layout、Page、Routes を作り、<code>EFFRONT.make</code>{" "}
@@ -131,25 +127,56 @@ export default EFFRONT.make({
         {code(`export { default } from "./application";`, "ts")}
         <h2 id="run">ビルド統合と実行</h2>
         <p>
-          共通のビルド統合は <code>@effront/vite</code> が担当します。
-          次の設定にホスト用プラグインとサーバーエントリを追加して実行します。
-          ホストなしで開発サーバーが完成する設定ではありません。
+          <code>src/entry.server.ts</code> にFetchハンドラーを定義します。
+        </p>
+        {code(
+          `import { createFetchHandler } from "effront/workers";
+import application from "./entry.client";
+
+export default { fetch: createFetchHandler(application) };`,
+          "ts",
+        )}
+        <p>
+          <code>vite.config.ts</code> でEffrontとCloudflareのプラグインを登録します。
         </p>
         {code(
           `import { effront } from "@effront/vite";
+import { effrontCloudflare } from "@effront/cloudflare";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
-  plugins: [effront()],
+  plugins: [effront(), effrontCloudflare()],
 });`,
           "ts",
         )}
-        <p>ホスト設定を済ませたアプリケーションのディレクトリから実行します。</p>
+        <p>
+          <code>wrangler.jsonc</code> にアプリケーション名とサーバーエントリを設定します。
+        </p>
         {code(
-          `vp dev
-vp build`,
+          `{
+  "name": "my-effront-app",
+  "main": "src/entry.server.ts",
+  "compatibility_date": "2026-09-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "binding": "ASSETS" }
+}`,
+          "json",
+        )}
+        <p>アプリケーションのディレクトリから開発サーバーを起動します。</p>
+        {code(`vp dev`, "bash")}
+        <p>
+          ターミナルに表示されたURLを開くと <code>Hello, Effront</code> が表示されます。
+          ビルド済みのアプリケーションは次のコマンドで確認できます。
+        </p>
+        {code(
+          `vp build
+vp exec wrangler dev --local --no-bundle --config dist/rsc/wrangler.json`,
           "bash",
         )}
+        <p>
+          環境変数やホスト設定の詳細は <a href="/platforms/cloudflare">Cloudflare</a>{" "}
+          のページを参照してください。
+        </p>
       </>
     ),
   },
@@ -218,8 +245,8 @@ const routes = EFFRONT.Routes.make({ layout: RootLayout })
         )}
         <h2 id="matching">マッチング時の注意</h2>
         <p>
-          GET と HEAD では、レンダリング前にパラメーターを一度だけ decode します。decode に失敗した
-          URL は 404 になります。予約済みの <code>/_effront</code>{" "}
+          GET と HEAD では、レンダリング前に Page のパスパラメーターを Schema で一度だけ decode
+          します。 この Schema に適合しないパスは 404 を返します。予約済みの <code>/_effront</code>{" "}
           名前空間はアプリケーションのルートに使えません。
         </p>
         <details>
@@ -266,9 +293,8 @@ const HomePage = EFFRONT.Page.make({
         )}
         <h2 id="client-boundary">Client boundary と CSS</h2>
         <p>
-          <code>"use client"</code> の境界は通常の React component に適用し、
-          <code>EFFRONT.Component.make</code> では包みません。React 側の意味は{" "}
-          <a href="https://react.dev/reference/rsc/use-client">use client reference</a>{" "}
+          <code>"use client"</code> の詳細は{" "}
+          <a href="https://react.dev/reference/rsc/use-client">React の公式リファレンス</a>{" "}
           を参照してください。 グローバル CSS は Layout が実際に render する export 済み Client
           Component から import します。 アプリケーション定義オブジェクトだけから import
           すると、Vite RSC が renderable な CSS 依存として 追跡できない場合があります。
@@ -332,6 +358,7 @@ export const followAuthor = EFFRONT.ServerFn.make({
     section: "Guide",
     headings: [
       { id: "service", title: "型付きサービスと Layer" },
+      { id: "missing-services", title: "サービス不足の型エラー" },
       { id: "lifetime", title: "リクエストごとの生存期間" },
     ],
     content: () => (
@@ -385,6 +412,36 @@ export default EFFRONT.make({
 });`,
           "tsx",
         )}
+        <h2 id="missing-services">サービス不足の型エラー</h2>
+        <p>
+          要求するサービスの宣言と、Layer による提供は型チェックで確認されます。 上の Greeting
+          を例にすると、次の不足を検出します。診断の全文は呼び出し方により変わります。
+        </p>
+        <ul>
+          <li>
+            <code>Application.effront()</code> のまま Page の render で Greeting を要求すると、
+            <code>TS2769: No overload matches this call</code> になります。 render が返す Effect
+            の要求サービス Greeting が、利用可能なサービスに含まれないためです。
+            <code>Application.effront&lt;Greeting&gt;()</code> と宣言します。
+          </li>
+          <li>
+            Greeting を宣言して <code>EFFRONT.make</code> の layer を省略すると、
+            <code>TS2345</code> になります。渡したオブジェクトに必須の layer が不足しています。
+          </li>
+          <li>
+            <code>layer: Layer.empty</code> を渡すと、
+            <code>
+              TS2322: Type 'Layer&lt;never, never, never&gt;' is not assignable to type
+              'Layer&lt;Greeting, never, HttpRouter&gt;'
+            </code>
+            になります。Layer の出力に Greeting が不足しているため、
+            <code>Greeting.layer</code> を渡します。
+          </li>
+        </ul>
+        <p>
+          複数サービスを宣言した場合は、それらをすべて提供する Layer を渡します。 Middleware
+          経由で追加するサービスは、その Middleware を適用したスコープで利用します。
+        </p>
         <h2 id="lifetime">リクエストごとの生存期間</h2>
         <p>
           Fetch ランタイムはアプリケーション Layer をグローバルに一度だけ構築しません。各 request
@@ -401,42 +458,43 @@ export default EFFRONT.make({
   },
   {
     slug: "/guide/testing",
-    title: "テストと検証",
-    description: "共通の品質チェックと、アプリケーションの振る舞いを確認するための指針です。",
+    title: "アプリケーションのテスト",
+    description: "アプリケーションの処理、ページ表示、ユーザー操作を検証します。",
     section: "Guide",
     headings: [
-      { id: "commands", title: "標準チェック" },
-      { id: "acceptance", title: "実行経路を分けて検証する" },
-      { id: "expectations", title: "確認すべきふるまい" },
+      { id: "services", title: "アプリケーションの処理" },
+      { id: "pages", title: "ページとユーザー操作" },
+      { id: "tools", title: "テストツール" },
     ],
     content: () => (
       <>
-        <h2 id="commands">標準チェック</h2>
-        {code(
-          `vp check --fix
-vp check
-vp test run`,
-          "bash",
-        )}
+        <h2 id="services">アプリケーションの処理</h2>
         <p>
-          単体テストは実装の横に <code>*.test.ts</code> または <code>*.test.tsx</code>{" "}
-          として置きます。
-          複数モジュールをまたぐ契約は統合テスト、実ブラウザーの操作は独立したE2Eプロジェクトで検証します。
+          Page や Server Function から呼ぶ処理を Effect
+          として切り出すと、表示から独立して検証できます。 テスト用のサービス実装を Layer
+          で提供し、戻り値、業務上のエラー、保存内容を確認します。
+          アプリケーション全体にテスト用サービスを使う場合は、
+          <code>EFFRONT.make</code> の <code>layer</code> に渡します。
         </p>
-        <h2 id="acceptance">実行経路を分けて検証する</h2>
+        <h2 id="pages">ページとユーザー操作</h2>
         <p>
-          ビルド成功だけでは、Flight、hydration、リクエストのリソース寿命は保証できません。
-          開発時とビルド済み成果物の両方で、選択したホストアダプターを通す必要があります。
-          起動方法は <a href="/platforms/cloudflare">プラットフォーム別の手順</a>{" "}
-          を参照してください。
+          起動したアプリケーションに実ブラウザーでアクセスし、利用者が見る結果を確認します。
+          起動設定は <a href="/guide/getting-started">はじめる</a>、ホストごとの設定は
+          <a href="/platforms">プラットフォーム</a> を参照してください。
         </p>
-        <h2 id="expectations">確認すべきふるまい</h2>
         <ul>
-          <li>初期HTML、Flight応答、hydration後の操作。</li>
-          <li>リンク遷移、未知のルート、パラメーターdecode失敗時の応答。</li>
-          <li>サービスのリクエスト間の分離と、秘密値が公開データに混入しないこと。</li>
-          <li>Responseの完了・エラー・キャンセル後にリクエストscopeが解放されること。</li>
+          <li>URL に対応する記事やデータが表示されること。</li>
+          <li>リンクで目的のページへ移動できること。</li>
+          <li>フォーム送信が保存内容と画面に反映されること。</li>
+          <li>入力エラーやアクセス権限に応じた案内が表示されること。</li>
         </ul>
+        <h2 id="tools">テストツール</h2>
+        <p>
+          テストの書き方は <a href="https://vitest.dev/guide/">Vitest</a>、
+          ブラウザーテストとサーバー自動起動は
+          <a href="https://playwright.dev/docs/test-webserver">Playwright</a>{" "}
+          の公式ガイドを参照してください。
+        </p>
       </>
     ),
   },

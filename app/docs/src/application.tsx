@@ -58,6 +58,7 @@ export default EFFRONT.make({
     .page("/guide/routes", documentPage("/guide/routes"))
     .page("/guide/components", documentPage("/guide/components"))
     .page("/guide/effect", documentPage("/guide/effect"))
+    .page("/platforms", documentPage("/platforms"))
     .page("/platforms/cloudflare", documentPage("/platforms/cloudflare"))
     .page("/guide/testing", documentPage("/guide/testing"))
     .page("/reading/overview", documentPage("/reading/overview"))

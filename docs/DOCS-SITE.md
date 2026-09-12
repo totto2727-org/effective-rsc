@@ -1,7 +1,7 @@
 # SSR documentation site
 
 `app/docs` is a private workspace application that uses the public `effront` and `effront/workers` entry points to render its own documentation.
-It combines six platform-neutral Guide pages, one dedicated Platforms page, and five upstream-comparison reading chapters in one shadcn/ui sidebar.
+It combines six Guide pages, a Platforms overview and a dedicated Cloudflare page, and five upstream-comparison reading chapters in one shadcn/ui sidebar.
 The content is Japanese, with source identifiers and commands preserved in English.
 
 ## Run locally
@@ -117,8 +117,25 @@ Compiler commands that emit package build artifacts remain build steps, not dupl
 
 The public Guide is written for npm package consumers, not contributors cloning this workspace.
 Its installation commands assume the planned registry distribution; this documentation change does not publish packages or verify a registry installation before release.
-Platform-specific setup is isolated at `/platforms/cloudflare`; common Guide pages do not prescribe a runtime or contain host-specific commands.
+Conceptual guides stay host-neutral. Getting started uses Cloudflare as a complete runnable example, with deeper platform details at `/platforms/cloudflare`.
 The homepage presents Effront as a React meta-framework built on Web standards and Effect, while the Platforms page states which adapters are actually available.
 Contributor installation and E2E commands remain in this operations document and AGENTS.md.
 Code-reading excerpts retain their fixed historical comparison, including host-specific changes in that comparison.
 Deferred ViewTransition work is recorded in [the roadmap](ROADMAP.md), not presented as an implemented API.
+
+## Contributor verification ownership
+
+The public testing guide covers application behavior: business logic, page content, navigation, forms, and authorization.
+Effront contributors additionally verify Flight negotiation, hydration integration, request-service isolation, and scope cleanup at response EOF, failure, and cancellation on development and built hosts.
+Unit tests are colocated with implementation files, multi-module integration tests belong in package tests directories, and browser acceptance belongs in tests/e2e.
+Platform support is summarized at /platforms; /platforms/cloudflare documents only Cloudflare setup and operation.
+
+## Consumer-guide revision validation
+
+The five getting-started source blocks were extracted verbatim into an ignored local consumer and executed through Vite dev and the built Wrangler artifact.
+Both hosts returned the expected Hello, Effront HTML and Flight response with HTTP 200 and returned 404 for an unknown route.
+This validates the documented application files with local workspace packages; npm registry installation remains dependent on package publication.
+Real vp check probes produced TS2769 for an undeclared Greeting requirement, TS2345 for an omitted required layer, and TS2322 for Layer.empty failing to provide Greeting.
+The same probe accepted Layer.succeed(Greeting), and the temporary failing source was removed before normal checks.
+The revised thirteen-page site passed all ten browser acceptance cases across Vite and Wrangler, including JavaScript-disabled route/link/anchor crawling, dark styling, Shiki output, hydration, and desktop/mobile navigation.
+The immutable Code reading source remained unchanged.

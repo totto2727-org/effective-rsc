@@ -8,13 +8,45 @@ const code = (source: string, language: CodeLanguage) => (
 
 export const platformPages: readonly DocPage[] = [
   {
+    slug: "/platforms",
+    title: "プラットフォーム",
+    description: "実行環境に合わせたホスト統合を選びます。",
+    section: "Platforms",
+    headings: [
+      { id: "architecture", title: "ホスト統合の役割" },
+      { id: "support", title: "対応状況" },
+    ],
+    content: () => (
+      <>
+        <h2 id="architecture">ホスト統合の役割</h2>
+        <p>
+          Effront のコアは Web 標準の Request と Response を入口にします。 共通のビルド統合は{" "}
+          <code>@effront/vite</code>、実行環境との接続はホスト用プラグインが担当します。
+          利用するホスト用プラグインを <code>effront()</code> と組み合わせて登録します。
+        </p>
+        <h2 id="support">対応状況</h2>
+        <ul>
+          <li>
+            <a href="/platforms/cloudflare">Cloudflare Workers</a>:<code>@effront/cloudflare</code>{" "}
+            で、開発サーバーと Wrangler による実行に対応しています。
+          </li>
+          <li>Node、Bun、Vercel: 専用アダプターは今後の対応候補です。</li>
+        </ul>
+        <p>
+          最初のアプリケーションは <a href="/guide/getting-started">はじめる</a> の Cloudflare
+          Workers 向けサンプルで作成できます。
+        </p>
+      </>
+    ),
+  },
+  {
     slug: "/platforms/cloudflare",
     title: "Cloudflare Workers のホスト設定",
     description:
       "Workers の env と execution context を安全に読む方法、および Vite と Wrangler の役割を説明します。",
     section: "Platforms",
     headings: [
-      { id: "support", title: "対応状況とセットアップ" },
+      { id: "setup", title: "セットアップ" },
       { id: "vite", title: "Vite 設定" },
       { id: "local", title: "ローカル実行と検証" },
       { id: "context", title: "リクエストコンテキスト" },
@@ -22,12 +54,7 @@ export const platformPages: readonly DocPage[] = [
     ],
     content: () => (
       <>
-        <h2 id="support">対応状況とセットアップ</h2>
-        <p>
-          現在提供しているホスト統合は <code>@effront/cloudflare</code> です。 Node、Bun、Vercel
-          向けアダプターは未提供で、実行を保証していません。 このページに限り、Cloudflare Workers
-          固有の起動方法と設定を扱います。
-        </p>
+        <h2 id="setup">セットアップ</h2>
         <p>
           アプリケーションにホストアダプターとWranglerを追加します。 Cloudflare Vite
           pluginはアダプターの依存関係に含まれます。
@@ -93,8 +120,7 @@ export default defineConfig({
           Cloudflare の option が必要な場合は{" "}
           <code>effrontCloudflare(&#123; ...options &#125;)</code> と 直接渡します。通常の設定では
           option は不要です。<code>cloudflare</code> で入れ子にせず、React plugin と Vite RSC plugin
-          は 重ねて登録しないでください。Cloudflare adapter を省けば将来の Node/Bun host adapter と
-          組み合わせられますが、それらはまだ実装されていません。デフォルトでは RSC entry は
+          はアダプターと共通プラグインが登録します。デフォルトでは RSC entry は
           <code>src/entry.server.ts</code>、アプリケーションの alias は{" "}
           <code>src/entry.client.ts</code> です。
         </p>
