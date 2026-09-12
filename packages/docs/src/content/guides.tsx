@@ -495,9 +495,7 @@ const requestInfo = Effect.gen(function* () {
     content: () => (
       <>
         <h2 id="commands">標準チェック</h2>
-        {code(`vp fmt --check
-vp lint
-vp run typecheck
+        {code(`vp check
 vp test run
 
 # ブラウザーによる Workers 受け入れテスト
