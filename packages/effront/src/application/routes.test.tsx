@@ -1,13 +1,16 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Schema, SchemaTransformation } from "effect";
+import { Context, Effect, Layer, Schema, SchemaTransformation } from "effect";
+import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
 
-import { Application } from "./effront";
+import { Application } from "../index";
+import { createFetchHandler } from "../workers";
 import { getRoutesState } from "./routes";
 
 const EFFRONT = Application.effront();
 const Shell = EFFRONT.Layout.make({
   render: ({ children }) => Effect.succeed(<main>{children}</main>),
 });
+
 const LoadingPage = EFFRONT.Loading.make({ render: () => <p>Loading...</p> });
 const HomePage = EFFRONT.Page.make({ render: () => Effect.succeed(<h1>Home</h1>) });
 const HistoryPage = EFFRONT.Page.make({ render: () => Effect.succeed(<h1>History</h1>) });
@@ -183,5 +186,161 @@ describe("Routes", () => {
       // @ts-expect-error Exercise runtime validation for an empty mounted route collection.
       EFFRONT.Routes.make().mount("/empty", emptyRoutes),
     ).toThrow('Cannot mount empty Routes at "/empty".');
+  });
+});
+
+describe("Routes.fromPages", () => {
+  it("registers wide readonly entries as non-empty root routes without assertions", () => {
+    const paths: ReadonlyArray<string> = ["/", "/guides/nested/history"];
+    const entries = paths.map((path): readonly [string, typeof HomePage] => [path, HomePage]);
+    const routes = EFFRONT.Routes.fromPages(entries, { layout: Shell, loading: LoadingPage });
+    expect(() => EFFRONT.make({ routes })).not.toThrow();
+    expect(getRoutesState(routes).paths).toEqual(paths);
+  });
+
+  it("mounts runtime entries and permits subsequent literal registrations", () => {
+    const child = EFFRONT.Routes.fromPages([["/deep/nested", HomePage]]);
+    const routes = EFFRONT.Routes.make({ layout: Shell }).mount("/docs", child).page("/", HomePage);
+    expect(() => EFFRONT.make({ routes })).not.toThrow();
+    expect(getRoutesState(routes).paths).toEqual(["/docs/deep/nested", "/"]);
+  });
+
+  it("copies mutable entry arrays into an immutable route collection", () => {
+    const entry: [string, typeof HomePage] = ["/original", HomePage];
+    const entries = [entry];
+    const routes = EFFRONT.Routes.fromPages(entries);
+    entry[0] = "/changed";
+    entries.push(["/added", HistoryPage]);
+    expect(getRoutesState(routes).paths).toEqual(["/original"]);
+    expect(Object.isFrozen(getRoutesState(routes).pages)).toBe(true);
+    expect(Object.isFrozen(getRoutesState(routes).pages[0])).toBe(true);
+  });
+
+  it("rejects empty collections before claiming non-empty routes", () => {
+    expect(() => EFFRONT.Routes.fromPages([])).toThrow(TypeError);
+  });
+
+  it.each([
+    "relative",
+    "/trailing/",
+    "/empty//segment",
+    "/dot/../segment",
+    "/dot/./segment",
+    "/escaped/%E6%97%A5",
+    "/literal%",
+    "/wildcard/*",
+    "/query?value",
+    "/fragment#value",
+    "/semi;colon",
+    "/back\\slash",
+    "/:parameter",
+    "/embedded:parameter",
+  ])("rejects unsupported static path %s", (path) => {
+    expect(() => EFFRONT.Routes.fromPages([[path, HomePage]])).toThrow(TypeError);
+  });
+
+  it("rejects a parameterized Page at compile time and runtime", () => {
+    expect(() =>
+      // @ts-expect-error Static entry collections cannot register parameterized pages.
+      EFFRONT.Routes.fromPages([["/day", DayPage]]),
+    ).toThrow(TypeError);
+  });
+
+  it("rejects case-insensitive duplicate entries", () => {
+    expect(() =>
+      EFFRONT.Routes.fromPages([
+        ["/Guide", HomePage],
+        ["/guide", HistoryPage],
+      ]),
+    ).toThrow(TypeError);
+  });
+
+  it("checks runtime collection collisions against existing literal routes", () => {
+    const child = EFFRONT.Routes.fromPages([["/guide", HomePage]]);
+    expect(() =>
+      EFFRONT.Routes.make().page("/docs/guide", HistoryPage).mount("/docs", child),
+    ).toThrow(TypeError);
+  });
+
+  it("checks subsequent additions against the runtime collection", () => {
+    const routes = EFFRONT.Routes.fromPages([["/guide", HomePage]]);
+    expect(() =>
+      // @ts-expect-error An opaque runtime path set cannot prove literal additions collision-free.
+      routes.page("/guide", HistoryPage),
+    ).toThrow(TypeError);
+  });
+
+  it("rejects another module's Page even with identical service types", () => {
+    const Other = Application.effront();
+    const page = Other.Page.make({ render: () => Effect.succeed(<h1>Other</h1>) });
+    expect(() => EFFRONT.Routes.fromPages([["/", page]])).toThrow(TypeError);
+  });
+
+  it("requires the root layout at compile time and runtime", () => {
+    const routes = EFFRONT.Routes.fromPages([["/", HomePage]]);
+    expect(() =>
+      // @ts-expect-error A non-empty collection still needs a root Layout.
+      EFFRONT.make({ routes }),
+    ).toThrow(TypeError);
+  });
+
+  it("rejects reserved root namespaces when compiling enumerated routes", () => {
+    const routes = EFFRONT.Routes.fromPages([["/_effront/assets/secret", HomePage]], {
+      layout: Shell,
+    });
+    expect(() => EFFRONT.make({ routes })).toThrow(TypeError);
+  });
+
+  it("does not erase application service requirements", () => {
+    class Greeting extends Context.Service<Greeting, string>()("effront/tests/routes/Greeting") {}
+    const Other = Application.effront<Greeting>();
+    const page = Other.Page.make({
+      render: () => Effect.map(Greeting, (value) => <h1>{value}</h1>),
+    });
+    const layout = Other.Layout.make({ render: ({ children }) => Effect.succeed(children) });
+    const routes = Other.Routes.fromPages([["/", page]], { layout });
+    expect(() => Other.make({ routes, layer: Layer.succeed(Greeting, "Hello") })).not.toThrow();
+    expect(() =>
+      // @ts-expect-error A Page from a module with services cannot enter a service-free module.
+      EFFRONT.Routes.fromPages([["/", page]]),
+    ).toThrow(TypeError);
+    // Compile-only checks must not create an application with missing services at runtime.
+    const checkRequiredLayer = () => {
+      // @ts-expect-error Runtime-enumerated routes retain the module's required application Layer.
+      Other.make({ routes });
+    };
+    expect(checkRequiredLayer).toBeTypeOf("function");
+  });
+
+  it.each([
+    ["/guides/deeply/nested/page", "/guides/deeply/nested/page"],
+    ["/日本語/入門", "/%E6%97%A5%E6%9C%AC%E8%AA%9E/%E5%85%A5%E9%96%80"],
+    ["/guide/with spaces", "/guide/with%20spaces"],
+    ["/guide/punctuation!()'", "/guide/punctuation!()'"],
+    ["/guide/$&+,=@", "/guide/$&+,=@"],
+  ])("matches the real Fetch request for %s", async (path, url) => {
+    const App = Application.effront();
+    const Respond = App.Middleware.make(() =>
+      Effect.map(HttpRouter.RouteContext, ({ route }) => HttpServerResponse.text(route.path)),
+    );
+    const layout = App.Layout.make({ render: ({ children }) => Effect.succeed(children) });
+    const page = App.Page.make({ render: () => Effect.die("Route middleware must respond.") });
+    const routes = App.withMiddleware(Respond).Routes.fromPages([[path, page]], { layout });
+    const handler = createFetchHandler(App.make({ routes }));
+    const response = await handler(new Request(`https://routes.test${url}`), {}, {});
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe(path);
+  });
+
+  it("returns 404 for an unregistered descendant rather than matching a wildcard", async () => {
+    const App = Application.effront();
+    const Respond = App.Middleware.make(() => Effect.succeed(HttpServerResponse.text("matched")));
+    const layout = App.Layout.make({ render: ({ children }) => Effect.succeed(children) });
+    const page = App.Page.make({ render: () => Effect.die("Route middleware must respond.") });
+    const routes = App.withMiddleware(Respond).Routes.fromPages([["/guide", page]], { layout });
+    const handler = createFetchHandler(App.make({ routes }));
+    const response = await handler(new Request("https://routes.test/guide/unregistered"), {}, {});
+    expect(response.status).toBe(404);
+    await response.body?.cancel();
   });
 });

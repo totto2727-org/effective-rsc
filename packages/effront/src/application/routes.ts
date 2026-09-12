@@ -12,10 +12,16 @@ import {
 import type { LayoutComponent } from "./layout";
 import type { LoadingComponent } from "./loading";
 import type { AnyMiddleware } from "./middleware";
-import { type AnyPageDefinition, getPageState, type PageConcern } from "./page";
+import {
+  type AnyPageDefinition,
+  getPageState,
+  type PageConcern,
+  type StaticPageDefinition,
+} from "./page";
 import {
   type AbsolutePath,
   analyzeRoutePath,
+  isAbsolutePath,
   joinRoutePaths,
   type JoinPath,
   type RouteParamNames,
@@ -24,6 +30,13 @@ import {
 } from "./route-path";
 
 declare const RoutesContractTypeId: unique symbol;
+declare const ValidatedStaticPathTypeId: unique symbol;
+
+// The concrete, non-empty path set is only known at runtime. This opaque path type
+// preserves that proof without pretending its entries are compile-time literals.
+type ValidatedStaticPath = AbsolutePath & { readonly [ValidatedStaticPathTypeId]: true };
+
+type StaticPageEntry<Services> = readonly [path: string, page: StaticPageDefinition<Services>];
 
 type RoutesState<
   HasLayout extends boolean,
@@ -295,6 +308,20 @@ export type RoutesFactory<Services> = {
       options: Options,
     ): RoutesDefinition<Services, HasLayoutFromOptions<Options>, never>;
   };
+  /**
+   * Register a non-empty, enumerated collection of static pages.
+   * Paths use the same decoded route grammar as `page`, not percent-encoded URLs.
+   * Paths, duplicates, page identity, and static-page contracts are checked at runtime.
+   */
+  readonly fromPages: {
+    (
+      entries: ReadonlyArray<StaticPageEntry<Services>>,
+    ): RoutesDefinition<Services, false, ValidatedStaticPath>;
+    <Options extends RoutesOptions<Services>>(
+      entries: ReadonlyArray<StaticPageEntry<Services>>,
+      options: Options,
+    ): RoutesDefinition<Services, HasLayoutFromOptions<Options>, ValidatedStaticPath>;
+  };
 };
 
 export const makeRoutesFactory = <Services>(
@@ -337,5 +364,52 @@ export const makeRoutesFactory = <Services>(
     });
   }
 
-  return { make };
+  function fromPages(
+    entries: ReadonlyArray<StaticPageEntry<Services>>,
+  ): RoutesDefinition<Services, false, ValidatedStaticPath>;
+  function fromPages<Options extends RoutesOptions<Services>>(
+    entries: ReadonlyArray<StaticPageEntry<Services>>,
+    options: Options,
+  ): RoutesDefinition<Services, HasLayoutFromOptions<Options>, ValidatedStaticPath>;
+  function fromPages(
+    entries: ReadonlyArray<StaticPageEntry<Services>>,
+    options: RoutesOptions<Services> = {},
+  ): AnyRoutes<Services> {
+    if (entries.length === 0) {
+      throw new TypeError("Routes.fromPages must contain at least one Page.");
+    }
+
+    const state = getRoutesState(make(options));
+    const pages: Array<RoutesPage<Services>> = [];
+    const paths: Array<AbsolutePath> = [];
+    const routeShapes = new Set<string>();
+    for (const [path, page] of entries) {
+      const route = analyzeRoutePath(path);
+      if (!isAbsolutePath(path) || route._tag !== "ParameterFree") {
+        throw new TypeError(`Routes.fromPages requires a static route path: "${path}".`);
+      }
+      if (routeShapes.has(route.shape)) {
+        throw new TypeError(`Route "${path}" conflicts with an existing route pattern.`);
+      }
+      const pageState = getPageState(page);
+      if (getEFFRONTIdentity(page) !== identity) {
+        throw new TypeError(`Page for "${path}" was created by a different EFFRONT module.`);
+      }
+      if (pageState.paramsSchema !== null) {
+        throw new TypeError(`Parameterized Page for "${path}" requires route parameters.`);
+      }
+      routeShapes.add(route.shape);
+      paths.push(path);
+      pages.push(Object.freeze({ path, page }));
+    }
+
+    return new RoutesDefinitionImpl(identity, {
+      ...state,
+      pages: Object.freeze(pages),
+      paths: Object.freeze(paths),
+      routeShapes,
+    });
+  }
+
+  return { make, fromPages };
 };
