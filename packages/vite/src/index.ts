@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
 import type { Plugin, PluginOption, UserConfig } from "vite";
 
-const browserEntry = fileURLToPath(new URL("./vite/browser.ts", import.meta.url));
+const browserEntry = fileURLToPath(new URL("./browser.ts", import.meta.url));
 
 export type EffrontViteOptions = {
   /** RSC environment entry exporting the runtime's `{ fetch }` handler; defaults to `src/entry.server.ts`. */
@@ -40,7 +40,7 @@ export const effront = (options: EffrontViteOptions = {}): PluginOption[] => {
       entries: {
         client: browserEntry,
         rsc: rscEntry,
-        ssr: fileURLToPath(new URL("./server/ssr.tsx", import.meta.url)),
+        ssr: fileURLToPath(import.meta.resolve("effront/internal/ssr-entry")),
       },
       serverHandler: false,
     }),

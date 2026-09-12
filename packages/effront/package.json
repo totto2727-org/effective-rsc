@@ -1,7 +1,7 @@
 {
   "name": "effront",
   "version": "0.1.4-workers.0",
-  "description": "Effect-native React Server Components with a Web fetch core and Vite/Cloudflare Workers integration.",
+  "description": "Effect-native React Server Components with a portable Web Fetch runtime.",
   "keywords": [
     "cloudflare-workers",
     "effect",
@@ -24,17 +24,14 @@
       "react-server": "./src/index.ts",
       "default": "./src/unsupported.ts"
     },
-    "./vite": "./src/vite.ts",
     "./workers": "./src/workers.ts",
-    "./cloudflare": "./src/cloudflare.ts"
+    "./internal/client-entry": "./src/client/entry.ts",
+    "./internal/ssr-entry": "./src/server/ssr.tsx"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "6.1.1",
-    "@vitejs/plugin-rsc": "catalog:",
-    "oxc-transform-react": "^0.145.0"
+    "@vitejs/plugin-rsc": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "catalog:",
     "@effect/platform-browser": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -44,16 +41,9 @@
     "vitest": "4.1.11"
   },
   "peerDependencies": {
-    "@cloudflare/vite-plugin": "catalog:",
     "@effect/platform-browser": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:",
-    "vite": "*"
-  },
-  "peerDependenciesMeta": {
-    "@cloudflare/vite-plugin": {
-      "optional": true
-    }
+    "react-dom": "catalog:"
   }
 }

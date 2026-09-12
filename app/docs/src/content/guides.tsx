@@ -451,14 +451,14 @@ export default EFFRONT.make({
       <>
         <h2 id="vite">Vite 設定</h2>
         <p>
-          Core と Cloudflare adapter は分けて登録します。<code>effront()</code> が React、Vite RSC、
-          compiler を担当し、<code>effrontCloudflare()</code> は <code>rsc</code> Worker
+          Vite 統合と Cloudflare adapter は分けて登録します。<code>effront()</code> が React、Vite
+          RSC、 compiler を担当し、<code>effrontCloudflare()</code> は <code>rsc</code> Worker
           environment、子
           <code>ssr</code> environment、Workers 向け SSR 出力配置だけを担当します。
         </p>
         {code(
-          `import { effront } from "effront/vite";
-import { effrontCloudflare } from "effront/cloudflare";
+          `import { effront } from "@effront/vite";
+import { effrontCloudflare } from "@effront/cloudflare";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
@@ -529,7 +529,7 @@ const requestInfo = Effect.gen(function* () {
 vp test run
 
 # ブラウザーによる Workers 受け入れテスト
-cd packages/e2e
+cd tests/e2e
 vp run test
 
 # ドキュメントサイトのブラウザー検証

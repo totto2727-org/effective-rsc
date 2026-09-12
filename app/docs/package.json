@@ -21,7 +21,8 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "catalog:",
+    "@effront/cloudflare": "workspace:*",
+    "@effront/vite": "workspace:*",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "catalog:",
     "@tsconfig/strictest": "2.0.8",

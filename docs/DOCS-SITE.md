@@ -1,6 +1,6 @@
 # SSR documentation site
 
-`packages/docs` is a private workspace application that uses the public `effront` and `effront/workers` entry points to render its own documentation.
+`app/docs` is a private workspace application that uses the public `effront` and `effront/workers` entry points to render its own documentation.
 It combines seven introductory Guide pages and five upstream-comparison reading chapters in one shadcn/ui sidebar.
 The content is Japanese, with source identifiers and commands preserved in English.
 
@@ -9,7 +9,7 @@ The content is Japanese, with source identifiers and commands preserved in Engli
 Install dependencies with `vp install` from the repository root, then enter the site package:
 
 ```sh
-cd packages/docs
+cd app/docs
 vp dev
 ```
 
@@ -46,7 +46,7 @@ The colocated catalog test checks uniqueness and heading targets; the browser su
 The reading material compares upstream `ed886996d1d3780b94166af4f798c53416d547c8` (version `0.1.4`) with the local pre-site revision `9058a71`.
 Those pinned comparisons predate the Effront rename, so their fixed source paths, package names, commands, and excerpts intentionally retain their historical `effective-rsc` spelling.
 They also predate the separation of the core Vite plugin and the Cloudflare adapter, so the pinned combined-factory snippet intentionally remains historical.
-For current code, use `effront` in place of `effective-rsc`, `Application.effront()` in place of `Application.ersc()`, and separately register `effront()` from `effront/vite` with `effrontCloudflare()` from `effront/cloudflare`.
+For current code, use `effront` in place of `effective-rsc`, `Application.effront()` in place of `Application.ersc()`, and separately register `effront()` from `@effront/vite` with `effrontCloudflare()` from `@effront/cloudflare`.
 It includes concrete diff excerpts, changed file structure, reasons for the port, retained behavior, and commands to inspect the complete changes locally.
 Diffs and source excerpts are generated from local Git objects and embedded as fixed JSX data.
 Neither rendering nor navigation queries GitHub to obtain differences.
@@ -58,7 +58,7 @@ Advanced topics and API reference are external navigation links, not additional 
 
 The site TypeScript configuration extends `@tsconfig/strictest` with `exactOptionalPropertyTypes: false` and no include/exclude overrides.
 Run `vp check` and `vp test run` from the repository root for static checks and normally discovered tests.
-From `packages/e2e`, run `vp run test:docs` for real Chromium acceptance through Vite/workerd and standalone Wrangler.
+From `tests/e2e`, run `vp run test:docs` for real Chromium acceptance through Vite/workerd and standalone Wrangler.
 That independent project owns the browser tests, random test ports, isolated builds/state, screenshots, and traces.
 Normal site configuration does not contain test-only port, inspector, or persistence overrides.
 
@@ -78,7 +78,7 @@ Client Components still produce server-rendered initial HTML, including the side
 
 The final frozen-lockfile install and `vp check` passed, and `vp test run` passed all 235 tests in 31 files.
 The highlighter adds 26 tests covering initialization/rendering with network and WASM unavailable, supported language aliases, escaped markup, exact whitespace and line endings, and request-independent tokenization.
-The normal `packages/docs` production build also passed.
+The normal `app/docs` production build also passed.
 
 The final documentation browser run passed all 10 cases across actual Vite/workerd development and independently built Wrangler local hosting.
 It exercised the following public behavior, rather than substituting mocked framework modules:
@@ -93,7 +93,7 @@ It exercised the following public behavior, rather than substituting mocked fram
 
 Browser request interception does not observe server-side outbound requests.
 The server highlighter uses locally imported grammars and theme data, and the comparison content is embedded from local Git objects rather than fetched remotely.
-The final browser evidence is kept as ignored temporary artifacts under `packages/e2e/tmp/docs-run-0hLRSo/`.
+The final browser evidence is kept as ignored temporary artifacts under `tests/e2e/tmp/docs-run-0hLRSo/`.
 The existing Workers example's nine browser cases also passed after the stream-injection correction.
 No remote Cloudflare deployment was performed or required for this local-hosting acceptance.
 
@@ -110,5 +110,5 @@ Compiler commands that emit package build artifacts remain build steps, not dupl
 - [Shiki](https://shiki.style/) and its [JavaScript regex engine](https://shiki.style/guide/regex-engines).
 - [VitePlus integrated checks](https://viteplus.dev/guide/check).
 - [Tailwind CSS Typography](https://github.com/tailwindlabs/tailwindcss-typography).
-- [Site third-party notices](../packages/docs/THIRD-PARTY-NOTICES.md) for copied/adapted shadcn components.
+- [Site third-party notices](../app/docs/THIRD-PARTY-NOTICES.md) for copied/adapted shadcn components.
 - [Upstream baseline](UPSTREAM.md) for the original effective-rsc source and license provenance.

@@ -7,7 +7,7 @@ The upstream history is preserved from `ed886996d1d3780b94166af4f798c53416d547c8
 ## Current naming note
 
 This is a historical validation record from before the Effront rename. Its observed commands, paths, API names, and results remain accurate for that execution and are intentionally unchanged.
-Current code uses `effront/*`, `Application.effront()`, and separate `effront()` from `effront/vite` plus `effrontCloudflare()` from `effront/cloudflare`; the latter direct options replaced the historical nested `cloudflare` options.
+Current code uses `effront/*`, `Application.effront()`, and separate `effront()` from `@effront/vite` plus `effrontCloudflare()` from `@effront/cloudflare`; the latter direct options replaced the historical nested `cloudflare` options.
 
 ## Requirement-to-evidence mapping
 
@@ -35,10 +35,10 @@ vp fmt --check
 vp lint
 vp run typecheck
 vp test run
-(cd packages/e2e && vp run test)
+(cd tests/e2e && vp run test)
 ```
 
-Final coordinator execution of `(cd packages/e2e && vp run test)` exited with status 0.
+Final coordinator execution of `(cd tests/e2e && vp run test)` exited with status 0.
 It ran the real build followed by 9 passing browser cases: 3 development, 3 default Wrangler, and 3 overridden Wrangler.
 The focused Fetch test is one scenario containing the lifecycle and isolation assertions listed above and passed with `vp test run`.
 These adapter checks complement, rather than replace, the real Workers browser acceptance path.
@@ -78,7 +78,7 @@ Verification after the final cleanup:
 - Frozen-lockfile installation passed with VitePlus.
 - Default VitePlus formatting, lint, and whole-tree type checking passed.
 - `vp test run` passed all 156 tests in 26 files, including the now-portable route-scaling test.
-- `(cd packages/e2e && vp run test)` passed all 9 real browser cases against Vite/workerd, standalone Wrangler, and the same Wrangler artifact with overridden runtime bindings.
+- `(cd tests/e2e && vp run test)` passed all 9 real browser cases against Vite/workerd, standalone Wrangler, and the same Wrangler artifact with overridden runtime bindings.
 - A local `vp pm pack` audit found 52 package files, all public export targets, resolved catalog versions, and no obsolete runtime, build, vendor, or test directories.
 - The required third-party MIT notice was preserved verbatim apart from whitespace and verified inside the tarball.
 - Local Markdown links resolved successfully.
@@ -118,7 +118,7 @@ Normal example configuration and its development commands are unchanged.
 
 Observed checks:
 
-- A single `(cd packages/e2e && vp run test)` passed all 9 browser cases, with Playwright logging termination of all three servers.
+- A single `(cd tests/e2e && vp run test)` passed all 9 browser cases, with Playwright logging termination of all three servers.
 - Two simultaneous invocations each passed all 9 cases (18 total), using six distinct HTTP ports: 64305 through 64310.
 - TCP connection attempts confirmed all six listeners were closed after both invocations completed.
 - An intentional `playwright test --timeout 1 --max-failures 1` failure returned exit 1 and closed all three of its listeners (64557 through 64559).

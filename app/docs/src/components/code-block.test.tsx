@@ -74,7 +74,7 @@ const fixtures = [
   ["jsonc", '{\n  // Local bindings\n  "vars": { "APP_LABEL": "資料" },\n}\n'],
   ["bash", 'BASE=ed886996\ngit show "$BASE:packages/effective-rsc/package.json"\n'],
   ["sh", "vp install\nvp build\n"],
-  ["shell", "(cd packages/e2e && vp run test)\n"],
+  ["shell", "(cd tests/e2e && vp run test)\n"],
   ["diff", '--- a/package.json\n+++ b/package.json\n@@ -1 +1 @@\n-"0.1.4"\n+"0.1.4-workers.0"\n'],
   ["css", ".code { color: #e1e4e8; }\n"],
   ["text", "├─ src/\n└─ 日本語の説明\n"],

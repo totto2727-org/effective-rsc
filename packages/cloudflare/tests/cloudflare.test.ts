@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest";
 import { resolveConfig } from "vite";
 import type { UserConfig } from "vite";
 
-import { effrontCloudflare } from "../../src/cloudflare";
-import { effront } from "../../src/vite";
+import { effrontCloudflare } from "../src/index";
+import { effront } from "@effront/vite";
 
 const fixtureRoot = fileURLToPath(new URL("./fixtures/", import.meta.url));
 const configPath = fileURLToPath(new URL("./fixtures/wrangler.json", import.meta.url));

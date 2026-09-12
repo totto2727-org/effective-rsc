@@ -23,7 +23,7 @@ The following suites remain under `packages/effront/tests/` because they exercis
 | `vite/cloudflare.test.ts`              | Real Vite configuration resolution integrating Effront and Cloudflare plugins.            |
 
 The package-owned `packages/gitignore-patterns/tests/cli.test.ts` validates the public generator under Vitest through actual Git and VitePlus CLI processes.
-The E2E project's `packages/e2e/tests/workers-fetch.e2e.ts` validates the actual browser application through Vite/workerd and standalone Wrangler.
+The E2E project's `tests/e2e/tests/workers-fetch.e2e.ts` validates the actual browser application through Vite/workerd and standalone Wrangler.
 Playwright explicitly selects the `.e2e.ts` suite, keeping it outside Vitest's standard `.test`/`.spec` discovery without a Vitest include override.
 
 ## Verification
@@ -31,7 +31,7 @@ Playwright explicitly selects the `.e2e.ts` suite, keeping it outside Vitest's s
 - `vp test run` discovers both colocated unit tests and retained integration tests by default.
 - `vp check` checks all source and retained tests, including the colocated files.
 - `(cd packages/gitignore-patterns && vp run test)` builds the generator and executes real formatter/linter acceptance.
-- `(cd packages/e2e && vp run test)` builds the Workers example and runs the real browser acceptance matrix.
+- `(cd tests/e2e && vp run test)` builds the Workers example and runs the real browser acceptance matrix.
 - Package archives must omit colocated tests; source-package file exclusions and the generator declaration-build exclusions enforce that boundary, not test-discovery exclusions.
 
 ## Observed migration results (2026-09-12)
@@ -44,7 +44,7 @@ Both package archives were inspected and contained no unit, integration, or brow
 
 ## Independent test ownership
 
-`packages/e2e` owns its Playwright dependency, configuration, standard webServer settings, test environment file, browser suites, and generated reports.
+`tests/e2e` owns its Playwright dependency, configuration, standard webServer settings, test environment file, browser suites, and generated reports.
 It references the existing `examples/workers` app without copying or relocating it.
 From that package, `vp run test` runs all three local-hosting variants and `vp check` checks its configuration and test source.
 The root package has no E2E runner script or Playwright dependency.
@@ -63,4 +63,4 @@ The E2E package uses Playwright's [webServer](https://playwright.dev/docs/test-w
 The Vite host configuration reuses the example source and public integration plugin while isolating test-only output, inspector, and persistence settings.
 Three dynamically selected HTTP ports and one unique run directory keep simultaneous invocations separate.
 Both Wrangler hosts build their own isolated artifacts before starting; overrides are applied at Wrangler startup, not during compilation.
-See [the E2E project instructions](../packages/e2e/AGENTS.md) for commands and retained diagnostic artifacts.
+See [the E2E project instructions](../tests/e2e/AGENTS.md) for commands and retained diagnostic artifacts.

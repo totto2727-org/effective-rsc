@@ -98,8 +98,8 @@ A future Node/Bun adapter can invoke the same Fetch interface, but those adapter
 Register the portable framework plugin and the independent Cloudflare adapter:
 
 ```ts
-import { effront } from "effront/vite";
-import { effrontCloudflare } from "effront/cloudflare";
+import { effront } from "@effront/vite";
+import { effrontCloudflare } from "@effront/cloudflare";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
@@ -110,7 +110,8 @@ export default defineConfig({
 `effront()` owns React, the native React Compiler, Vite RSC, and the default `src/entry.server.ts` and `src/entry.client.ts` entries.
 The application entry remains part of the RSC graph, not the browser hydration bootstrap, which the framework supplies.
 `effrontCloudflare()` only adds host integration, including the `rsc` Worker environment, `ssr` child environment, and nested SSR output.
-Install its optional peer `@cloudflare/vite-plugin` in Cloudflare consumers.
+Install `@effront/vite` and, for Cloudflare hosts, `@effront/cloudflare` as development dependencies.
+The Cloudflare package owns `@cloudflare/vite-plugin`; the core does not depend on Cloudflare or the native compiler.
 Other future hosts can omit the Cloudflare adapter.
 
 Run Vite from the application's directory so normal root and Wrangler configuration discovery apply.
@@ -136,7 +137,7 @@ The Cloudflare adapter owns its required environment names.
 ```sh
 vp check
 vp test run
-cd packages/e2e
+cd tests/e2e
 vp run test
 ```
 

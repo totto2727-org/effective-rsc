@@ -1,13 +1,11 @@
 packages:
-  - packages/effront
-  - packages/e2e
-  - packages/docs
-  - packages/gitignore-patterns
-  - examples/workers
+  - app/*
+  - packages/*
+  - tests/*
+  - examples/*
 
 catalog:
   "@tailwindcss/vite": ^4.3.3
-  "@cloudflare/vite-plugin": 1.54.7
   vite-plus: 0.3.1
   effect: 4.0.0-rc.113
   "@effect/platform-browser": 4.0.0-rc.113

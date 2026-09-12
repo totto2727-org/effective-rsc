@@ -1,8 +1,8 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
-import { effrontCloudflare } from "effront/cloudflare";
-import { effront } from "effront/vite";
+import { effrontCloudflare } from "@effront/cloudflare";
+import { effront } from "@effront/vite";
 import { defineConfig } from "vite-plus";
 
 const outDir = process.env["EFFRONT_DOCS_E2E_OUTPUT"];
@@ -11,7 +11,7 @@ if (!outDir)
 
 // Use the real docs source and public plugin, with test isolation and a client-bundle audit artifact.
 export default defineConfig({
-  root: fileURLToPath(new URL("../docs/", import.meta.url)),
+  root: fileURLToPath(new URL("../../app/docs/", import.meta.url)),
   plugins: [
     tailwindcss(),
     effront(),

@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { effrontCloudflare } from "effront/cloudflare";
-import { effront } from "effront/vite";
+import { effrontCloudflare } from "@effront/cloudflare";
+import { effront } from "@effront/vite";
 import { defineConfig } from "vite-plus";
 
 const outDir = process.env["EFFRONT_E2E_OUTPUT"];

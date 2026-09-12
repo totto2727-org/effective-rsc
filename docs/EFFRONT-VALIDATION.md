@@ -12,8 +12,8 @@ No package was published and no remote repository was renamed.
 Workers applications register the portable core and the host adapter separately:
 
 ```ts
-import { effront } from "effront/vite";
-import { effrontCloudflare } from "effront/cloudflare";
+import { effront } from "@effront/vite";
+import { effrontCloudflare } from "@effront/cloudflare";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
@@ -37,7 +37,7 @@ The required `oxc-transform-react` dependency resolves to `0.145.0` and is shipp
 This uses the plugin's experimental Rust implementation, not a Babel fallback.
 The official plugin compiles client environments, leaving the SSR and RSC server-consumer environments outside client memoization.
 
-The permanent test `packages/effront/tests/vite/compiler.test.ts` passes the real example Counter through Vite's actual transformation pipeline using only the public `effront()` plugin.
+The permanent test `packages/vite/tests/compiler.test.ts` passes the real example Counter through Vite's actual transformation pipeline using only the public `effront()` plugin.
 It observes compiler-runtime imports, the memo-cache sentinel, and cache-slot access, while the compiler-disabled control preserves the Counter without those transformations.
 The same resolved core configuration contains no Cloudflare plugin and preserves the `react-server` condition only in the RSC environment.
 Server transforms retain SSR code and RSC client references without client memoization.
@@ -60,10 +60,21 @@ Official references:
 - The real Workers example suite passed all nine cases across Vite development, default Wrangler bindings, and overridden Wrangler bindings.
 - The real documentation suite passed all ten cases across Vite development and standalone Wrangler, including initial SSR, dark mode, navigation, highlighting, exact pinned diff text, and Effront document titles.
 - The built documentation client graph contains neither Shiki nor the native build-time React compiler implementation.
-- A local `vp pm pack` tarball contained all 53 intended source/document/license files, every exported target, and the native compiler dependency, with no tests or obsolete authoring filenames.
+- Local `vp pm pack` audits verified core (50 files), Vite (6 files), and Cloudflare (5 files), including every exported target, resolved workspace/catalog dependency ranges, and no shipped tests.
+- Core has no direct Cloudflare, React plugin, or native compiler dependency; Vite has no Cloudflare dependency.
 - The immutable reading snippet object and all its reproduction commands remained byte-identical to the pre-rename revision.
 - Root, framework, and documentation third-party license files remained byte-identical.
 - The viewing server was restored on `http://127.0.0.1:5173/` and returned HTTP 200 with an Effront title.
 
 Historical validation records remain historical rather than being rewritten to pretend that earlier commands used the new package names.
 Temporary build logs, packed artifacts, and browser screenshots remain ignored inside this repository.
+
+## Package boundaries
+
+`effront` contains the application and Fetch runtime, `@effront/vite` owns build integration and the native compiler, and `@effront/cloudflare` owns only the Cloudflare Vite adapter.
+The adapter requires Vite integration but does not register it automatically.
+The core still uses `@vitejs/plugin-rsc` runtime exports for Flight and its SSR module-loading protocol; this split is not a claim of bundler-independent React Flight support.
+Core `internal/client-entry` and `internal/ssr-entry` exports let the matching Vite integration resolve shipped entries without relative cross-package source paths.
+
+The documentation app is located at `app/docs`, and independent Playwright acceptance at `tests/e2e`.
+Workspace discovery uses role-based wildcards instead of individual project paths.

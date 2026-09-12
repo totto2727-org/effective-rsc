@@ -107,9 +107,6 @@ settings:
 
 catalogs:
   default:
-    '@cloudflare/vite-plugin':
-      specifier: 1.54.7
-      version: 1.54.7
     '@effect/platform-browser':
       specifier: 4.0.0-rc.113
       version: 4.0.0-rc.113
@@ -170,44 +167,7 @@ importers:
         specifier: 'catalog:'
         version: 0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2)
 
-  examples/workers:
-    dependencies:
-      '@effect/platform-browser':
-        specifier: 'catalog:'
-        version: 4.0.0-rc.113(effect@4.0.0-rc.113)
-      effect:
-        specifier: 'catalog:'
-        version: 4.0.0-rc.113
-      effront:
-        specifier: workspace:*
-        version: link:../../packages/effront
-      react:
-        specifier: 19.3.0-canary-1d34f91d-20260909
-        version: 19.3.0-canary-1d34f91d-20260909
-      react-dom:
-        specifier: 19.3.0-canary-1d34f91d-20260909
-        version: 19.3.0-canary-1d34f91d-20260909(react@19.3.0-canary-1d34f91d-20260909)
-    devDependencies:
-      '@cloudflare/vite-plugin':
-        specifier: 'catalog:'
-        version: 1.54.7(@types/node@22.20.2)(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))(wrangler@4.131.0(@types/node@22.20.2))
-      '@types/react':
-        specifier: 'catalog:'
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: 'catalog:'
-        version: 19.3.0(@types/react@19.3.0)
-      '@vitejs/plugin-rsc':
-        specifier: 'catalog:'
-        version: 0.5.34(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))(react-dom@19.3.0-canary-1d34f91d-20260909(react@19.3.0-canary-1d34f91d-20260909))(react@19.3.0-canary-1d34f91d-20260909)
-      vite-plus:
-        specifier: 'catalog:'
-        version: 0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2)
-      wrangler:
-        specifier: 'catalog:'
-        version: 4.131.0(@types/node@22.20.2)
-
-  packages/docs:
+  app/docs:
     dependencies:
       '@effect/platform-browser':
         specifier: 'catalog:'
@@ -223,7 +183,7 @@ importers:
         version: 4.0.0-rc.113
       effront:
         specifier: workspace:*
-        version: link:../effront
+        version: link:../../packages/effront
       lucide-react:
         specifier: ^1.44.0
         version: 1.44.0(react@19.3.0-canary-1d34f91d-20260909)
@@ -243,9 +203,12 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
     devDependencies:
-      '@cloudflare/vite-plugin':
-        specifier: 'catalog:'
-        version: 1.54.7(@types/node@22.20.2)(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))(wrangler@4.131.0(@types/node@22.20.2))
+      '@effront/cloudflare':
+        specifier: workspace:*
+        version: link:../../packages/cloudflare
+      '@effront/vite':
+        specifier: workspace:*
+        version: link:../../packages/vite
       '@tailwindcss/typography':
         specifier: ^0.5.20
         version: 0.5.20(tailwindcss@4.3.3)
@@ -283,26 +246,39 @@ importers:
         specifier: 'catalog:'
         version: 4.131.0(@types/node@22.20.2)
 
-  packages/e2e:
-    devDependencies:
-      '@playwright/test':
-        specifier: 1.63.0
-        version: 1.63.0
-      '@tailwindcss/vite':
+  examples/workers:
+    dependencies:
+      '@effect/platform-browser':
         specifier: 'catalog:'
-        version: 4.3.3(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))
-      '@tsconfig/strictest':
-        specifier: 2.0.8
-        version: 2.0.8
-      '@types/node':
-        specifier: 22.20.2
-        version: 22.20.2
+        version: 4.0.0-rc.113(effect@4.0.0-rc.113)
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.113
       effront:
         specifier: workspace:*
-        version: link:../effront
-      typescript:
-        specifier: 7.0.2
-        version: 7.0.2
+        version: link:../../packages/effront
+      react:
+        specifier: 19.3.0-canary-1d34f91d-20260909
+        version: 19.3.0-canary-1d34f91d-20260909
+      react-dom:
+        specifier: 19.3.0-canary-1d34f91d-20260909
+        version: 19.3.0-canary-1d34f91d-20260909(react@19.3.0-canary-1d34f91d-20260909)
+    devDependencies:
+      '@effront/cloudflare':
+        specifier: workspace:*
+        version: link:../../packages/cloudflare
+      '@effront/vite':
+        specifier: workspace:*
+        version: link:../../packages/vite
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
+      '@vitejs/plugin-rsc':
+        specifier: 'catalog:'
+        version: 0.5.34(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))(react-dom@19.3.0-canary-1d34f91d-20260909(react@19.3.0-canary-1d34f91d-20260909))(react@19.3.0-canary-1d34f91d-20260909)
       vite-plus:
         specifier: 'catalog:'
         version: 0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2)
@@ -310,24 +286,28 @@ importers:
         specifier: 'catalog:'
         version: 4.131.0(@types/node@22.20.2)
 
-  packages/effront:
+  packages/cloudflare:
     dependencies:
-      '@vitejs/plugin-react':
-        specifier: 6.1.1
-        version: 6.1.1(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))(oxc-transform-react@0.145.0)
-      '@vitejs/plugin-rsc':
-        specifier: 'catalog:'
-        version: 0.5.34(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))(react-dom@19.3.0-canary-1d34f91d-20260909(react@19.3.0-canary-1d34f91d-20260909))(react@19.3.0-canary-1d34f91d-20260909)
-      oxc-transform-react:
-        specifier: ^0.145.0
-        version: 0.145.0
+      '@cloudflare/vite-plugin':
+        specifier: 1.54.7
+        version: 1.54.7(@types/node@22.20.2)(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))(wrangler@4.131.0(@types/node@22.20.2))
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.3.1
         version: '@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2)'
     devDependencies:
-      '@cloudflare/vite-plugin':
+      '@effront/vite':
+        specifier: workspace:*
+        version: link:../vite
+      vitest:
+        specifier: 4.1.11
+        version: 4.1.11(@types/node@22.20.2)(@vitest/browser-preview@4.1.11)(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))
+
+  packages/effront:
+    dependencies:
+      '@vitejs/plugin-rsc':
         specifier: 'catalog:'
-        version: 1.54.7(@types/node@22.20.2)(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))(wrangler@4.131.0(@types/node@22.20.2))
+        version: 0.5.34(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))(react-dom@19.3.0-canary-1d34f91d-20260909(react@19.3.0-canary-1d34f91d-20260909))(react@19.3.0-canary-1d34f91d-20260909)
+    devDependencies:
       '@effect/platform-browser':
         specifier: 'catalog:'
         version: 4.0.0-rc.113(effect@4.0.0-rc.113)
@@ -365,6 +345,61 @@ importers:
       vite-plus:
         specifier: 'catalog:'
         version: 0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2)
+
+  packages/vite:
+    dependencies:
+      '@vitejs/plugin-react':
+        specifier: 6.1.1
+        version: 6.1.1(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))(oxc-transform-react@0.145.0)
+      '@vitejs/plugin-rsc':
+        specifier: 'catalog:'
+        version: 0.5.34(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))(react-dom@19.3.0-canary-1d34f91d-20260909(react@19.3.0-canary-1d34f91d-20260909))(react@19.3.0-canary-1d34f91d-20260909)
+      oxc-transform-react:
+        specifier: ^0.145.0
+        version: 0.145.0
+      vite:
+        specifier: npm:@voidzero-dev/vite-plus-core@0.3.1
+        version: '@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2)'
+    devDependencies:
+      effront:
+        specifier: workspace:*
+        version: link:../effront
+      vitest:
+        specifier: 4.1.11
+        version: 4.1.11(@types/node@22.20.2)(@vitest/browser-preview@4.1.11)(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))
+
+  tests/e2e:
+    devDependencies:
+      '@effront/cloudflare':
+        specifier: workspace:*
+        version: link:../../packages/cloudflare
+      '@effront/vite':
+        specifier: workspace:*
+        version: link:../../packages/vite
+      '@playwright/test':
+        specifier: 1.63.0
+        version: 1.63.0
+      '@tailwindcss/vite':
+        specifier: 'catalog:'
+        version: 4.3.3(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2))
+      '@tsconfig/strictest':
+        specifier: 2.0.8
+        version: 2.0.8
+      '@types/node':
+        specifier: 22.20.2
+        version: 22.20.2
+      effront:
+        specifier: workspace:*
+        version: link:../../packages/effront
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+      vite-plus:
+        specifier: 'catalog:'
+        version: 0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2)
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.131.0(@types/node@22.20.2)
 
 packages:
 

@@ -38,7 +38,7 @@ No external tracker issue is created by this local-only implementation, and no u
 - `(cd packages/gitignore-patterns && vp run test)` exercises generated exclusions through the generator API and actual VitePlus formatter and linter commands.
 - The CLI fixtures have independent Git and pnpm workspace roots and remove native Gitignore inputs after generation, so native ignores cannot mask generator failures.
 - `vp fmt --check`, `vp lint`, and `vp check` check the real workspace using the generated root configuration.
-- `(cd packages/e2e && vp run test)` checks that the real Workers development and standalone Wrangler workflows still work.
+- `(cd tests/e2e && vp run test)` checks that the real Workers development and standalone Wrangler workflows still work.
 
 Temporary probes belong under ignored `tmp/` and are not package contents.
 

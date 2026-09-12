@@ -42,8 +42,8 @@ The browser graph uses the plugin's browser Flight client and hydration entry.
 
 ## Host and build ownership
 
-`effront/vite` exports the host-independent `effront()` plugin, which owns React, Vite RSC, and the React compiler.
-`effront/cloudflare` exports `effrontCloudflare()`, which owns only the Cloudflare plugin plus the required Worker/SSR environment and SSR-output layout invariants.
+`@effront/vite` exports the host-independent `effront()` plugin, which owns React, Vite RSC, and the React compiler.
+`@effront/cloudflare` exports `effrontCloudflare()`, which owns only the Cloudflare plugin plus the required Worker/SSR environment and SSR-output layout invariants.
 Workers applications register both explicitly: `plugins: [effront(), effrontCloudflare()]`.
 Cloudflare options, when needed, are passed directly to `effrontCloudflare(...)` rather than nested beneath a `cloudflare` property; the ordinary configuration uses `effrontCloudflare()` with no options.
 Do not register React or Vite RSC plugins a second time.
@@ -69,7 +69,7 @@ Worker-first routing remains an explicit application choice for cases such as pr
 Changing Wrangler runtime variables must not require rebuilding the application.
 
 The package exposes TypeScript source exports for Vite bundling.
-The workspace consumer exercises the actual `effront`, `effront/vite`, and `effront/workers` export map.
+The workspace consumer exercises the actual `effront`, `@effront/vite`, `@effront/cloudflare`, and `effront/workers` exports.
 This is not a claim of standalone unbundled Node compatibility or published-package readiness.
 
 ## Tooling
@@ -83,7 +83,7 @@ The workspace contains the framework and its Workers example.
 
 - `vp check` checks every retained framework source file, the consumer, and test source.
 - `vp test run` checks the retained framework tests, including the public Fetch adapter's request-context and lifecycle behavior.
-- `(cd packages/e2e && vp run test)` uses Playwright webServer to host the example source in VitePlus development mode and isolated Wrangler builds with default and overridden runtime variables.
+- `(cd tests/e2e && vp run test)` uses Playwright webServer to host the example source in VitePlus development mode and isolated Wrangler builds with default and overridden runtime variables.
 - Browser checks cover HTML, Flight, hydrated interaction, navigation, unknown routes, and secret non-disclosure.
 - Successful compilation alone does not establish Workers runtime or hydration correctness.
 

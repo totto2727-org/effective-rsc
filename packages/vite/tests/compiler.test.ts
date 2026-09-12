@@ -3,12 +3,12 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import react from "@vitejs/plugin-react";
-import { effront } from "effront/vite";
+import { effront } from "@effront/vite";
 import { createServer, type ViteDevServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-const exampleRoot = fileURLToPath(new URL("../../../../examples/workers/", import.meta.url));
-const temporaryRoot = fileURLToPath(new URL("../../../../tmp/", import.meta.url));
+const exampleRoot = fileURLToPath(new URL("../../../examples/workers/", import.meta.url));
+const temporaryRoot = fileURLToPath(new URL("../../../tmp/", import.meta.url));
 const memoSentinel = "react.memo_cache_sentinel";
 
 // Exercise Vite's real module pipeline without executing server modules or substituting a host.
@@ -46,7 +46,8 @@ describe("default native React Compiler", () => {
 
   afterAll(async () => {
     await Promise.all([compiled?.close(), uncompiled?.close()]);
-    if (directory) await rm(directory, { recursive: true, force: true });
+    if (directory)
+      await rm(directory, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
   });
 
   it("memoizes the real example Counter by default, unlike a compiler-disabled control", async () => {
