@@ -158,6 +158,16 @@ input {
   font-weight: var(--shiki-light-font-weight);
   text-decoration: var(--shiki-light-text-decoration);
 }
+.dark [data-doc-page] pre[data-code-block].shiki {
+  background: var(--shiki-dark-bg);
+  color: var(--shiki-dark);
+}
+.dark [data-doc-page] pre[data-code-block].shiki span {
+  color: var(--shiki-dark);
+  font-style: var(--shiki-dark-font-style);
+  font-weight: var(--shiki-dark-font-weight);
+  text-decoration: var(--shiki-dark-text-decoration);
+}
 @media (prefers-color-scheme: dark) {
   [data-doc-page] pre[data-code-block].shiki {
     background: var(--shiki-dark-bg);
