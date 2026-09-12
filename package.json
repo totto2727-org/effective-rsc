@@ -13,10 +13,12 @@
     "lint": "vp lint",
     "test": "vp test run",
     "test:e2e": "node tests/run-workers-fetch.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:ignore": "tsc -p packages/gitignore-patterns/tsconfig.build.json && node tests/gitignore-patterns.mjs"
   },
   "devDependencies": {
     "@effect/vitest": "4.0.0-rc.113",
+    "@effective-rsc/gitignore-patterns": "workspace:*",
     "@playwright/test": "1.63.0",
     "@types/node": "22.20.2",
     "@types/react": "catalog:",

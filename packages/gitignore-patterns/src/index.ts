@@ -92,10 +92,6 @@ export const generateIgnorePatterns = async (
 
       const entryPath = resolve(directory, entry.name);
       const metadata = await lstat(entryPath);
-      if (metadata.isSymbolicLink()) {
-        continue;
-      }
-
       const directoryEntry = metadata.isDirectory();
       const ignored = isIgnored(matchers, entryPath, directoryEntry);
       if (ignored) {

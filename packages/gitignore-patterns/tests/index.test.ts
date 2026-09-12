@@ -119,7 +119,10 @@ describe("generateIgnorePatterns", () => {
     symlinkSync(join(external, "ignored.txt"), join(root, "linked-file"));
     write(root, "nested/visible.txt");
 
-    await expect(generateIgnorePatterns(root)).resolves.toEqual([]);
+    await expect(generateIgnorePatterns(root)).resolves.toEqual([
+      "/linked-directory",
+      "/linked-file",
+    ]);
   });
 
   it("does not traverse Git metadata", async () => {
@@ -128,6 +131,43 @@ describe("generateIgnorePatterns", () => {
     write(root, ".git/secret.txt");
 
     await expect(generateIgnorePatterns(root)).resolves.toEqual([]);
+  });
+
+  it("loads a reachable ignore file even when its filename is ignored", async () => {
+    const root = createRoot();
+    write(root, ".gitignore", ".gitignore\n*.log\n");
+    write(root, "nested/.gitignore", "!keep.log\n");
+    write(root, "nested/keep.log");
+    write(root, "nested/drop.log");
+    expect(gitIgnored(root, "nested/keep.log")).toBe(false);
+    await expect(generateIgnorePatterns(root)).resolves.toEqual([
+      "/.gitignore",
+      "/nested/.gitignore",
+      "/nested/drop.log",
+    ]);
+  });
+
+  it("does not inherit ignore rules outside the supplied root", async () => {
+    const root = createRoot();
+    write(root, ".gitignore", "*.log\n");
+    write(root, "child/visible.log");
+    await expect(generateIgnorePatterns(join(root, "child"))).resolves.toEqual([]);
+  });
+
+  it("regenerates snapshot entries when a new ignored file is created", async () => {
+    const root = createRoot();
+    write(root, ".gitignore", "*.log\n");
+    const before = await generateIgnorePatterns(root);
+    write(root, "new.log");
+    expect(before).toEqual([]);
+    await expect(generateIgnorePatterns(root)).resolves.toEqual(["/new.log"]);
+  });
+
+  it("rejects a symbolic-link root instead of scanning its target", async () => {
+    const root = createRoot();
+    const target = createRoot();
+    symlinkSync(target, join(root, "alias"));
+    await expect(generateIgnorePatterns(join(root, "alias"))).rejects.toThrow(TypeError);
   });
 
   it("defaults to case-sensitive matching and supports ignoreCase", async () => {

@@ -145,6 +145,9 @@ importers:
       '@effect/vitest':
         specifier: 4.0.0-rc.113
         version: 4.0.0-rc.113(effect@4.0.0-rc.113)(vitest@4.1.11)
+      '@effective-rsc/gitignore-patterns':
+        specifier: workspace:*
+        version: link:packages/gitignore-patterns
       '@playwright/test':
         specifier: 1.63.0
         version: 1.63.0
@@ -243,6 +246,22 @@ importers:
       vitest:
         specifier: 4.1.11
         version: 4.1.11(@types/node@22.20.2)(@vitest/browser-preview@4.1.11)(@voidzero-dev/vite-plus-core@0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(terser@5.51.2)(typescript@7.0.2))
+
+  packages/gitignore-patterns:
+    dependencies:
+      ignore:
+        specifier: 7.0.9
+        version: 7.0.9
+    devDependencies:
+      '@types/node':
+        specifier: 22.20.2
+        version: 22.20.2
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+      vite-plus:
+        specifier: 'catalog:'
+        version: 0.3.1(@types/node@22.20.2)(esbuild@0.28.1)(terser@5.51.2)(typescript@7.0.2)
 
 packages:
 
@@ -1533,6 +1552,10 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
 
+  ignore@7.0.9:
+    resolution: {integrity: sha512-brTTsvFRt5C1gGHtPst/281UjPD5t9fBqbgoMPlVWy11ZLTPfu7HxK4ZYqO9H7o/yC9rSTCI85EaQ4OoY12qYw==}
+    engines: {node: '>= 4'}
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -2775,6 +2798,8 @@ snapshots:
 
   fsevents@2.3.3:
     optional: true
+
+  ignore@7.0.9: {}
 
   js-tokens@4.0.0: {}
 

@@ -1,5 +1,6 @@
 packages:
   - packages/effective-rsc
+  - packages/gitignore-patterns
   - examples/workers
 
 catalog:

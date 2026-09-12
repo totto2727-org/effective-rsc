@@ -1,20 +1,13 @@
+import { generateIgnorePatterns } from "@effective-rsc/gitignore-patterns";
 import { defineConfig } from "vite-plus";
 
-// Match the workspace baseline: default VitePlus formatting and lint rules.
-const generated = [
-  "tmp/**",
-  "**/.wrangler/**",
-  "**/dist/**",
-  "**/node_modules/**",
-  "coverage/**",
-  "playwright-report/**",
-  "test-results/**",
-];
+// Regenerate effective exclusions from reachable .gitignore files on every config load.
+const ignorePatterns = await generateIgnorePatterns(new URL(".", import.meta.url));
 
 export default defineConfig({
-  fmt: { ignorePatterns: generated },
-  lint: { ignorePatterns: generated },
+  fmt: { ignorePatterns },
+  lint: { ignorePatterns },
   test: {
-    include: ["packages/effective-rsc/tests/**/*.test.{ts,tsx}"],
+    include: ["packages/*/tests/**/*.test.{ts,tsx}"],
   },
 });

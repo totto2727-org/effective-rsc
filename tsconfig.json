@@ -34,6 +34,8 @@
     "packages/effective-rsc/src/**/*.ts",
     "packages/effective-rsc/src/**/*.tsx",
     "packages/effective-rsc/tests/**/*.ts",
-    "packages/effective-rsc/tests/**/*.tsx"
+    "packages/effective-rsc/tests/**/*.tsx",
+    "packages/gitignore-patterns/src/**/*.ts",
+    "packages/gitignore-patterns/tests/**/*.ts"
   ]
 }
