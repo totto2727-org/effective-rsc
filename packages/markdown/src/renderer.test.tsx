@@ -10,7 +10,6 @@ const entry = (content: string): MarkdownEntry => ({
   pathname: "/manual/start",
   resolveImage: (source) => `/assets/${source}`,
   resolveLink: (href) => `/manual/${href}`,
-  routePath: "/manual/start",
   source: "./content/start.md",
   url: "/manual/start",
 });

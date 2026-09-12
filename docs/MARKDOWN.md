@@ -9,7 +9,7 @@ See [the package README](../packages/markdown/README.md) for installation, compo
 `content/index.md` maps to `/manual`, while `content/guide/deep/details.md` maps to `/manual/guide/deep/details`.
 Relative links resolve from the containing source file, preserving query strings and fragments.
 Images and non-document links resolve through the supplied Vite asset map.
-The framework's `Routes.fromPages` validates the generated static route set without weakening literal `.page` typing.
+A single named catch-all Page handles the collection. Middleware looks up the original request URL, returns 404 before streaming for missing entries, and provides the found entry through request-scoped Effect context.
 
 ## Default rendering
 
@@ -40,11 +40,14 @@ No Cloudflare deployment, npm publication, or upstream pull request is required 
 Schema-validated metadata, typed relationships, and extensible loaders remain a separate milestone in [the roadmap](ROADMAP.md).
 Creating its follow-up issue is currently blocked because the fork has GitHub Issues disabled.
 
-## Observed acceptance on 2026-09-12
+## Catch-all SSR acceptance on 2026-09-12
 
-- Root VitePlus check passed; Vitest passed 358 tests in 44 files.
-- Markdown browser acceptance passed 28 cases, with two intentional host-specific skips.
+- Root VitePlus check passed; Vitest passed 356 tests in 45 files.
+- Markdown browser acceptance passed 32 cases, with two intentional host-specific skips.
 - Existing Workers acceptance passed 36 cases; documentation acceptance passed 12 cases.
-- Real dev content editing, glob addition, and glob deletion updated the rendered page set, including a 404 after deletion.
+- One `/manual/*path` route serves the directory root and arbitrary nested documents through request-time lookup.
+- Unknown documents return 404 for HTML and Flight before streaming begins. Malformed escapes, encoded separators, and control characters are rejected before lookup.
+- Real dev content editing, glob addition, and glob deletion update the collection while the route stays fixed. The added filename includes literal `%20`, exercising decode-once behavior through its `%2520` URL.
 - Built client module inspection found no Markdown parser or highlighter implementation; browser requests required no remote font service.
-- The npm tarball contains the public source, stylesheet, README, and license, without tests or temporary evidence.
+- The npm tarball contains public source, stylesheet, README, and license, without tests or temporary evidence.
+- The earlier enumeration prototype is preserved only on the backup branch recorded in the SSG roadmap. Its public API, opaque types, dedicated tests, and static-registration entry property have been removed from the current source tree.

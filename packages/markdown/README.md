@@ -31,36 +31,52 @@ Inside `content/guide/start.md`, `[Details](./deep/details.md#example)` becomes 
 An image such as `![Diagram](../images/diagram.svg)` resolves against the source file's directory and uses the URL emitted by Vite.
 The `no-inline` query makes even small assets individually fetchable; ordinary `?url` also supports Vite's inlining policy.
 
-Register the collected pages using your application's identity and shared Layout:
+Route the whole collection through one catch-all Page and look up the entry for each request:
 
 ```tsx
-import { Markdown } from "@effront/markdown";
-import { Effect } from "effect";
+import { Markdown, type MarkdownEntry } from "@effront/markdown";
+import { Context, Effect, Schema } from "effect";
+import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 
-const routes = EFFRONT.Routes.fromPages(
-  manual.entries.map(
-    (entry) =>
-      [
-        entry.routePath,
-        EFFRONT.Page.make({
-          render: () =>
-            Effect.succeed(
-              <article className="comark">
-                <Markdown entry={entry} />
-              </article>,
-            ),
-        }),
-      ] as const,
-  ),
-  { layout: RootLayout },
+class CurrentEntry extends Context.Service<CurrentEntry, MarkdownEntry>()(
+  "markdown-example/CurrentEntry",
+) {}
+
+const FindEntry = EFFRONT.Middleware.make<{ provides: CurrentEntry }>(
+  Effect.fnUntraced(function* (httpEffect) {
+    const request = yield* HttpServerRequest.HttpServerRequest;
+    const entry = manual.get(request.url);
+    if (!entry) {
+      return HttpServerResponse.text("Not found", { status: 404 });
+    }
+    return yield* httpEffect.pipe(Effect.provideService(CurrentEntry, entry));
+  }),
 );
+const Manual = EFFRONT.withMiddleware(FindEntry);
+const ManualPage = Manual.Page.make({
+  params: Schema.Struct({ path: Schema.String }),
+  render: () =>
+    Effect.gen(function* () {
+      const entry = yield* CurrentEntry;
+      return (
+        <article className="comark" data-markdown-page={entry.url}>
+          <Markdown entry={entry} />
+        </article>
+      );
+    }),
+});
 
-export default EFFRONT.make({ routes });
+export default EFFRONT.make({
+  routes: Manual.Routes.make({ layout: RootLayout }).page("/manual/*path", ManualPage),
+});
 ```
 
-Here `EFFRONT` is your `Application.effront()` identity and `RootLayout` is a Layout created by that identity.
-The [complete example](../../examples/markdown/src/application.tsx) includes both definitions.
-`fromPages` validates the collected route set at initialization, so adding a nested source file automatically adds its route without a hand-written route for each file.
+Here `EFFRONT` is your `Application.effront()` identity, `manual` is the collection above, and `RootLayout` is a Layout created by that identity.
+The [complete example](../../examples/markdown/src/application.tsx) includes their wiring.
+`/manual/*path` matches `/manual`, `/manual/`, and any nested path; `params.path` is an already-decoded string without a leading slash.
+The Middleware uses the original request URL for collection lookup, avoiding a second decoding of captured parameters.
+It returns a real 404 before response streaming begins when no article exists and provides the found entry to the Page's request scope.
+Adding or removing documents updates the collection, while the single catch-all route stays unchanged.
 
 ## Key features
 
@@ -100,8 +116,8 @@ It includes KaTeX styling and minimal content overflow rules; the application ow
 - `assets`: optional eager URL-string glob map of linked files and images.
 
 The collection exposes `entries`, `get(pathname)`, `resolveLink(entry, href)`, and `resolveImage(entry, src)`.
-Each entry exposes `source`, `content`, public `url`/`pathname`, decoded `routePath`, and its own `resolveLink`/`resolveImage` functions.
-Use `url` for browser links and `routePath` for `Routes.fromPages`.
+Each entry exposes `source`, `content`, public `url`/`pathname`, and its own `resolveLink`/`resolveImage` functions.
+Use `url` for browser links and pass the original request pathname to `get`; URL escapes are decoded once for lookup.
 The source Markdown remains unchanged.
 
 Only `index.md` maps to the containing directory's URL; `README.md` keeps `/README`.
@@ -112,8 +128,8 @@ Missing references and attempts to leave the source directory produce an error n
 Duplicate generated routes and invalid glob maps fail during collection creation.
 
 Unicode and spaces are supported in source names and emitted URLs.
-Use Effront-compatible static route names when registering pages: `%`, `#`, `?`, and route-pattern syntax are rejected by the route validator with an actionable error.
-Assets can retain filenames that are unsuitable for document routes because their URLs are owned by Vite.
+Source filenames are URL-encoded independently of the fixed catch-all route pattern.
+Assets use the URLs emitted by Vite.
 
 ### `Markdown({ entry, components?, plugins? })`
 

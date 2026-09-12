@@ -343,10 +343,6 @@ const section = EFFRONT.Routes.make({
             "同じ identity の Layout と Loading を設定します。",
           ],
           [
-            "Routes.fromPages(entries, { layout?, loading? })",
-            "glob などで列挙した [静的パス, Page] の配列から Routes を作ります。初期化時に空配列、無効なパス、重複、identity の不一致を検証します。Page は params を持たない定義を使用します。直接アプリケーションへ渡す場合は Layout を設定し、子 Routes として mount することもできます。",
-          ],
-          [
             "routes.page(path, page)",
             "Page を追加した新しい Routes を返します。path と params の対応を型で検証します。",
           ],
@@ -374,12 +370,20 @@ const routes = EFFRONT.Routes.make({ layout: RootLayout })
           ],
           ["mount の prefix", "パラメーターを含まない静的パスを指定します。"],
           [
+            "/manual/*path",
+            "末尾の名前付き catch-all は任意階層を path に格納します。/manual と /manual/ では空文字です。Page の params Schema に同じ名前を定義します。捕捉値は一度だけ URL デコード済みです。",
+          ],
+          [
+            "catch-all の競合",
+            "catch-all はその直下の空パスも所有するため、/manual/*path と /manual の同時登録はできません。/manual/about のような具体的な子ルートは優先されます。",
+          ],
+          [
             "重複",
             "大文字小文字を正規化し、パラメーター名を除いた形が同じルートは競合します。例: /articles/:id と /articles/:slug。",
           ],
           [
             "無効なパス",
-            "末尾の /（ルート / を除く）、空・.・.. セグメント、ワイルドカード、クエリー、ハッシュなどは指定できません。",
+            "末尾の /（ルート / を除く）、空・.・.. セグメント、途中のワイルドカードや名前のないワイルドカード、クエリー、ハッシュなどは指定できません。",
           ],
           [
             "/_effront",

@@ -391,9 +391,10 @@ export const coreModelPages: readonly DocPage[] = [
         <p>
           <code>application/route-path.ts</code> の <code>ValidRoutePath</code> と{" "}
           <code>analyzeRoutePath</code> が型と実行時の文法を対にしています。 パスは <code>/</code>{" "}
-          から始まり、動的セグメントは <code>:id</code> のように書きます。
-          空セグメント、末尾のスラッシュ、<code>.</code> や <code>..</code>{" "}
-          のセグメント、ワイルドカードやクエリーを含む宣言は受け付けません。
+          から始まり、動的セグメントは <code>:id</code>、残りのパスを取る名前付きcatch-allは末尾の
+          <code>*path</code> のように書きます。 空セグメント、末尾のスラッシュ、<code>.</code> や{" "}
+          <code>..</code>{" "}
+          のセグメント、catch-all以外のワイルドカード、クエリーを含む宣言は受け付けません。
           1つのパスに同名のパラメーターを繰り返すことも拒否します。
         </p>
         <p>
@@ -413,6 +414,8 @@ export const coreModelPages: readonly DocPage[] = [
           <code>/About</code> と <code>/about</code> も衝突します。 一方、<code>/items/new</code> と{" "}
           <code>/items/:id</code>{" "}
           は別の形です。衝突検査は重複する形を拒否するもので、あり得る照合の重なりをすべて禁止する検査ではありません。
+          catch-allは通常の形に加えて空のcaptureを取る接頭辞の形も登録するため、
+          <code>/manual/*path</code> と <code>/manual</code> は共存できません。
         </p>
         <p>
           <code>mount</code>{" "}
@@ -463,7 +466,9 @@ export const coreModelPages: readonly DocPage[] = [
           <code>HttpRouter.add</code> でGETとPOSTを登録します。 URLの照合はEffect
           HTTPへ委ね、core独自の先勝ちmatcherをここで実装しているわけではありません。
           PageのmiddlewareとリクエストContextを通った後、パラメーター付きPageでは{" "}
-          <code>HttpRouter.params</code> を読みます。
+          <code>HttpRouter.params</code> を読みます。 catch-allではEffect
+          HTTPが一度decodeした残りのcaptureを、宣言した名前へ入れ直します。
+          空のcaptureは空文字列とし、エンコードされた区切り文字、backslash、制御文字を含むcaptureは404にします。
           次の抜粋は、その値に対するSchema検証と描画の分岐です。
         </p>
         <SourceExcerpt source={coreModelSources.parameterValidation} />

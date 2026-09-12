@@ -27,7 +27,11 @@ describe("createMarkdownCollection", () => {
     expect(markdown.entries.map((entry) => [entry.source, entry.pathname, entry.url])).toEqual([
       ["./content/index.md", "/manual", "/manual"],
       ["./content/guides/index.md", "/manual/guides", "/manual/guides"],
-      ["./content/guides/$&+,=@.md", "/manual/guides/$&+,=@", "/manual/guides/$&+,=@"],
+      [
+        "./content/guides/$&+,=@.md",
+        "/manual/guides/%24%26%2B%2C%3D%40",
+        "/manual/guides/%24%26%2B%2C%3D%40",
+      ],
       ["./content/guides/100%.md", "/manual/guides/100%25", "/manual/guides/100%25"],
       ["./content/guides/advanced.md", "/manual/guides/advanced", "/manual/guides/advanced"],
       [
@@ -41,9 +45,29 @@ describe("createMarkdownCollection", () => {
     expect(markdown.get("/manual/guides/getting started")).toBe(
       markdown.get("/manual/guides/getting%20started"),
     );
-    expect(markdown.get("/manual/guides/100%25")?.routePath).toBe("/manual/guides/100%");
-    expect(markdown.get("/manual/guides/%24%26%2B%2C%3D%40")?.url).toBe("/manual/guides/$&+,=@");
+    expect(markdown.get("/manual/guides/100%25")?.content).toBe("# Percent");
+    expect(markdown.get("/manual/guides/%24%26%2B%2C%3D%40")?.url).toBe(
+      "/manual/guides/%24%26%2B%2C%3D%40",
+    );
     expect(markdown.get("/outside")).toBeUndefined();
+  });
+
+  it("looks up URL-encoded filenames without interpreting them as route patterns", () => {
+    const markdown = createMarkdownCollection({
+      source: "./content",
+      basePath: "/manual",
+      documents: {
+        "./content/literal%20.md": "# Literal escape",
+        "./content/what?.md": "# Question",
+        "./content/hash#.md": "# Hash",
+        "./content/:name.md": "# Colon",
+      },
+    });
+    expect(markdown.get("/manual/literal%2520")?.content).toBe("# Literal escape");
+    expect(markdown.get("/manual/literal%20")).toBeUndefined();
+    expect(markdown.get("/manual/what%3F")?.content).toBe("# Question");
+    expect(markdown.get("/manual/hash%23")?.content).toBe("# Hash");
+    expect(markdown.get("/manual/%3Aname")?.content).toBe("# Colon");
   });
 
   it("resolves Markdown relative to its source directory and preserves suffixes", () => {

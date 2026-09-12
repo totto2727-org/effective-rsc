@@ -189,7 +189,7 @@ vp exec wrangler dev --local --no-bundle --config dist/rsc/wrangler.json`,
       "不変な Routes グラフに Page、ネストした Layout、Schema によるパスパラメーターを追加します。",
     section: "Guide",
     headings: [
-      { id: "pages", title: "静的ページとパラメーター" },
+      { id: "pages", title: "静的ページ、パラメーター、catch-all" },
       { id: "mount", title: "ネストした Routes と Loading" },
       { id: "matching", title: "マッチング時の注意" },
     ],
@@ -199,7 +199,7 @@ vp exec wrangler dev --local --no-bundle --config dist/rsc/wrangler.json`,
           Routes は不変です。<code>page</code> と <code>mount</code>{" "}
           は新しい定義を返すので、戻り値をつないでアプリケーションのグラフを組み立てます。
         </p>
-        <h2 id="pages">静的ページとパラメーター</h2>
+        <h2 id="pages">静的ページ、パラメーター、catch-all</h2>
         <p>
           パラメーター付き Page は URL の文字列を schema で decode してから <code>render</code>{" "}
           に渡します。 パスの <code>:slug</code> と schema のキーは一致させます。schema の定義方法は{" "}
@@ -220,6 +220,27 @@ const HomePage = EFFRONT.Page.make({
 });`,
           "tsx",
         )}
+        <p>
+          末尾に置く <code>*path</code>{" "}
+          は、その位置から残りのパスを1つの名前付きパラメーターとして受け取る catch-all です。
+        </p>
+        {code(
+          `const ManualPage = EFFRONT.Page.make({
+  params: Schema.Struct({ path: Schema.String }),
+  render: ({ params }) => Effect.succeed(<article>{params.path}</article>),
+});
+
+const routes = EFFRONT.Routes.make({ layout: RootLayout })
+  .page("/manual/*path", ManualPage);`,
+          "tsx",
+        )}
+        <p>
+          <code>/manual</code> と <code>/manual/</code> では <code>path</code>{" "}
+          は空文字列になります。
+          <code>/manual/a/b</code> では <code>"a/b"</code> を一度だけdecodeしてSchemaへ渡します。
+          catch-all は末尾だけに置けます。<code>/manual</code>{" "}
+          を別のPageとして同時に登録することはできません。
+        </p>
         <h2 id="mount">ネストした Routes と Loading</h2>
         <p>
           子 Routes を <code>mount</code> すると、その Layout と Loading
@@ -265,6 +286,12 @@ const routes = EFFRONT.Routes.make({ layout: RootLayout })
           Effect HTTP に任せ、Routes の構築時には同じ形のパスの重複や不正な合成を検出します。
           たとえば <code>/articles/:slug</code> と <code>/articles/:id</code>{" "}
           は別ルートとして重ねられません。
+        </p>
+        <p>
+          catch-all と同じ接頭辞に置いたリテラルや <code>:parameter</code>{" "}
+          は、より具体的なルートとして catch-all
+          より先に照合されます。パーセントエンコードが不正なURL、エンコードされた
+          <code>/</code>・<code>\</code>、NUL を含む catch-all のリクエストは 404 です。
         </p>
         <p>
           ページ遷移は既定でクロスフェードします。全体設定やページごとの変更・無効化は

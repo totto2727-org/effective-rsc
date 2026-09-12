@@ -13,6 +13,13 @@ Status: planned by user request on 2026-09-12; no SSG implementation or static-h
 - Initial document requests receive HTML with the hydration data they need; subsequent client navigations and current-route refreshes can fetch only the Flight payload.
 - Aim for the same client rendering and navigation semantics as SSR for equivalent content. Static snapshots do not provide request-time freshness, personalized responses, or Server Function execution by themselves.
 
+### Saved route-enumeration prototype
+
+The earlier Markdown route-enumeration implementation is preserved only on branch `backup/markdown-from-pages`, commit `e08074f`, in the fork.
+It is a historical SSR prototype, not an SSG implementation or a current public API.
+When designing SSG, consult that branch for file-to-route enumeration and initialization validation; design HTML/Flight generation and static parameters against the requirements below rather than restoring its API automatically.
+Current Markdown SSR uses request-time collection lookup through catch-all routing.
+
 ### Serving without a Worker
 
 - The current SSR client requests Flight at the document URL with `Accept: text/x-component` (`packages/effront/src/client/flight-client.ts`).

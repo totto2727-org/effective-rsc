@@ -174,6 +174,22 @@ for (const accept of ["text/html", "text/x-component"]) {
     });
     expect(response.status()).toBe(404);
   });
+
+  test(`rejects malformed and encoded-separator catch-all paths with ${accept}`, async ({
+    request,
+  }) => {
+    for (const path of [
+      "/manual/guide/%",
+      "/manual/guide/%E0%A4%A",
+      "/manual/guide%2Fdeep/details",
+      "/manual/guide%5Cdeep/details",
+      "/manual/guide/deep/details%00",
+    ]) {
+      const response = await request.get(path, { headers: { Accept: accept } });
+      expect(response.status(), `Reject ${path} without aliasing content or throwing`).toBe(404);
+      expect(await response.text()).not.toContain("Deep details");
+    }
+  });
 }
 
 test("hydrates and follows Markdown links with Flight while retaining shared layout state", async ({
@@ -256,9 +272,13 @@ test("updates edited Markdown and discovers added and removed source pages in de
   );
   test.setTimeout(45_000);
   const indexFile = new URL("../../../examples/markdown/content/index.md", import.meta.url);
-  const stem = `acceptance-added-${randomUUID()}`;
-  const addedFile = new URL(`../../../examples/markdown/content/guide/${stem}.md`, import.meta.url);
-  const addedPath = `/manual/guide/${stem}`;
+  const stem = `acceptance-added-${randomUUID()}%20literal`;
+  const encodedStem = encodeURIComponent(stem);
+  const addedFile = new URL(
+    `../../../examples/markdown/content/guide/${encodedStem}.md`,
+    import.meta.url,
+  );
+  const addedPath = `/manual/guide/${encodedStem}`;
   const original = await readFile(indexFile);
   await page.goto("/manual");
   await page.waitForLoadState("networkidle");
