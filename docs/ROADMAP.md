@@ -38,6 +38,36 @@ Status: planned by user request on 2026-09-12; no SSG implementation or static-h
 - Verify payload MIME types, parameter/query policy, redirects, unknown routes, missing payloads, cache isolation, and deployment-version mismatch handling.
 - Confirm that secrets and request-specific data cannot enter public static artifacts and that generation handles streaming failures and resource cleanup.
 
+## Markdown rendering and content collections
+
+Status: planned by user request on 2026-09-12; implementation and public API design are deferred.
+
+### Direction
+
+- Use comark for Markdown rendering, taking the main monorepo's `js/app/mdts` and `js/app/mdts-example` as local references for content authoring and plugin configuration.
+- The current mdts integration exports HTML rendering and plugins through `@comark/html` in `src/comark.ts`. For Effront, prefer comark's standard React integration rather than reproducing that HTML adapter or writing a custom Markdown-to-React renderer.
+- Verify the chosen React integration's Server Component, SSR, streaming, and Workers compatibility before selecting its public API. Keep parsing and server-only rendering dependencies out of the client graph.
+- Start with a straightforward Markdown-to-React content path usable inside existing Effront Pages and shared Layouts. Preserve JSX authoring and allow application-owned React component mappings where the integration supports them.
+- Reuse the existing Shiki and Typography presentation policy where appropriate; determine how comark plugins compose with it instead of adding a second highlighting pipeline by default.
+
+### Target: typed content collections
+
+- Aim for an Astro Content Collections-like authoring experience: named collections, content loaders, schema-validated metadata, stable entry IDs, typed lookup/query APIs, and a separate rendering step.
+- Define metadata validation, useful file/entry diagnostics, duplicate-ID handling, and relationships between entries before stabilizing the API.
+- Separate content loading and indexing from route creation so an application can choose URLs, parameters, Layouts, and rendering policy.
+- Integrate local content discovery, changes, additions, and removals with Vite development and the production build. Preprocess or bundle local files as needed so Workers SSR does not depend on a runtime filesystem.
+- Begin with SSR as the rendering target. Content collections do not require SSG; the separate HTML/Flight SSG milestone can later consume the same entries and route enumeration.
+- Keep runtime-specific loading and build integration outside the portable core. Decide package boundaries during implementation rather than committing to package names now.
+
+### Acceptance before release
+
+- Render representative real content through the public integration on Vite development and a standalone built Wrangler host, including no-JavaScript HTML, Flight navigation, custom React components, and the existing shared Layout behavior.
+- Verify metadata types and validation errors, stable IDs and lookup, development updates, production packaging, and the absence of server-only parsing/highlighting code in client bundles.
+- Define and test the trust boundary for raw HTML, links, and embedded components; distinguish trusted repository-authored content from externally supplied Markdown.
+- Check the selected comark integration and plugin versions through actual React/RSC execution before documenting supported features.
+
+References: [Astro Content Collections](https://docs.astro.build/en/guides/content-collections/), [comark](https://comark.dev/), and the local main-monorepo mdts implementation noted above.
+
 ## Page View Transitions
 
 Status: implemented after the user's 2026-09-12 request to enable page transitions by default.
