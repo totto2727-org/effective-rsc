@@ -1,10 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Context, Effect, Layer, Schema, SchemaTransformation } from "effect";
-import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
+import { Effect, Schema, SchemaTransformation } from "effect";
 
-import { Application } from "../index";
-import { createFetchHandler } from "../workers";
+import { Application } from "./effront";
 import { getRoutesState } from "./routes";
+import { analyzeRoutePath, type ValidRoutePath } from "./route-path";
 
 const EFFRONT = Application.effront();
 const Shell = EFFRONT.Layout.make({
@@ -127,7 +126,7 @@ describe("Routes", () => {
     expect(() =>
       // @ts-expect-error Exercise runtime validation for percent escapes.
       EFFRONT.Routes.make().page("/users/%61", HomePage),
-    ).toThrow('cannot contain "*", "?", "#", "%", ";", or "\\"');
+    ).toThrow('cannot contain "?", "#", "%", ";", or "\\"');
     expect(() =>
       // @ts-expect-error Exercise runtime validation for duplicate parameter names.
       EFFRONT.Routes.make().page("/users/:userId/:userId", HomePage),
@@ -189,158 +188,113 @@ describe("Routes", () => {
   });
 });
 
-describe("Routes.fromPages", () => {
-  it("registers wide readonly entries as non-empty root routes without assertions", () => {
-    const paths: ReadonlyArray<string> = ["/", "/guides/nested/history"];
-    const entries = paths.map((path): readonly [string, typeof HomePage] => [path, HomePage]);
-    const routes = EFFRONT.Routes.fromPages(entries, { layout: Shell, loading: LoadingPage });
+describe("named catch-all routes", () => {
+  const PathPage = EFFRONT.Page.make({
+    params: Schema.Struct({ path: Schema.String }),
+    render: ({ params }) => Effect.succeed(<h1>{params.path}</h1>),
+  });
+
+  it("infers the terminal capture and mounts beneath a static prefix", () => {
+    const child = EFFRONT.Routes.make().page("/*path", PathPage);
+    const routes = EFFRONT.Routes.make({ layout: Shell }).mount("/manual", child);
+    expect(getRoutesState(routes).paths).toEqual(["/manual/*path"]);
     expect(() => EFFRONT.make({ routes })).not.toThrow();
-    expect(getRoutesState(routes).paths).toEqual(paths);
-  });
-
-  it("mounts runtime entries and permits subsequent literal registrations", () => {
-    const child = EFFRONT.Routes.fromPages([["/deep/nested", HomePage]]);
-    const routes = EFFRONT.Routes.make({ layout: Shell }).mount("/docs", child).page("/", HomePage);
-    expect(() => EFFRONT.make({ routes })).not.toThrow();
-    expect(getRoutesState(routes).paths).toEqual(["/docs/deep/nested", "/"]);
-  });
-
-  it("copies mutable entry arrays into an immutable route collection", () => {
-    const entry: [string, typeof HomePage] = ["/original", HomePage];
-    const entries = [entry];
-    const routes = EFFRONT.Routes.fromPages(entries);
-    entry[0] = "/changed";
-    entries.push(["/added", HistoryPage]);
-    expect(getRoutesState(routes).paths).toEqual(["/original"]);
-    expect(Object.isFrozen(getRoutesState(routes).pages)).toBe(true);
-    expect(Object.isFrozen(getRoutesState(routes).pages[0])).toBe(true);
-  });
-
-  it("rejects empty collections before claiming non-empty routes", () => {
-    expect(() => EFFRONT.Routes.fromPages([])).toThrow(TypeError);
-  });
-
-  it.each([
-    "relative",
-    "/trailing/",
-    "/empty//segment",
-    "/dot/../segment",
-    "/dot/./segment",
-    "/escaped/%E6%97%A5",
-    "/literal%",
-    "/wildcard/*",
-    "/query?value",
-    "/fragment#value",
-    "/semi;colon",
-    "/back\\slash",
-    "/:parameter",
-    "/embedded:parameter",
-  ])("rejects unsupported static path %s", (path) => {
-    expect(() => EFFRONT.Routes.fromPages([[path, HomePage]])).toThrow(TypeError);
-  });
-
-  it("rejects a parameterized Page at compile time and runtime", () => {
-    expect(() =>
-      // @ts-expect-error Static entry collections cannot register parameterized pages.
-      EFFRONT.Routes.fromPages([["/day", DayPage]]),
-    ).toThrow(TypeError);
-  });
-
-  it("rejects case-insensitive duplicate entries", () => {
-    expect(() =>
-      EFFRONT.Routes.fromPages([
-        ["/Guide", HomePage],
-        ["/guide", HistoryPage],
-      ]),
-    ).toThrow(TypeError);
-  });
-
-  it("checks runtime collection collisions against existing literal routes", () => {
-    const child = EFFRONT.Routes.fromPages([["/guide", HomePage]]);
-    expect(() =>
-      EFFRONT.Routes.make().page("/docs/guide", HistoryPage).mount("/docs", child),
-    ).toThrow(TypeError);
-  });
-
-  it("checks subsequent additions against the runtime collection", () => {
-    const routes = EFFRONT.Routes.fromPages([["/guide", HomePage]]);
-    expect(() =>
-      // @ts-expect-error An opaque runtime path set cannot prove literal additions collision-free.
-      routes.page("/guide", HistoryPage),
-    ).toThrow(TypeError);
-  });
-
-  it("rejects another module's Page even with identical service types", () => {
-    const Other = Application.effront();
-    const page = Other.Page.make({ render: () => Effect.succeed(<h1>Other</h1>) });
-    expect(() => EFFRONT.Routes.fromPages([["/", page]])).toThrow(TypeError);
-  });
-
-  it("requires the root layout at compile time and runtime", () => {
-    const routes = EFFRONT.Routes.fromPages([["/", HomePage]]);
-    expect(() =>
-      // @ts-expect-error A non-empty collection still needs a root Layout.
-      EFFRONT.make({ routes }),
-    ).toThrow(TypeError);
-  });
-
-  it("rejects reserved root namespaces when compiling enumerated routes", () => {
-    const routes = EFFRONT.Routes.fromPages([["/_effront/assets/secret", HomePage]], {
-      layout: Shell,
+    expect(analyzeRoutePath("/manual/*path")).toMatchObject({
+      catchAll: "path",
+      matcher: "/manual/*",
+      shapes: ["/manual/*", "/manual"],
+      parameterNames: ["path"],
     });
-    expect(() => EFFRONT.make({ routes })).toThrow(TypeError);
+    const nested = EFFRONT.Routes.make().page("/a/:b/*d", NestedParamsPage);
+    expect(getRoutesState(nested).paths).toEqual(["/a/:b/*d"]);
   });
 
-  it("does not erase application service requirements", () => {
-    class Greeting extends Context.Service<Greeting, string>()("effront/tests/routes/Greeting") {}
-    const Other = Application.effront<Greeting>();
-    const page = Other.Page.make({
-      render: () => Effect.map(Greeting, (value) => <h1>{value}</h1>),
-    });
-    const layout = Other.Layout.make({ render: ({ children }) => Effect.succeed(children) });
-    const routes = Other.Routes.fromPages([["/", page]], { layout });
-    expect(() => Other.make({ routes, layer: Layer.succeed(Greeting, "Hello") })).not.toThrow();
+  it("requires the catch-all schema key and keeps static mount constraints", () => {
     expect(() =>
-      // @ts-expect-error A Page from a module with services cannot enter a service-free module.
-      EFFRONT.Routes.fromPages([["/", page]]),
-    ).toThrow(TypeError);
-    // Compile-only checks must not create an application with missing services at runtime.
-    const checkRequiredLayer = () => {
-      // @ts-expect-error Runtime-enumerated routes retain the module's required application Layer.
-      Other.make({ routes });
+      // @ts-expect-error A catch-all Page requires a parameter Schema.
+      EFFRONT.Routes.make().page("/manual/*path", HomePage),
+    ).toThrow("must declare a parameter Schema");
+    const checkNames = () => {
+      // @ts-expect-error The schema must declare path, not slug.
+      EFFRONT.Routes.make().page("/manual/*path", SlugPage);
+      // @ts-expect-error Both regular and catch-all parameters must appear in the Schema.
+      EFFRONT.Routes.make().page("/manual/:slug/*path", PathPage);
     };
-    expect(checkRequiredLayer).toBeTypeOf("function");
+    expect(checkNames).toBeTypeOf("function");
+    expect(() =>
+      // @ts-expect-error Catch-all mount prefixes are parameterized, not static.
+      EFFRONT.Routes.make().mount("/manual/*path", EFFRONT.Routes.make().page("/", HomePage)),
+    ).toThrow("cannot be mounted beneath parameterized path");
   });
 
-  it.each([
-    ["/guides/deeply/nested/page", "/guides/deeply/nested/page"],
-    ["/日本語/入門", "/%E6%97%A5%E6%9C%AC%E8%AA%9E/%E5%85%A5%E9%96%80"],
-    ["/guide/with spaces", "/guide/with%20spaces"],
-    ["/guide/punctuation!()'", "/guide/punctuation!()'"],
-    ["/guide/$&+,=@", "/guide/$&+,=@"],
-  ])("matches the real Fetch request for %s", async (path, url) => {
-    const App = Application.effront();
-    const Respond = App.Middleware.make(() =>
-      Effect.map(HttpRouter.RouteContext, ({ route }) => HttpServerResponse.text(route.path)),
-    );
-    const layout = App.Layout.make({ render: ({ children }) => Effect.succeed(children) });
-    const page = App.Page.make({ render: () => Effect.die("Route middleware must respond.") });
-    const routes = App.withMiddleware(Respond).Routes.fromPages([[path, page]], { layout });
-    const handler = createFetchHandler(App.make({ routes }));
-    const response = await handler(new Request(`https://routes.test${url}`), {}, {});
-    expect(response.status).toBe(200);
-    expect(await response.text()).toBe(path);
+  it("rejects malformed wildcards at both grammar boundaries", () => {
+    // This list is also a compile-time assertion: none of these literals may be ValidRoutePath.
+    type Invalid =
+      | "/manual/*"
+      | "/manual/*path/more"
+      | "/manual/prefix*path"
+      | "/manual/**path"
+      | "/manual/*bad-name"
+      | "/manual/:path/*path";
+    const invalid: ReadonlyArray<Invalid> = [
+      "/manual/*",
+      "/manual/*path/more",
+      "/manual/prefix*path",
+      "/manual/**path",
+      "/manual/*bad-name",
+      "/manual/:path/*path",
+    ];
+    type Accepted = { [Path in Invalid]: ValidRoutePath<Path> }[Invalid];
+    const assertInvalid = (path: Accepted) => path;
+    for (const path of invalid) {
+      // @ts-expect-error None of the malformed patterns is a valid route path.
+      assertInvalid(path);
+      expect(() => analyzeRoutePath(path)).toThrow(TypeError);
+    }
   });
 
-  it("returns 404 for an unregistered descendant rather than matching a wildcard", async () => {
-    const App = Application.effront();
-    const Respond = App.Middleware.make(() => Effect.succeed(HttpServerResponse.text("matched")));
-    const layout = App.Layout.make({ render: ({ children }) => Effect.succeed(children) });
-    const page = App.Page.make({ render: () => Effect.die("Route middleware must respond.") });
-    const routes = App.withMiddleware(Respond).Routes.fromPages([["/guide", page]], { layout });
-    const handler = createFetchHandler(App.make({ routes }));
-    const response = await handler(new Request("https://routes.test/guide/unregistered"), {}, {});
-    expect(response.status).toBe(404);
-    await response.body?.cancel();
+  it("rejects renamed wildcard duplicates and collisions with the empty-capture prefix", () => {
+    const child = EFFRONT.Routes.make().page("/*path", PathPage);
+    expect(() =>
+      // @ts-expect-error Unmounted child catch-alls also reserve their empty prefix.
+      child.page("/", HomePage),
+    ).toThrow("conflicts with an existing route pattern");
+    const routes = EFFRONT.Routes.make().page("/Manual/*path", PathPage);
+    expect(() =>
+      // @ts-expect-error Wildcard names do not distinguish route shapes.
+      routes.page("/manual/*slug", SlugPage),
+    ).toThrow("conflicts with an existing route pattern");
+    expect(() =>
+      // @ts-expect-error The catch-all already owns its empty-capture prefix.
+      routes.page("/manual", HomePage),
+    ).toThrow("conflicts with an existing route pattern");
+    expect(() =>
+      // @ts-expect-error Adding the catch-all after its root also conflicts.
+      EFFRONT.Routes.make().page("/manual", HomePage).page("/manual/*path", PathPage),
+    ).toThrow("conflicts with an existing route pattern");
+    expect(() =>
+      EFFRONT.Routes.make()
+        .page("/manual", HomePage)
+        // @ts-expect-error Mounts must account for the wildcard's implicit root route.
+        .mount("/manual", EFFRONT.Routes.make().page("/*path", PathPage)),
+    ).toThrow("conflicts with an existing route pattern");
+    expect(() =>
+      routes.page("/manual/about", HomePage).page("/manual/:slug", SlugPage),
+    ).not.toThrow();
+  });
+
+  it("rejects catch-alls overlapping the reserved framework namespace", () => {
+    expect(() =>
+      EFFRONT.make({
+        // @ts-expect-error Root catch-alls overlap the reserved namespace.
+        routes: EFFRONT.Routes.make({ layout: Shell }).page("/*path", PathPage),
+      }),
+    ).toThrow("framework-reserved");
+    expect(() =>
+      EFFRONT.make({
+        // @ts-expect-error Named catch-alls beneath the framework namespace are reserved.
+        routes: EFFRONT.Routes.make({ layout: Shell }).page("/_EFFRONT/*path", PathPage),
+      }),
+    ).toThrow("framework-reserved");
   });
 });
