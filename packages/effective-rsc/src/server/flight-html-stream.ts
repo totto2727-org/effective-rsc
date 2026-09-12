@@ -59,7 +59,10 @@ const writeFlightChunk = (
   nonce: string | undefined,
 ) => {
   try {
-    const text = decoder.decode(chunk, { stream: true });
+    // Decode each chunk independently: a streaming fatal decoder can discard pending
+    // bytes from the previous chunk when the next chunk contains binary Flight data.
+    // Incomplete UTF-8 is therefore encoded as bytes, just like other binary data.
+    const text = decoder.decode(chunk);
     if (text.length > 0) {
       writeFlightValue(JSON.stringify(text), controller, nonce);
     }
@@ -73,26 +76,17 @@ const writeFlightChunk = (
 };
 
 const writeFlightStream = async (
-  stream: ReadableStream<Uint8Array>,
+  reader: ReadableStreamDefaultReader<Uint8Array>,
   controller: StreamController,
   nonce: string | undefined,
 ) => {
   const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
-  const reader = stream.getReader();
-  try {
-    while (true) {
-      const result = await reader.read();
-      if (result.done) {
-        const finalText = decoder.decode();
-        if (finalText.length > 0) {
-          writeFlightValue(JSON.stringify(finalText), controller, nonce);
-        }
-        return;
-      }
-      writeFlightChunk(decoder, result.value, controller, nonce);
+  while (true) {
+    const result = await reader.read();
+    if (result.done) {
+      return;
     }
-  } finally {
-    reader.releaseLock();
+    writeFlightChunk(decoder, result.value, controller, nonce);
   }
 };
 
@@ -104,7 +98,6 @@ const makeHtmlWriter = () => {
       if (tail.byteLength !== htmlTrailer.byteLength && tail.byteLength > 0) {
         controller.enqueue(tail);
       }
-      controller.enqueue(htmlTrailer);
     },
     write(chunk: Uint8Array, controller: StreamController) {
       const combined = new Uint8Array(tail.byteLength + chunk.byteLength);
@@ -124,25 +117,80 @@ export const injectFlightPayload = (
   options?: FlightHtmlStreamOptions,
 ) => {
   const htmlWriter = makeHtmlWriter();
-  let flight: Promise<void> | undefined;
-
-  const startFlight = (controller: StreamController) => {
-    flight ??= writeFlightStream(flightStream, controller, options?.nonce);
-    return flight;
+  const flightReader = flightStream.getReader();
+  let flightReleased = false;
+  const releaseFlight = () => {
+    if (!flightReleased) {
+      flightReleased = true;
+      flightReader.releaseLock();
+    }
+  };
+  const cancelFlight = (reason: unknown) => {
+    if (!flightReleased) {
+      // Cancelling a tee branch settles its pending reads immediately, but the
+      // cancellation promise waits for the sibling. Do not block request-scope
+      // release on that sibling, which can itself need the scope's abort signal.
+      void flightReader.cancel(reason).catch(() => {});
+      releaseFlight();
+    }
   };
 
-  return new TransformStream<Uint8Array, Uint8Array>({
+  const transform = new TransformStream<Uint8Array, Uint8Array>({
     async flush(controller) {
       try {
-        await startFlight(controller);
         htmlWriter.finish(controller);
+        // HTML chunks are arbitrary bytes, not parser boundaries. Only HTML EOF is
+        // safe for injection without a tokenizer. The SSR tee branch keeps pulling
+        // Flight while its browser branch queues, so HTML still streams normally.
+        await writeFlightStream(flightReader, controller, options?.nonce);
+        controller.enqueue(htmlTrailer);
       } catch (cause) {
         controller.error(cause);
+      } finally {
+        releaseFlight();
       }
     },
     transform(chunk, controller) {
       htmlWriter.write(chunk, controller);
-      void startFlight(controller).catch((cause: unknown) => controller.error(cause));
     },
   });
+
+  const htmlReader = transform.readable.getReader();
+  let ended = false;
+  // A TransformStream cancellation can wait for an already-running flush.
+  // Intercept it before that wait so a pending Flight read cannot deadlock
+  // cancellation of the response body and its request-local services.
+  const readable = new ReadableStream<Uint8Array>({
+    async cancel(reason) {
+      ended = true;
+      cancelFlight(reason);
+      try {
+        await htmlReader.cancel(reason);
+      } finally {
+        htmlReader.releaseLock();
+      }
+    },
+    async pull(controller) {
+      try {
+        const result = await htmlReader.read();
+        if (ended) {
+          return;
+        }
+        if (result.done) {
+          ended = true;
+          controller.close();
+          htmlReader.releaseLock();
+        } else {
+          controller.enqueue(result.value);
+        }
+      } catch (cause) {
+        ended = true;
+        cancelFlight(cause);
+        controller.error(cause);
+        htmlReader.releaseLock();
+      }
+    },
+  });
+
+  return { readable, writable: transform.writable };
 };
