@@ -1,4 +1,5 @@
 import type { DocPage } from "./types";
+import { CodeBlock } from "../components/code-block";
 
 const baseline = "ed886996d1d3780b94166af4f798c53416d547c8";
 const comparison = "9058a71dcb522ffed8eb838ef9aef3c69953dfe7";
@@ -409,15 +410,16 @@ function ReadingSource({ snippet }: { readonly snippet: ReadingSnippet }) {
           </p>
         ) : null}
       </figcaption>
-      <pre>
-        <code>{snippet.code}</code>
-      </pre>
+      <CodeBlock
+        code={snippet.code}
+        language={
+          snippet.kind === "diff" ? "diff" : snippet.path.endsWith(".tsx") ? "tsx" : "typescript"
+        }
+      />
       <details>
         <summary>この抜粋を Git で再現する</summary>
         <p>リポジトリのルートで実行します。diff の場合は省略した hunk も表示します。</p>
-        <pre>
-          <code>{snippet.command}</code>
-        </pre>
+        <CodeBlock code={snippet.command} language="bash" />
       </details>
     </figure>
   );
@@ -471,8 +473,8 @@ export const readingPages: readonly DocPage[] = [
           release tag や npm 公開版と完全に同じ内容だという意味ではありません。 After の{" "}
           <code>0.1.4-workers.0</code> も、公開済みであることを意味しません。
         </p>
-        <pre>
-          <code>{`# Git オブジェクトが存在するこのクローンのルートで実行
+        <CodeBlock
+          code={`# Git オブジェクトが存在するこのクローンのルートで実行
 BASE=${baseline}
 AFTER=${comparison}
 git show "$BASE:packages/effective-rsc/package.json"
@@ -481,8 +483,9 @@ git diff --stat "$BASE" "$AFTER"
 # 省略なしの全リポジトリ差分
 git diff "$BASE" "$AFTER"
 # 読解する runtime ソースだけに絞る場合
-git diff "$BASE" "$AFTER" -- packages/effective-rsc/src`}</code>
-        </pre>
+git diff "$BASE" "$AFTER" -- packages/effective-rsc/src`}
+          language="bash"
+        />
 
         <h2 id="file-layout">削除・追加・移動の地図</h2>
         <p>
@@ -490,8 +493,8 @@ git diff "$BASE" "$AFTER" -- packages/effective-rsc/src`}</code>
           から作った、 読解に必要なパスだけの編集図です。完全なツリーではありません。
           「存続」は同名パスが残るという意味で、内容が不変という意味ではありません。
         </p>
-        <pre>
-          <code>{`リポジトリの代表的な変更（BASE → AFTER）
+        <CodeBlock
+          code={`リポジトリの代表的な変更（BASE → AFTER）
 ├─ packages/effective-rsc/
 │  ├─ src/application/             存続: Page・Layout・Middleware・ServerFn
 │  ├─ src/client/                  存続: hydration・ルーター・Flight クライアント
@@ -520,8 +523,9 @@ git diff "$BASE" "$AFTER" -- packages/effective-rsc/src`}</code>
 
 Git が rename として検出する例（内容にも変更あり）:
 packages/effective-rsc/tests/application/component.test.tsx
-  → packages/effective-rsc/src/application/component.test.tsx`}</code>
-        </pre>
+  → packages/effective-rsc/src/application/component.test.tsx`}
+          language="text"
+        />
         <p>
           <code>server/html-renderer.tsx</code> は削除されず、SSR への橋渡しとして残っています。
           新しい <code>server/ssr.tsx</code> への責務の分離は、ファイル全体の単純な rename
@@ -529,11 +533,12 @@ packages/effective-rsc/tests/application/component.test.tsx
           の名前だけを変えたものとして扱いません。 このサイトの <code>packages/docs/</code>{" "}
           は比較終点の後に追加するため、この地図には含めません。
         </p>
-        <pre>
-          <code>{`git ls-tree -r --name-only ${baseline} -- packages examples fixtures site vendor
+        <CodeBlock
+          code={`git ls-tree -r --name-only ${baseline} -- packages examples fixtures site vendor
 git ls-tree -r --name-only ${comparison} -- packages examples
-git diff --find-renames --name-status ${baseline} ${comparison} -- packages/effective-rsc`}</code>
-        </pre>
+git diff --find-renames --name-status ${baseline} ${comparison} -- packages/effective-rsc`}
+          language="bash"
+        />
 
         <h2 id="reading-strategy">差分を読む順番</h2>
         <ol>
@@ -659,11 +664,12 @@ git diff --find-renames --name-status ${baseline} ${comparison} -- packages/effe
             や本番デプロイは、この比較版の実装範囲ではありません。
           </li>
         </ul>
-        <pre>
-          <code>{`git diff ${baseline} ${comparison} -- packages/effective-rsc/src/server/server-config.ts packages/effective-rsc/src/server/server-fn-request.ts
+        <CodeBlock
+          code={`git diff ${baseline} ${comparison} -- packages/effective-rsc/src/server/server-config.ts packages/effective-rsc/src/server/server-fn-request.ts
 git show ${comparison}:examples/workers/src/worker.ts
-git show ${comparison}:examples/workers/wrangler.jsonc`}</code>
-        </pre>
+git show ${comparison}:examples/workers/wrangler.jsonc`}
+          language="bash"
+        />
       </>
     ),
   },
@@ -779,12 +785,13 @@ git show ${comparison}:examples/workers/wrangler.jsonc`}</code>
             の順序、エラー、キャンセルを回帰テストにしています。
             この修正のテストと、固定比較の時点の実装を混同しないよう、確認コマンドも分けます。
           </p>
-          <pre>
-            <code>{`# 固定比較とは別の、後続修正だけを確認
+          <CodeBlock
+            code={`# 固定比較とは別の、後続修正だけを確認
 git show ${injectorFix} -- packages/effective-rsc/src/server/flight-html-stream.ts packages/effective-rsc/tests/server/flight-html-stream.test.ts
 # 現在の作業ツリーで injector の回帰テストを実行
-vp test run packages/effective-rsc/tests/server/flight-html-stream.test.ts`}</code>
-          </pre>
+vp test run packages/effective-rsc/tests/server/flight-html-stream.test.ts`}
+            language="bash"
+          />
         </aside>
 
         <h2 id="server-functions">Server Function も同じ境界で読む</h2>
@@ -801,9 +808,10 @@ vp test run packages/effective-rsc/tests/server/flight-html-stream.test.ts`}</co
           の受け入れシナリオはありません。 ソースに経路が残っていることを、両ホストで全 Server
           Function 動作を検証済みという意味に広げないでください。
         </p>
-        <pre>
-          <code>{`git diff ${baseline} ${comparison} -- packages/effective-rsc/src/rsc/flight.ts packages/effective-rsc/src/server/html-renderer.tsx packages/effective-rsc/src/client/flight-client.ts packages/effective-rsc/src/server/server-fn-request.ts`}</code>
-        </pre>
+        <CodeBlock
+          code={`git diff ${baseline} ${comparison} -- packages/effective-rsc/src/rsc/flight.ts packages/effective-rsc/src/server/html-renderer.tsx packages/effective-rsc/src/client/flight-client.ts packages/effective-rsc/src/server/server-fn-request.ts`}
+          language="bash"
+        />
       </>
     ),
   },
@@ -872,14 +880,15 @@ vp test run packages/effective-rsc/tests/server/flight-html-stream.test.ts`}</co
           に添付せず、実行時に失敗する背景が記録されています。 このコードは明示した SSR outDir
           を上書きしないので、任意の出力先を指定しても安全になる仕組みではありません。
         </p>
-        <pre>
-          <code>{`# 既定の生成物の関係だけを示す模式図（全出力ファイルではない）
+        <CodeBlock
+          code={`# 既定の生成物の関係だけを示す模式図（全出力ファイルではない）
 examples/workers/dist/
 ├─ client/              ブラウザー向けアセット
 └─ rsc/
    ├─ wrangler.json     ビルドが生成する実行設定
-   └─ ssr/              Worker の出力配下に置く SSR module`}</code>
-        </pre>
+   └─ ssr/              Worker の出力配下に置く SSR module`}
+          language="text"
+        />
         <p>
           <code>examples/workers/package.json</code> の local script は生成した
           <code>dist/rsc/wrangler.json</code> を <code>--local --no-bundle</code> で実行します。
@@ -889,8 +898,8 @@ examples/workers/dist/
         </p>
 
         <h2 id="tooling-checks">確認コマンドとテストの読み分け</h2>
-        <pre>
-          <code>{`# リポジトリのルート
+        <CodeBlock
+          code={`# リポジトリのルート
 vp run typecheck
 vp test run
 
@@ -902,8 +911,9 @@ vp build
 vp run local
 
 # 別ターミナルでリポジトリのルートから実行
-(cd packages/e2e && vp run test)`}</code>
-        </pre>
+(cd packages/e2e && vp run test)`}
+          language="bash"
+        />
         <p>
           root の <code>vite.config.ts</code> は VitePlus の整形・lint・unit test
           設定を所有し、example の起動スクリプトを root へ置かない構成です。
@@ -918,11 +928,12 @@ vp run local
           設定やテストが存在するという静的な証拠と、実際にそのテストを走らせて通ったという実行証拠を区別します。
           この章の抜粋作成自体は、全ランタイムテストを再実行したという報告ではありません。
         </p>
-        <pre>
-          <code>{`git show ${comparison}:packages/e2e/playwright.config.ts
+        <CodeBlock
+          code={`git show ${comparison}:packages/e2e/playwright.config.ts
 git show ${comparison}:packages/e2e/tests/workers-fetch.e2e.ts
-git show ${comparison}:docs/WORKERS.md`}</code>
-        </pre>
+git show ${comparison}:docs/WORKERS.md`}
+          language="bash"
+        />
       </>
     ),
   },
@@ -1024,12 +1035,13 @@ git show ${comparison}:docs/WORKERS.md`}</code>
           <a href="/reading/tooling#tooling-checks">別パッケージのブラウザー受け入れ</a>{" "}
           と組み合わせて読む理由はここにあります。
         </p>
-        <pre>
-          <code>{`git show ${comparison}:packages/effective-rsc/tests/server/workers.test.tsx
+        <CodeBlock
+          code={`git show ${comparison}:packages/effective-rsc/tests/server/workers.test.tsx
 git diff ${baseline} ${comparison} -- packages/effective-rsc/src/application/render-runtime.ts packages/effective-rsc/src/server/flight-renderer.tsx
 # リポジトリのルートで adapter の回帰テストを実行
-vp test run packages/effective-rsc/tests/server/workers.test.tsx`}</code>
-        </pre>
+vp test run packages/effective-rsc/tests/server/workers.test.tsx`}
+          language="bash"
+        />
         <p>
           読解の最後は、変数や関数の名前ではなく「誰が資源を取得し、どの出口で解放するか」を図にできるか確認しましょう。
           この比較では React の描画プロトコルを保ちながら、ホストと request scope
