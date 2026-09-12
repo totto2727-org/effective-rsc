@@ -91,6 +91,7 @@ export const guidePages: readonly DocPage[] = [
       "VitePlus、Cloudflare Vite plugin、Workers Fetch ハンドラーで最小のアプリケーションを起動します。",
     section: "Guide",
     headings: [
+      { id: "setup", title: "前提条件" },
       { id: "files", title: "最小構成" },
       { id: "application", title: "アプリケーションを書く" },
       { id: "run", title: "ローカルで動かす" },
@@ -101,12 +102,32 @@ export const guidePages: readonly DocPage[] = [
           このリポジトリの <code>examples/workers</code> は実行できる最小例です。ここでは公開 export
           を使う構成を示します。パッケージ公開や npm からのインストールを前提にはしません。
         </p>
+        <h2 id="setup">前提条件</h2>
+        <p>リポジトリのルートで、まず workspace の固定済み依存関係をインストールします。</p>
+        {code(`vp install`)}
+        <p>
+          Vite 設定は <a href="/guide/workers">Cloudflare Workers のホスト設定</a>
+          で確認してください。
+        </p>
         <h2 id="files">最小構成</h2>
         {code(`src/
   application.tsx  # ERSC のルートグラフ
   worker.ts        # Cloudflare の fetch export
 vite.config.ts     # VitePlus の設定
 wrangler.jsonc     # Worker 名、vars、assets の設定`)}
+        <p>
+          <code>wrangler.jsonc</code> は source 側の Worker
+          設定です。以下はこの例に対応する最小設定です。
+        </p>
+        {code(`{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "my-effective-rsc-worker",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-09-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": { "APP_LABEL": "My Workers app" },
+  "assets": { "binding": "ASSETS" }
+}`)}
         <h2 id="application">アプリケーションを書く</h2>
         <p>
           同じ <code>ERSC</code> 値から Layout、Page、Routes を作り、最後に <code>ERSC.make</code>{" "}
@@ -248,8 +269,9 @@ const routes = ERSC.Routes.make({ layout: RootLayout })
         </p>
         {code(`import { Effect } from "effect";
 
-const Welcome = ERSC.Component.make<{ readonly name: string }>({
-  render: ({ name }) => Effect.succeed(<p>こんにちは、{name} さん。</p>),
+const Welcome = ERSC.Component.make({
+  render: ({ name }: { readonly name: string }) =>
+    Effect.succeed(<p>こんにちは、{name} さん。</p>),
 });
 
 const HomePage = ERSC.Page.make({
@@ -442,7 +464,10 @@ vp test run
 
 # ブラウザーによる Workers 受け入れテスト
 cd packages/e2e
-vp run test`)}
+vp run test
+
+# ドキュメントサイトのブラウザー検証
+vp run test:docs`)}
         <p>
           単体テストは実装の横に <code>*.test.ts</code> または <code>*.test.tsx</code>{" "}
           として置きます。複数モジュールや外部ツールの契約は統合テストにします。ブラウザー suite は{" "}
