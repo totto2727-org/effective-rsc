@@ -1,5 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
-import { erscCloudflare } from "effective-rsc/cloudflare";
+import { effrontCloudflare } from "effront/cloudflare";
+import { effront } from "effront/vite";
 import { defineConfig } from "vite-plus";
 
-export default defineConfig({ plugins: [erscCloudflare(), tailwindcss()] });
+export default defineConfig({ plugins: [effront(), effrontCloudflare(), tailwindcss()] });

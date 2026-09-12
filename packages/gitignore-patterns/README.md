@@ -1,4 +1,4 @@
-# @effective-rsc/gitignore-patterns
+# @effront/gitignore-patterns
 
 Generate shared formatter and linter exclusions from a directory tree's `.gitignore` files, using the established [`ignore`](https://github.com/kaelzhang/node-ignore) parser for Gitignore syntax.
 
@@ -7,7 +7,7 @@ Generate shared formatter and linter exclusions from a directory tree's `.gitign
 Keep VitePlus exclusions synchronized with your project's Gitignore rules without maintaining another list:
 
 ```ts
-import { generateIgnorePatterns } from "@effective-rsc/gitignore-patterns";
+import { generateIgnorePatterns } from "@effront/gitignore-patterns";
 import { defineConfig } from "vite-plus";
 
 const ignorePatterns = await generateIgnorePatterns(new URL(".", import.meta.url));
@@ -44,7 +44,7 @@ Workspace consumers declare:
 ```json
 {
   "devDependencies": {
-    "@effective-rsc/gitignore-patterns": "workspace:*"
+    "@effront/gitignore-patterns": "workspace:*"
   }
 }
 ```

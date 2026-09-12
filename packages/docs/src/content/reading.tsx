@@ -460,6 +460,13 @@ export const readingPages: readonly DocPage[] = [
         <h2 id="comparison">何と何を比較するのか</h2>
         <Provenance />
         <p>
+          この比較は Effront への rename と core Vite plugin / Cloudflare adapter
+          の分離より前のものです。 現在の package とディレクトリは <code>effront</code> と{" "}
+          <code>packages/effront</code>、application API は<code>Application.effront()</code>{" "}
+          です。以下に現れる一体型の historical factory ではなく、現在は
+          <code>plugins: [effront(), effrontCloudflare()]</code> を登録します。
+        </p>
+        <p>
           最初に実行環境の名前ではなく、フレームワークが何を所有するかに注目します。 上流は Bun
           向けの実験的 RSC
           フレームワークで、サーバー起動、ビルド、静的ファイル配信までを持っています。 比較版は Web

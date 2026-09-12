@@ -46,6 +46,7 @@ test("serves HTML and Flight responses without leaking server bindings", async (
     }
   });
   await page.goto("/");
+  await expect(page).toHaveTitle("Effront Workers");
   await page.waitForLoadState("networkidle");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(expected.label);
   await expect(page.getByTestId("secret-status")).toHaveText(
@@ -65,6 +66,7 @@ test("hydrates the client counter and navigates application links", async ({ pag
   const expected = configuredProject(testInfo.project.name);
 
   await page.goto("/");
+  await expect(page).toHaveTitle("Effront Workers");
   await page.waitForLoadState("networkidle");
   const counter = page.getByRole("button", { name: "Count: 0" });
   await expect(counter).toBeVisible();

@@ -9,7 +9,7 @@ const code = (source: string, language: CodeLanguage) => (
 export const guidePages: readonly DocPage[] = [
   {
     slug: "/",
-    title: "effective-rsc for Workers",
+    title: "Effront for Workers",
     description:
       "Cloudflare Workers 上で Effect と React Server Components を動かすための入門です。",
     section: "Guide",
@@ -21,16 +21,15 @@ export const guidePages: readonly DocPage[] = [
     content: () => (
       <>
         <p>
-          effective-rsc は、Effect で記述したサーバー側の UI を React Server Components
+          Effront は、Effect で記述したサーバー側の UI を React Server Components
           としてレンダリングし、Cloudflare Workers の <code>fetch</code>{" "}
           ハンドラーから返す実験的なフレームワークです。
         </p>
         <h2 id="overview">このフレームワークがすること</h2>
         <p>
-          アプリケーションはルート、Layout、Page、必要なら Component や Middleware
-          から組み立てます。Page と Layout は <code>Effect</code>{" "}
-          を返すため、サーバー側の依存関係を型で表せます。クライアントで状態を持つ部品だけは通常の{" "}
-          <code>"use client"</code> コンポーネントです。
+          アプリケーションは Routes、Layout、Page、必要なら Component、Middleware、Server Function
+          から組み立てます。Page と Layout が返す Effect
+          の要求をアプリケーション定義に集約し、Request ごとの Layer で満たします。
         </p>
         <table>
           <thead>
@@ -112,41 +111,33 @@ export const guidePages: readonly DocPage[] = [
         <h2 id="files">最小構成</h2>
         {code(
           `src/
-  application.tsx  # ERSC のルートグラフ
+  application.tsx  # EFFRONT のルートグラフ
   worker.ts        # Cloudflare の fetch export
 vite.config.ts     # VitePlus の設定
 wrangler.jsonc     # Worker 名、vars、assets の設定`,
           "text",
         )}
         <p>
-          <code>wrangler.jsonc</code> は source 側の Worker
-          設定です。以下はこの例に対応する最小設定です。
+          Worker 名、assets、bindings の設定は{" "}
+          <a href="https://developers.cloudflare.com/workers/wrangler/configuration/">
+            Cloudflare の Wrangler configuration
+          </a>
+          を参照してください。Effront は生成済みの Wrangler artifact を実行し、Wrangler に未処理の
+          RSC source をコンパイルさせません。
         </p>
-        {code(
-          `{
-  "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "my-effective-rsc-worker",
-  "main": "src/worker.ts",
-  "compatibility_date": "2026-09-10",
-  "compatibility_flags": ["nodejs_compat"],
-  "vars": { "APP_LABEL": "My Workers app" },
-  "assets": { "binding": "ASSETS" }
-}`,
-          "jsonc",
-        )}
         <h2 id="application">アプリケーションを書く</h2>
         <p>
-          同じ <code>ERSC</code> 値から Layout、Page、Routes を作り、最後に <code>ERSC.make</code>{" "}
-          で閉じます。以下の <code>src/application.tsx</code> はサービスを要求しないため{" "}
-          <code>layer</code> は不要です。
+          同じ <code>EFFRONT</code> 値から Layout、Page、Routes を作り、最後に{" "}
+          <code>EFFRONT.make</code> で閉じます。以下の <code>src/application.tsx</code>{" "}
+          はサービスを要求しないため <code>layer</code> は不要です。
         </p>
         {code(
           `import { Effect } from "effect";
-import { Application } from "effective-rsc";
+import { Application } from "effront";
 
-const ERSC = Application.ersc();
+const EFFRONT = Application.effront();
 
-const RootLayout = ERSC.Layout.make({
+const RootLayout = EFFRONT.Layout.make({
   render: ({ children }) =>
     Effect.succeed(
       <html lang="ja">
@@ -155,12 +146,12 @@ const RootLayout = ERSC.Layout.make({
     ),
 });
 
-const HomePage = ERSC.Page.make({
+const HomePage = EFFRONT.Page.make({
   render: () => Effect.succeed(<h1>Hello, Workers</h1>),
 });
 
-export default ERSC.make({
-  routes: ERSC.Routes.make({ layout: RootLayout }).page("/", HomePage),
+export default EFFRONT.make({
+  routes: EFFRONT.Routes.make({ layout: RootLayout }).page("/", HomePage),
 });`,
           "tsx",
         )}
@@ -168,7 +159,7 @@ export default ERSC.make({
           <code>src/worker.ts</code> は Cloudflare が呼ぶ export です。
         </p>
         {code(
-          `import { createFetchHandler } from "effective-rsc/workers";
+          `import { createFetchHandler } from "effront/workers";
 import application from "./application";
 
 export default { fetch: createFetchHandler(application) };`,
@@ -211,19 +202,21 @@ vp run local`,
         </p>
         <h2 id="pages">静的ページとパラメーター</h2>
         <p>
-          パラメーター付き Page は URL の文字列を Effect Schema で decode してから{" "}
-          <code>render</code> に渡します。パスの <code>:slug</code> と Schema のキーは一致させます。
+          パラメーター付き Page は URL の文字列を schema で decode してから <code>render</code>{" "}
+          に渡します。 パスの <code>:slug</code> と schema のキーは一致させます。schema の定義方法は{" "}
+          <a href="https://effect.website/docs/schema/introduction/">Effect Schema documentation</a>{" "}
+          を参照してください。
         </p>
         {code(
           `import { Effect, Schema } from "effect";
 
-const ArticlePage = ERSC.Page.make({
+const ArticlePage = EFFRONT.Page.make({
   params: Schema.Struct({ slug: Schema.NonEmptyString }),
   render: ({ params }) =>
     Effect.succeed(<article><h1>{params.slug}</h1></article>),
 });
 
-const HomePage = ERSC.Page.make({
+const HomePage = EFFRONT.Page.make({
   render: () => Effect.succeed(<h1>ホーム</h1>),
 });`,
           "tsx",
@@ -234,21 +227,21 @@ const HomePage = ERSC.Page.make({
           の祖先関係を保ったままプレフィックスの下へ追加します。
         </p>
         {code(
-          `const ArticleLayout = ERSC.Layout.make({
+          `const ArticleLayout = EFFRONT.Layout.make({
   render: ({ children }) =>
     Effect.succeed(<section><h1>記事</h1>{children}</section>),
 });
 
-const ArticleLoading = ERSC.Loading.make({
+const ArticleLoading = EFFRONT.Loading.make({
   render: () => <p>記事を読み込み中…</p>,
 });
 
-const articles = ERSC.Routes.make({
+const articles = EFFRONT.Routes.make({
   layout: ArticleLayout,
   loading: ArticleLoading,
 }).page("/:slug", ArticlePage);
 
-const routes = ERSC.Routes.make({ layout: RootLayout })
+const routes = EFFRONT.Routes.make({ layout: RootLayout })
   .page("/", HomePage)
   .mount("/articles", articles);`,
           "tsx",
@@ -256,14 +249,14 @@ const routes = ERSC.Routes.make({ layout: RootLayout })
         <h2 id="matching">マッチング時の注意</h2>
         <p>
           GET と HEAD では、レンダリング前にパラメーターを一度だけ decode します。decode に失敗した
-          URL は 404 になります。予約済みの <code>/_ersc</code>{" "}
+          URL は 404 になります。予約済みの <code>/_effront</code>{" "}
           名前空間はアプリケーションのルートに使えません。
         </p>
         <details>
           <summary>ルートを分割したい場合</summary>
           <p>
-            一つのモジュールで <code>Application.ersc()</code> を作り、それを import して
-            Page、Layout、Routes を定義してください。異なる ERSC identity
+            一つのモジュールで <code>Application.effront()</code> を作り、それを import して
+            Page、Layout、Routes を定義してください。異なる EFFRONT identity
             から作った値は同じアプリケーションに混ぜられません。
           </p>
         </details>
@@ -272,13 +265,12 @@ const routes = ERSC.Routes.make({ layout: RootLayout })
   },
   {
     slug: "/guide/components",
-    title: "Server Component と Client Component",
-    description:
-      "Effect を返す Server Component と、ブラウザーで状態を持つ Client Component を分けて書きます。",
+    title: "Component と Server Function",
+    description: "Effront の Effectful Component、Server Function、Client boundary を接続します。",
     section: "Guide",
     headings: [
       { id: "server", title: "Effectful な Server Component" },
-      { id: "client", title: "Client Component" },
+      { id: "client-boundary", title: "Client boundary と CSS" },
       { id: "mutations", title: "Server Function による更新" },
       { id: "boundary", title: "境界を守る" },
     ],
@@ -286,62 +278,55 @@ const routes = ERSC.Routes.make({ layout: RootLayout })
       <>
         <h2 id="server">Effectful な Server Component</h2>
         <p>
-          共有のサーバー UI には <code>ERSC.Component.make</code> を使えます。<code>render</code> は
-          props を受け、<code>Effect&lt;ReactNode&gt;</code> を返します。
+          共有のサーバー UI には <code>EFFRONT.Component.make</code> を使えます。<code>render</code>{" "}
+          は props を受け、<code>Effect&lt;ReactNode&gt;</code> を返します。
         </p>
         {code(
           `import { Effect } from "effect";
 
-const Welcome = ERSC.Component.make({
+const Welcome = EFFRONT.Component.make({
   render: ({ name }: { readonly name: string }) =>
     Effect.succeed(<p>こんにちは、{name} さん。</p>),
 });
 
-const HomePage = ERSC.Page.make({
+const HomePage = EFFRONT.Page.make({
   render: () => Effect.succeed(<Welcome name="Ada" />),
 });`,
           "tsx",
         )}
-        <h2 id="client">Client Component</h2>
+        <h2 id="client-boundary">Client boundary と CSS</h2>
         <p>
-          イベントハンドラー、state、ブラウザー API が必要なファイルの先頭には{" "}
-          <code>"use client"</code> を置きます。これは通常の React コンポーネントであり、
-          <code>ERSC.Component.make</code> では包みません。<code>"use client"</code> は no-SSR
-          を意味しません。Client Component も初回表示用の HTML には SSR され、その後ブラウザーで
-          hydrate されます。グローバル CSS は、Layout から実際に render する export 済み Client
-          Component で import してください。アプリケーション定義オブジェクトだけから import
-          すると、Vite RSC が renderable な CSS 依存として追跡できない場合があります。
+          <code>"use client"</code> の境界は通常の React component に適用し、
+          <code>EFFRONT.Component.make</code> では包みません。React 側の意味は{" "}
+          <a href="https://react.dev/reference/rsc/use-client">use client reference</a>{" "}
+          を参照してください。 グローバル CSS は Layout が実際に render する export 済み Client
+          Component から import します。 アプリケーション定義オブジェクトだけから import
+          すると、Vite RSC が renderable な CSS 依存として 追跡できない場合があります。
         </p>
-        {code(
-          `"use client";
-
-import { useState } from "react";
-
-export function Counter() {
-  const [count, setCount] = useState(0);
-  return <button onClick={() => setCount((n) => n + 1)}>Count: {count}</button>;
-}`,
-          "tsx",
-        )}
         <h2 id="mutations">Server Function による更新</h2>
         <p>
-          更新処理には <code>ERSC.ServerFn.make</code> を使います。入力は Schema で検証・decode
-          され、handler は Effect を返します。<code>Schema.fromFormData</code>{" "}
-          を使うと、戻り値をそのまま native の <code>form action</code> に渡せます。
+          更新処理には <code>EFFRONT.ServerFn.make</code> を使います。input は schema で decode
+          され、handler は Effect を返します。<code>Schema.fromFormData</code> を使うと、戻り値を
+          native の <code>form action</code>
+          に渡せます。schema の詳細は{" "}
+          <a href="https://effect.website/docs/schema/introduction/">
+            Effect Schema documentation
+          </a>{" "}
+          を参照してください。
         </p>
         {code(
           `"use server";
 
 import { Effect, Schema } from "effect";
 
-export const followAuthor = ERSC.ServerFn.make({
+export const followAuthor = EFFRONT.ServerFn.make({
   input: Schema.fromFormData(Schema.Struct({ authorId: Schema.NonEmptyString })),
   handler: ({ authorId }) => Effect.logInfo("Followed author", { authorId }),
 });`,
           "ts",
         )}
         {code(
-          `const FollowAuthorButton = ERSC.Component.make({
+          `const FollowAuthorButton = EFFRONT.Component.make({
   render: ({ authorId }: { readonly authorId: string }) =>
     Effect.succeed(
       <form action={followAuthor}>
@@ -354,26 +339,17 @@ export const followAuthor = ERSC.ServerFn.make({
         )}
         <p>
           Server Function をサーバーグラフから通常の async
-          関数として直接呼び出すことはできません。React が呼び出せる action
-          として渡してください。入力 decode の失敗や handler の失敗は action の失敗として React
-          のエラー処理へ届くため、利用者に必要なフィードバックは error boundary や form state
-          で設計します。
-          <code>useActionState</code> を使う状態付きフォームなどの詳細は{" "}
-          <a href="https://react.dev/reference/react/useActionState">
-            React の useActionState リファレンス
-          </a>
+          関数として直接呼び出すことはできません。React が 呼び出せる action
+          として渡してください。入力 decode と handler の失敗は action の失敗として React の
+          エラー処理へ届きます。フォーム state は{" "}
+          <a href="https://react.dev/reference/react/useActionState">useActionState reference</a>{" "}
           を参照してください。
         </p>
         <h2 id="boundary">境界を守る</h2>
         <p>
-          Server Component から <code>&lt;Counter /&gt;</code> をレンダリングできます。しかし props
-          は Flight
-          を通るため、シリアライズ可能で公開してよい値だけを渡してください。環境変数、リクエスト、Effect
-          service を Client Component で直接取得することはできません。
-        </p>
-        <p>
-          ナビゲーションはブラウザーの Navigation API
-          が使える場合にクライアント側で処理されます。利用できない場合は通常のフルページ遷移に戻ります。
+          Client Component に渡す props は Flight
+          を通るため、シリアライズ可能で公開してよい値だけにしてください。 環境変数、Request、Effect
+          service を直接渡してはいけません。
         </p>
       </>
     ),
@@ -385,42 +361,38 @@ export const followAuthor = ERSC.ServerFn.make({
       "Effect の Context.Service と Layer を使い、サーバーの依存関係を Page に注入します。",
     section: "Guide",
     headings: [
-      { id: "service", title: "サービスを定義する" },
-      { id: "consume", title: "Page から使う" },
+      { id: "service", title: "型付きサービスと Layer" },
       { id: "lifetime", title: "リクエストごとの生存期間" },
     ],
     content: () => (
       <>
         <p>
           アプリケーションが要求するサービス union を{" "}
-          <code>Application.ersc&lt;Services&gt;()</code> に指定します。サービスを要求するなら{" "}
-          <code>ERSC.make</code> の <code>layer</code> が必須です。
+          <code>Application.effront&lt;Services&gt;()</code> に指定します。サービスを要求するなら{" "}
+          <code>EFFRONT.make</code> の <code>layer</code> が必須です。
         </p>
-        <h2 id="service">サービスを定義する</h2>
-        {code(
-          `import { Context, Effect, Layer } from "effect";
-
-export class Greeting extends Context.Service<Greeting>()(
-  "example/services/Greeting",
-  {
-    make: Effect.succeed({
-      message: (name: string) => Effect.succeed(\`こんにちは、\${name} さん\`),
-    }),
-  },
-) {
-  static readonly layer = Layer.effect(this, this.make);
-}`,
-          "ts",
-        )}
-        <h2 id="consume">Page から使う</h2>
+        <h2 id="service">型付きサービスと Layer</h2>
+        <p>
+          サービス自身の設計は{" "}
+          <a href="https://effect.website/docs/requirements-management/services/">
+            Effect Services
+          </a>{" "}
+          と{" "}
+          <a href="https://effect.website/docs/requirements-management/layers/">
+            Layers documentation
+          </a>{" "}
+          を参照してください。 Effront 固有の接続点は、
+          <code>Application.effront&lt;Services&gt;()</code> と<code>EFFRONT.make</code> の{" "}
+          <code>layer</code> です。
+        </p>
         {code(
           `import { Effect } from "effect";
-import { Application } from "effective-rsc";
+import { Application } from "effront";
 import { Greeting } from "./greeting";
 
-const ERSC = Application.ersc<Greeting>();
+const EFFRONT = Application.effront<Greeting>();
 
-const RootLayout = ERSC.Layout.make({
+const RootLayout = EFFRONT.Layout.make({
   render: ({ children }) =>
     Effect.succeed(
       <html lang="ja">
@@ -429,7 +401,7 @@ const RootLayout = ERSC.Layout.make({
     ),
 });
 
-const HomePage = ERSC.Page.make({
+const HomePage = EFFRONT.Page.make({
   render: Effect.fn("HomePage.render")(function* () {
     const greeting = yield* Greeting;
     const message = yield* greeting.message("Ada");
@@ -437,8 +409,8 @@ const HomePage = ERSC.Page.make({
   }),
 });
 
-export default ERSC.make({
-  routes: ERSC.Routes.make({ layout: RootLayout }).page("/", HomePage),
+export default EFFRONT.make({
+  routes: EFFRONT.Routes.make({ layout: RootLayout }).page("/", HomePage),
   layer: Greeting.layer,
 });`,
           "tsx",
@@ -451,7 +423,7 @@ export default ERSC.make({
           を保持します。リクエスト固有の接続や値をモジュールグローバルにキャッシュしないでください。
         </p>
         <p>
-          Middleware が提供するサービスは、その Middleware を追加した ERSC の
+          Middleware が提供するサービスは、その Middleware を追加した EFFRONT の
           Page、Layout、Component、Server Function
           で利用できます。認証のような依存関係を明示する用途に向きます。
         </p>
@@ -473,23 +445,29 @@ export default ERSC.make({
       <>
         <h2 id="vite">Vite 設定</h2>
         <p>
-          Cloudflare 用には <code>erscCloudflare()</code> を一つだけ登録します。これが
-          ERSC、React、Vite RSC、Cloudflare plugin の統合と、<code>rsc</code> Worker environment
-          と子 <code>ssr</code> environment の配線を担当します。
+          Core と Cloudflare adapter は分けて登録します。<code>effront()</code> が React、Vite RSC、
+          compiler を担当し、<code>effrontCloudflare()</code> は <code>rsc</code> Worker
+          environment、子
+          <code>ssr</code> environment、Workers 向け SSR 出力配置だけを担当します。
         </p>
         {code(
-          `import { erscCloudflare } from "effective-rsc/cloudflare";
+          `import { effront } from "effront/vite";
+import { effrontCloudflare } from "effront/cloudflare";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
-  plugins: [erscCloudflare()],
+  plugins: [effront(), effrontCloudflare()],
 });`,
           "ts",
         )}
         <p>
-          React plugin、Vite RSC plugin、Cloudflare plugin
-          を重ねて登録しないでください。デフォルトでは RSC entry は <code>src/worker.ts</code>
-          、アプリケーションの alias は <code>src/application.tsx</code> です。
+          Cloudflare の option が必要な場合は{" "}
+          <code>effrontCloudflare(&#123; ...options &#125;)</code> と 直接渡します。通常の設定では
+          option は不要です。<code>cloudflare</code> で入れ子にせず、React plugin と Vite RSC plugin
+          は 重ねて登録しないでください。Cloudflare adapter を省けば将来の Node/Bun host adapter と
+          組み合わせられますが、それらはまだ実装されていません。デフォルトでは RSC entry は
+          <code>src/worker.ts</code>、アプリケーションの alias は <code>src/application.tsx</code>{" "}
+          です。
         </p>
         <h2 id="context">リクエストコンテキスト</h2>
         <p>
@@ -498,7 +476,7 @@ export default defineConfig({
         </p>
         {code(
           `import { Effect } from "effect";
-import { getWorkersEnv, getWorkersRequestContext } from "effective-rsc/workers";
+import { getWorkersEnv, getWorkersRequestContext } from "effront/workers";
 
 type Env = { APP_LABEL: string; SERVER_TOKEN?: string };
 type ExecutionContext = { waitUntil(promise: Promise<unknown>): void };
@@ -517,14 +495,12 @@ const requestInfo = Effect.gen(function* () {
         </p>
         <h2 id="secrets">環境値と秘密値</h2>
         <p>
-          <code>wrangler.jsonc</code> の <code>vars</code> に通常のローカル binding
-          を置けます。ローカル秘密値は <code>.dev.vars.example</code> を <code>.dev.vars</code>{" "}
-          にコピーして設定し、Git に追加しないでください。
-        </p>
-        <p>
-          env は HTML や Flight に自動直列化されません。ただし、JSX へ描画したり Client Component の
-          props に渡したりすれば公開されます。生成済み Wrangler 設定でローカル実行する際は、runtime
-          の <code>--var</code> または明示的な <code>--env-file</code> を使います。
+          bindings と local secrets の設定は{" "}
+          <a href="https://developers.cloudflare.com/workers/configuration/environment-variables/">
+            Cloudflare environment variables documentation
+          </a>
+          を参照してください。Effront は env を HTML や Flight に自動直列化しませんが、JSX や Client
+          props に 明示的に渡した値は公開されます。
         </p>
       </>
     ),

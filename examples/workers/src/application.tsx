@@ -1,18 +1,18 @@
 import { Effect } from "effect";
-import { Application } from "effective-rsc";
-import { getWorkersEnv } from "effective-rsc/workers";
+import { Application } from "effront";
+import { getWorkersEnv } from "effront/workers";
 import { Counter } from "./counter";
 import type { Env } from "./env";
 import "./styles.css";
 
-const ERSC = Application.ersc();
+const EFFRONT = Application.effront();
 
-const RootLayout = ERSC.Layout.make({
+const RootLayout = EFFRONT.Layout.make({
   render: ({ children }) =>
     Effect.succeed(
       <html lang="en">
         <head>
-          <title>ERSC Workers</title>
+          <title>Effront Workers</title>
         </head>
         <body>
           <nav>
@@ -24,7 +24,7 @@ const RootLayout = ERSC.Layout.make({
     ),
 });
 
-const HomePage = ERSC.Page.make({
+const HomePage = EFFRONT.Page.make({
   render: Effect.fn("HomePage.render")(function* () {
     const env = yield* getWorkersEnv<Env>();
     return (
@@ -40,7 +40,7 @@ const HomePage = ERSC.Page.make({
   }),
 });
 
-const AboutPage = ERSC.Page.make({
+const AboutPage = EFFRONT.Page.make({
   render: Effect.fn("AboutPage.render")(function* () {
     const env = yield* getWorkersEnv<Env>();
     return (
@@ -53,6 +53,6 @@ const AboutPage = ERSC.Page.make({
   }),
 });
 
-export default ERSC.make({
-  routes: ERSC.Routes.make({ layout: RootLayout }).page("/", HomePage).page("/about", AboutPage),
+export default EFFRONT.make({
+  routes: EFFRONT.Routes.make({ layout: RootLayout }).page("/", HomePage).page("/about", AboutPage),
 });

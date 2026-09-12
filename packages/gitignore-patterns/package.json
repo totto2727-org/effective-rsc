@@ -1,5 +1,5 @@
 {
-  "name": "@effective-rsc/gitignore-patterns",
+  "name": "@effront/gitignore-patterns",
   "version": "0.1.0",
   "description": "Generate escaped ignore-pattern snapshots from reachable .gitignore files.",
   "license": "MIT",

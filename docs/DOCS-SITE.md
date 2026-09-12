@@ -1,6 +1,6 @@
 # SSR documentation site
 
-`packages/docs` is a private workspace application that uses the public `effective-rsc` and `effective-rsc/workers` entry points to render its own documentation.
+`packages/docs` is a private workspace application that uses the public `effront` and `effront/workers` entry points to render its own documentation.
 It combines seven introductory Guide pages and five upstream-comparison reading chapters in one shadcn/ui sidebar.
 The content is Japanese, with source identifiers and commands preserved in English.
 
@@ -28,7 +28,7 @@ No Cloudflare account, remote binding, database, or deployment is required.
 ## Rendering and authoring
 
 There is no SSG, prerender job, static HTML export, MDX loader, or Markdown runtime parser.
-Pages are JSX functions in `src/content/guides.tsx` and `src/content/reading.tsx`, rendered through ERSC Page definitions on an HTTP request.
+Pages are JSX functions in `src/content/guides.tsx` and `src/content/reading.tsx`, rendered through Effront Page definitions on an HTTP request.
 This keeps code-diff tables and annotated examples straightforward without introducing a content compiler.
 `@tailwindcss/typography` styles the server-rendered article through `prose`.
 The initial server-rendered document uses dark mode regardless of the operating-system preference; there is no theme-toggle or hydration-dependent theme initialization.
@@ -44,6 +44,9 @@ The colocated catalog test checks uniqueness and heading targets; the browser su
 ## Comparison provenance
 
 The reading material compares upstream `ed886996d1d3780b94166af4f798c53416d547c8` (version `0.1.4`) with the local pre-site revision `9058a71`.
+Those pinned comparisons predate the Effront rename, so their fixed source paths, package names, commands, and excerpts intentionally retain their historical `effective-rsc` spelling.
+They also predate the separation of the core Vite plugin and the Cloudflare adapter, so the pinned combined-factory snippet intentionally remains historical.
+For current code, use `effront` in place of `effective-rsc`, `Application.effront()` in place of `Application.ersc()`, and separately register `effront()` from `effront/vite` with `effrontCloudflare()` from `effront/cloudflare`.
 It includes concrete diff excerpts, changed file structure, reasons for the port, retained behavior, and commands to inspect the complete changes locally.
 Diffs and source excerpts are generated from local Git objects and embedded as fixed JSX data.
 Neither rendering nor navigation queries GitHub to obtain differences.
@@ -68,7 +71,7 @@ Cancellation during pending Flight flush also releases the render scope rather t
 The existing Workers example browser suite passed after this framework correction.
 
 The site stylesheet is imported by the exported Client `DocsShell`, allowing the RSC plugin to associate it with the client reference and deliver it with the initial SSR page.
-The ERSC application-definition object is not itself a renderable component export, so a stylesheet side-effect import there did not provide the required dependency boundary.
+The Effront application-definition object is not itself a renderable component export, so a stylesheet side-effect import there did not provide the required dependency boundary.
 Client Components still produce server-rendered initial HTML, including the sidebar.
 
 ## Observed acceptance

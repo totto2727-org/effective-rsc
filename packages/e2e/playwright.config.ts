@@ -7,7 +7,7 @@ import { defineConfig, devices } from "@playwright/test";
 const root = dirname(fileURLToPath(import.meta.url));
 mkdirSync(join(root, "tmp"), { recursive: true });
 // Config is also evaluated in test workers. Inherited values keep their URLs and artifacts aligned.
-const runDirectory = (process.env["ERSC_E2E_RUN_DIR"] ??= mkdtempSync(join(root, "tmp/run-")));
+const runDirectory = (process.env["EFFRONT_E2E_RUN_DIR"] ??= mkdtempSync(join(root, "tmp/run-")));
 const freePort = () =>
   new Promise<number>((resolve, reject) => {
     const socket = createServer();
@@ -18,7 +18,7 @@ const freePort = () =>
       socket.close((error) => (error ? reject(error) : resolve(address.port)));
     });
   });
-const ports = (process.env["ERSC_E2E_PORTS"] ??= (
+const ports = (process.env["EFFRONT_E2E_PORTS"] ??= (
   await Promise.all([freePort(), freePort(), freePort()])
 ).join(",")).split(",");
 const names = ["workers-dev", "workers-wrangler-default", "workers-wrangler-overridden"] as const;
@@ -47,7 +47,7 @@ export default defineConfig({
         index === 0
           ? `vp dev --config ${viteConfig} --host 127.0.0.1 --port ${ports[index]} --strictPort`
           : `vp build --config ${viteConfig} && wrangler dev --local --no-bundle --config ${wranglerConfig} --env-file ${emptyEnvironment} --ip 127.0.0.1 --port ${ports[index]} --inspector-port 0 --persist-to ${state}${index === 2 ? ' --var "APP_LABEL:Workers override" --var "SERVER_TOKEN:acceptance-test-secret"' : ""}`,
-      env: { ERSC_E2E_OUTPUT: output },
+      env: { EFFRONT_E2E_OUTPUT: output },
       url: origin(index),
       reuseExistingServer: false,
       timeout: 120_000,

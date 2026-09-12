@@ -1,6 +1,6 @@
 # Gitignore-driven tooling exclusions
 
-The root VitePlus configuration uses `@effective-rsc/gitignore-patterns` to regenerate `fmt.ignorePatterns` and `lint.ignorePatterns` from the workspace's reachable `.gitignore` files whenever the configuration loads.
+The root VitePlus configuration uses `@effront/gitignore-patterns` to regenerate `fmt.ignorePatterns` and `lint.ignorePatterns` from the workspace's reachable `.gitignore` files whenever the configuration loads.
 Formatting and lint rules remain VitePlus defaults.
 The package delegates Gitignore parsing to [`ignore`](https://github.com/kaelzhang/node-ignore), rather than implementing the pattern grammar.
 
@@ -37,7 +37,7 @@ No external tracker issue is created by this local-only implementation, and no u
 - `vp test run` exercises the package's rule traversal and compares effective exclusions with real Git.
 - `(cd packages/gitignore-patterns && vp run test)` exercises generated exclusions through the generator API and actual VitePlus formatter and linter commands.
 - The CLI fixtures have independent Git and pnpm workspace roots and remove native Gitignore inputs after generation, so native ignores cannot mask generator failures.
-- `vp fmt --check`, `vp lint`, and `vp run typecheck` check the real workspace using the generated root configuration.
+- `vp fmt --check`, `vp lint`, and `vp check` check the real workspace using the generated root configuration.
 - `(cd packages/e2e && vp run test)` checks that the real Workers development and standalone Wrangler workflows still work.
 
 Temporary probes belong under ignored `tmp/` and are not package contents.

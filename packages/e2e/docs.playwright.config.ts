@@ -7,7 +7,7 @@ import { defineConfig, devices } from "@playwright/test";
 const root = dirname(fileURLToPath(import.meta.url));
 mkdirSync(join(root, "tmp"), { recursive: true });
 // Test workers inherit the invocation's ports and artifacts instead of allocating another host.
-const runDirectory = (process.env["ERSC_DOCS_E2E_RUN_DIR"] ??= mkdtempSync(
+const runDirectory = (process.env["EFFRONT_DOCS_E2E_RUN_DIR"] ??= mkdtempSync(
   join(root, "tmp/docs-run-"),
 ));
 const freePort = () =>
@@ -20,7 +20,7 @@ const freePort = () =>
       socket.close((error) => (error ? reject(error) : resolve(address.port)));
     });
   });
-const ports = (process.env["ERSC_DOCS_E2E_PORTS"] ??= (
+const ports = (process.env["EFFRONT_DOCS_E2E_PORTS"] ??= (
   await Promise.all([freePort(), freePort()])
 ).join(",")).split(",");
 const names = ["docs-dev", "docs-wrangler"] as const;
@@ -49,7 +49,7 @@ export default defineConfig({
         index === 0
           ? `vp dev --config ${viteConfig} --host 127.0.0.1 --port ${ports[index]} --strictPort`
           : `vp build --config ${viteConfig} && wrangler dev --local --no-bundle --config ${wranglerConfig} --env-file ${emptyEnvironment} --ip 127.0.0.1 --port ${ports[index]} --inspector-port 0 --persist-to ${state}`,
-      env: { ERSC_DOCS_E2E_OUTPUT: output },
+      env: { EFFRONT_DOCS_E2E_OUTPUT: output },
       url: origin(index),
       reuseExistingServer: false,
       timeout: 120_000,

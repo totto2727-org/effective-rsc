@@ -6,7 +6,7 @@ Moving the tests preserves their assertions and changes only module-relative imp
 
 ## Retained integration suites
 
-The following suites remain under `packages/effective-rsc/tests/` because they exercise interactions across module or tool boundaries:
+The following suites remain under `packages/effront/tests/` because they exercise interactions across module or tool boundaries:
 
 | Suite                                  | Integration contract                                                                      |
 | -------------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -20,7 +20,7 @@ The following suites remain under `packages/effective-rsc/tests/` because they e
 | `server/middleware.test.ts`            | Application middleware acquisition/release through the real Effect HTTP web handler.      |
 | `server/workers.test.tsx`              | Application layers, request-scoped bindings, and public Workers Fetch response lifetimes. |
 | `types/route-scaling.test.ts`          | Type instantiation scaling through an independently invoked TypeScript compiler.          |
-| `vite/cloudflare.test.ts`              | Real Vite configuration resolution integrating ERSC and Cloudflare plugins.               |
+| `vite/cloudflare.test.ts`              | Real Vite configuration resolution integrating Effront and Cloudflare plugins.            |
 
 The package-owned `packages/gitignore-patterns/tests/cli.test.ts` validates the public generator under Vitest through actual Git and VitePlus CLI processes.
 The E2E project's `packages/e2e/tests/workers-fetch.e2e.ts` validates the actual browser application through Vite/workerd and standalone Wrangler.
@@ -35,6 +35,8 @@ Playwright explicitly selects the `.e2e.ts` suite, keeping it outside Vitest's s
 - Package archives must omit colocated tests; source-package file exclusions and the generator declaration-build exclusions enforce that boundary, not test-discovery exclusions.
 
 ## Observed migration results (2026-09-12)
+
+This is a historical validation record from before the Effront rename. Its recorded output and package identifiers remain unchanged.
 
 Standard discovery passed all 28 files and 171 tests: 17 colocated suites and 11 retained integration suites.
 Formatting, linting, type checking, real Gitignore CLI acceptance, and all nine Workers browser checks passed.

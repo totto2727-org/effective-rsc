@@ -1,8 +1,8 @@
-# effective-rsc Workers
+# Effront Workers
 
 ## Repository structure
 
-- `packages/effective-rsc/`: fetch-based framework and Vite integration.
+- `packages/effront/`: fetch-based framework and Vite integration.
 - `examples/workers/`: consumer using the public package exports, Workers `fetch`, and runtime `env`.
 - `packages/docs/`: SSR Guide and upstream-comparison site, using the framework itself with shadcn/ui and Tailwind Typography.
 - `packages/e2e/`: independently managed Playwright acceptance against the real consumer.

@@ -1,5 +1,5 @@
 {
-  "name": "@effective-rsc/docs",
+  "name": "@effront/docs",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,7 +12,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "effect": "catalog:",
-    "effective-rsc": "workspace:*",
+    "effront": "workspace:*",
     "lucide-react": "^1.44.0",
     "radix-ui": "^1.6.7",
     "react": "catalog:",

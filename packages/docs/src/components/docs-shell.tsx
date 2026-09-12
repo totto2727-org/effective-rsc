@@ -46,10 +46,10 @@ function DocsNavigation({ current, navigation }: Pick<DocsShellProps, "current" 
           href="/"
           className="rounded-md px-2 py-1 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
         >
-          <span className="block font-mono text-sm font-semibold tracking-tight">
-            effective-rsc
+          <span className="block font-mono text-sm font-semibold tracking-tight">Effront</span>
+          <span className="block pt-0.5 text-xs text-sidebar-foreground/60">
+            Effect-powered frontends. Fetch-native.
           </span>
-          <span className="block pt-0.5 text-xs text-sidebar-foreground/60">Workers edition</span>
         </a>
         <label className="relative block px-1">
           <span className="sr-only">ガイドを絞り込む</span>
@@ -199,7 +199,7 @@ export function DocsShell({ current, navigation, headings, children }: DocsShell
             <noscript>
               <nav aria-label="ドキュメントナビゲーション" className="docs-noscript-nav">
                 <p>
-                  <strong>effective-rsc</strong> Workers edition
+                  <strong>Effront</strong> Effect-powered frontends. Fetch-native.
                 </p>
                 <ul>
                   {navigation.map((item) => (

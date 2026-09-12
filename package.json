@@ -1,5 +1,5 @@
 {
-  "name": "effective-rsc-workers-workspace",
+  "name": "effront-workspace",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@effect/vitest": "4.0.0-rc.113",
-    "@effective-rsc/gitignore-patterns": "workspace:*",
+    "@effront/gitignore-patterns": "workspace:*",
     "@types/node": "22.20.2",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

@@ -13,11 +13,11 @@ const readingRoutes = [
   "/reading/lifetimes",
 ];
 const guideApplication = `import { Effect } from "effect";
-import { Application } from "effective-rsc";
+import { Application } from "effront";
 
-const ERSC = Application.ersc();
+const EFFRONT = Application.effront();
 
-const RootLayout = ERSC.Layout.make({
+const RootLayout = EFFRONT.Layout.make({
   render: ({ children }) =>
     Effect.succeed(
       <html lang="ja">
@@ -26,12 +26,12 @@ const RootLayout = ERSC.Layout.make({
     ),
 });
 
-const HomePage = ERSC.Page.make({
+const HomePage = EFFRONT.Page.make({
   render: () => Effect.succeed(<h1>Hello, Workers</h1>),
 });
 
-export default ERSC.make({
-  routes: ERSC.Routes.make({ layout: RootLayout }).page("/", HomePage),
+export default EFFRONT.make({
+  routes: EFFRONT.Routes.make({ layout: RootLayout }).page("/", HomePage),
 });`;
 const versionDiff = `diff --git a/packages/effective-rsc/package.json b/packages/effective-rsc/package.json
 index a6d8558e..06a7939e 100644
@@ -240,7 +240,7 @@ const expectUnclippedSidebarLabels = async (scope: Locator) => {
 };
 
 const expectServerOnlyHighlighter = async () => {
-  const runDirectory = process.env["ERSC_DOCS_E2E_RUN_DIR"];
+  const runDirectory = process.env["EFFRONT_DOCS_E2E_RUN_DIR"];
   if (!runDirectory) throw new TypeError("Docs acceptance requires its isolated run directory");
   const graph: { modules: string[]; assets: string[] } = JSON.parse(
     await readFile(
@@ -251,8 +251,10 @@ const expectServerOnlyHighlighter = async () => {
   expect(graph.modules.length, "Audit the real nonempty client build graph").toBeGreaterThan(10);
   expect(graph.modules.some((id) => id.includes("/src/components/docs-shell.tsx"))).toBe(true);
   expect(
-    [...graph.modules, ...graph.assets].filter((id) => /shiki|oniguruma|vscode-textmate/i.test(id)),
-    "The client bundle must not contain Shiki engines, grammars or themes",
+    [...graph.modules, ...graph.assets].filter((id) =>
+      /shiki|oniguruma|vscode-textmate|oxc-transform-react/i.test(id),
+    ),
+    "The client bundle must not contain Shiki or the build-time native React Compiler",
   ).toEqual([]);
 };
 
@@ -283,6 +285,7 @@ test.describe("server-rendered public documentation", () => {
       expect(response?.status(), route).toBe(200);
       expect(response?.headers()["content-type"], route).toContain("text/html");
       const article = await expectArticle(page);
+      await expect(page).toHaveTitle(/Effront/);
       await expectInitialDarkMode(page);
       await expectTypography(page);
       await expectNoHorizontalOverflow(page);

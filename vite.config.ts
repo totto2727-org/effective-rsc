@@ -1,4 +1,4 @@
-import { generateIgnorePatterns } from "@effective-rsc/gitignore-patterns";
+import { generateIgnorePatterns } from "@effront/gitignore-patterns";
 import { defineConfig } from "vite-plus";
 
 // Regenerate effective exclusions from reachable .gitignore files on every config load.

@@ -1,5 +1,5 @@
 packages:
-  - packages/effective-rsc
+  - packages/effront
   - packages/e2e
   - packages/docs
   - packages/gitignore-patterns

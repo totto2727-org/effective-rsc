@@ -13,7 +13,7 @@ No container, Bun process, cloud deployment, PR, or npm publishing is required.
 
 ```mermaid
 flowchart TD
-  Host[Workers fetch request / env / executionContext] --> Adapter[effective-rsc/workers createFetchHandler]
+  Host[Workers fetch request / env / executionContext] --> Adapter[effront/workers createFetchHandler]
   Adapter --> Context[Request-scoped Effect context and application Layer]
   Context --> HTTP[Effect HttpRouter.toWebHandler]
   HTTP --> RSC[RSC graph: application and Flight rendering]
@@ -42,9 +42,12 @@ The browser graph uses the plugin's browser Flight client and hydration entry.
 
 ## Host and build ownership
 
-`effective-rsc/cloudflare` exports `erscCloudflare()`, which composes the portable `ersc()` plugin and Cloudflare integration.
-Applications only need `plugins: [erscCloudflare()]` and must not register the RSC, React, or Cloudflare plugins twice.
-`effective-rsc/vite` continues to export the lower-level, host-independent `ersc()`.
+`effront/vite` exports the host-independent `effront()` plugin, which owns React, Vite RSC, and the React compiler.
+`effront/cloudflare` exports `effrontCloudflare()`, which owns only the Cloudflare plugin plus the required Worker/SSR environment and SSR-output layout invariants.
+Workers applications register both explicitly: `plugins: [effront(), effrontCloudflare()]`.
+Cloudflare options, when needed, are passed directly to `effrontCloudflare(...)` rather than nested beneath a `cloudflare` property; the ordinary configuration uses `effrontCloudflare()` with no options.
+Do not register React or Vite RSC plugins a second time.
+Omitting the Cloudflare adapter leaves the core available for a future Node or Bun host adapter, but neither adapter is implemented in this milestone.
 The default RSC entry is the application's `src/worker.ts`, which exports the Workers Fetch object.
 The framework provides the SSR and browser entries.
 The Cloudflare wrapper owns the required `viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] }`.
@@ -64,7 +67,7 @@ Worker-first routing remains an explicit application choice for cases such as pr
 Changing Wrangler runtime variables must not require rebuilding the application.
 
 The package exposes TypeScript source exports for Vite bundling.
-The workspace consumer exercises the actual `effective-rsc`, `effective-rsc/vite`, and `effective-rsc/workers` export map.
+The workspace consumer exercises the actual `effront`, `effront/vite`, and `effront/workers` export map.
 This is not a claim of standalone unbundled Node compatibility or published-package readiness.
 
 ## Tooling

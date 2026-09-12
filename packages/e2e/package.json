@@ -1,5 +1,5 @@
 {
-  "name": "@effective-rsc/e2e",
+  "name": "@effront/e2e",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
     "@tailwindcss/vite": "catalog:",
     "@tsconfig/strictest": "2.0.8",
     "@types/node": "22.20.2",
-    "effective-rsc": "workspace:*",
+    "effront": "workspace:*",
     "typescript": "7.0.2",
     "vite-plus": "catalog:",
     "wrangler": "catalog:"

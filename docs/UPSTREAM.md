@@ -17,6 +17,12 @@ Sources: [upstream commit](https://github.com/nikhilsnayak/effective-rsc/commit/
 The version above is read from the manifest, not an assertion that the commit is a release tag or an exact npm publication.
 The parent of this fork's first local implementation commit, `d391de2`, is the recorded baseline, and the upstream history remains in this repository.
 
+## Current Effront mapping
+
+The pinned baseline and comparison material predate the Effront rename. They intentionally retain the original upstream names, source URLs, licenses, paths, commands, and commit hashes.
+For current local code, use `packages/effront`, package imports `effront/*`, and `Application.effront()`.
+The historical combined Cloudflare factory was superseded after the pinned comparison: register `effront()` from `effront/vite` and `effrontCloudflare()` from `effront/cloudflare` separately; Cloudflare options are direct adapter options, not nested `cloudflare` options.
+
 ## Future incorporation
 
 Keep the original baseline immutable.

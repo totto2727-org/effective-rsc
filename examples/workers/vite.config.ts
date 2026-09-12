@@ -1,6 +1,7 @@
-import { erscCloudflare } from "effective-rsc/cloudflare";
+import { effrontCloudflare } from "effront/cloudflare";
+import { effront } from "effront/vite";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
-  plugins: [erscCloudflare()],
+  plugins: [effront(), effrontCloudflare()],
 });

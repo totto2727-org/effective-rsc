@@ -154,7 +154,7 @@ function Sidebar({
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Documentation navigation</SheetTitle>
-            <SheetDescription>Browse effective-rsc documentation.</SheetDescription>
+            <SheetDescription>Browse Effront documentation.</SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>

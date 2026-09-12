@@ -26,7 +26,7 @@ Keep the root workspace free of Playwright configuration and E2E scripts.
 - `vite.host.config.ts` points at the unchanged example source and uses the public Cloudflare factory, but overrides build paths, inspector, and persistence solely for test-host isolation.
 - Each Wrangler variant builds into its own directory before starting, avoiding shared-output races and cross-server startup dependencies.
 - `fixtures/empty.env` prevents the standalone Wrangler hosts from loading local environment files; overridden values are test-only CLI arguments, not build-time values.
-- Configuration workers inherit the invocation's selected ports and output directory through `ERSC_E2E_*` variables. Do not set these internal variables in normal use.
+- Configuration workers inherit the invocation's selected ports and output directory through `EFFRONT_E2E_*` variables. Do not set these internal variables in normal use.
 - Temporary output remains ignored under this project for diagnosis and may be removed after the run ends.
 - No cloud deployment, account, remote binding, or real secret is required.
 

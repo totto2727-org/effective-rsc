@@ -1,5 +1,5 @@
 {
-  "name": "ersc-workers-example",
+  "name": "effront-workers-example",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
   "dependencies": {
     "@effect/platform-browser": "catalog:",
     "effect": "catalog:",
-    "effective-rsc": "workspace:*",
+    "effront": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

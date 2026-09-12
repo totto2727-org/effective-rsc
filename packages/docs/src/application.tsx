@@ -1,10 +1,10 @@
 import { Effect } from "effect";
-import { Application } from "effective-rsc";
+import { Application } from "effront";
 import { DocsShell } from "./components/docs-shell";
 import { getPage, navigation } from "./content";
 
-const ERSC = Application.ersc();
-const RootLayout = ERSC.Layout.make({
+const EFFRONT = Application.effront();
+const RootLayout = EFFRONT.Layout.make({
   render: ({ children }) =>
     Effect.succeed(
       <html lang="ja" className="dark">
@@ -20,11 +20,11 @@ const RootLayout = ERSC.Layout.make({
 function documentPage(slug: string) {
   const page = getPage(slug);
   const Content = page.content;
-  return ERSC.Page.make({
+  return EFFRONT.Page.make({
     render: () =>
       Effect.succeed(
         <>
-          <title>{`${page.title} | effective-rsc`}</title>
+          <title>{`${page.title} | Effront`}</title>
           <meta name="description" content={page.description} />
           <DocsShell
             current={{ slug: page.slug, title: page.title, section: page.section }}
@@ -50,9 +50,9 @@ function documentPage(slug: string) {
   });
 }
 
-// Explicit routes preserve ERSC's compile-time collision checks and its native 404 handling.
-export default ERSC.make({
-  routes: ERSC.Routes.make({ layout: RootLayout })
+// Explicit routes preserve Effront's compile-time collision checks and its native 404 handling.
+export default EFFRONT.make({
+  routes: EFFRONT.Routes.make({ layout: RootLayout })
     .page("/", documentPage("/"))
     .page("/guide/getting-started", documentPage("/guide/getting-started"))
     .page("/guide/routes", documentPage("/guide/routes"))
