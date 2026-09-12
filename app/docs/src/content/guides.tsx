@@ -83,7 +83,7 @@ vp add -D @effront/vite @effront/cloudflare @vitejs/plugin-rsc wrangler`,
         <h2 id="files">アプリケーションの構成</h2>
         {code(
           `src/
-  entry.server.ts  # ホストへ公開するサーバーエントリ
+  entry.workers.ts # Fetch ハンドラーを公開するエントリ
   entry.client.ts  # アプリケーション定義のexport
   application.tsx  # JSXを含むルートグラフ
 vite.config.ts    # ビルドとホスト統合
@@ -127,7 +127,7 @@ export default EFFRONT.make({
         {code(`export { default } from "./application";`, "ts")}
         <h2 id="run">ビルド統合と実行</h2>
         <p>
-          <code>src/entry.server.ts</code> にFetchハンドラーを定義します。
+          <code>src/entry.workers.ts</code> にFetchハンドラーを定義します。
         </p>
         {code(
           `import { createFetchHandler } from "effront/workers";
@@ -155,7 +155,7 @@ export default defineConfig({
         {code(
           `{
   "name": "my-effront-app",
-  "main": "src/entry.server.ts",
+  "main": "src/entry.workers.ts",
   "compatibility_date": "2026-09-12",
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "binding": "ASSETS" }

@@ -7,11 +7,11 @@ import { effront } from "./index";
 const root = fileURLToPath(new URL("../../../examples/workers/", import.meta.url));
 
 describe("Effront entry conventions", () => {
-  it("uses entry.server.ts and entry.client.ts without consumer configuration", async () => {
+  it("uses entry.workers.ts and entry.client.ts without consumer configuration", async () => {
     const config = await resolveConfig({ configFile: false, root, plugins: effront() }, "build");
 
     expect(config.environments["rsc"]?.build.rollupOptions.input).toEqual({
-      index: "./src/entry.server.ts",
+      index: "./src/entry.workers.ts",
     });
     expect(config.resolve.alias).toContainEqual({
       find: "effront/application-entry",

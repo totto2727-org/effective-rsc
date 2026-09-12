@@ -462,11 +462,15 @@ test("hydrates desktop navigation with readable typography and working heading l
   await expectNoHorizontalOverflow(page);
   await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
   await page.screenshot({
+    // Preserve input styles while deferred boundaries may still be hydrating.
+    caret: "initial",
     animations: "disabled",
     path: testInfo.outputPath("desktop-viewport.png"),
     fullPage: false,
   });
   await page.screenshot({
+    // Preserve input styles while deferred boundaries may still be hydrating.
+    caret: "initial",
     animations: "disabled",
     path: testInfo.outputPath("desktop.png"),
     fullPage: true,
@@ -484,6 +488,8 @@ test("supports mobile sidebar keyboard dismissal and link dismissal without over
   await expectTypography(page);
   await expectNoHorizontalOverflow(page);
   await page.screenshot({
+    // Preserve input styles while deferred boundaries may still be hydrating.
+    caret: "initial",
     animations: "disabled",
     path: testInfo.outputPath("mobile.png"),
     fullPage: true,
@@ -496,6 +502,8 @@ test("supports mobile sidebar keyboard dismissal and link dismissal without over
   await expect(sheet).toBeVisible();
   await expectUnclippedSidebarLabels(sheet);
   await page.screenshot({
+    // Preserve input styles while deferred boundaries may still be hydrating.
+    caret: "initial",
     animations: "disabled",
     path: testInfo.outputPath("mobile-sidebar.png"),
     fullPage: true,
@@ -517,6 +525,8 @@ test("supports mobile sidebar keyboard dismissal and link dismissal without over
   await expectArticle(page);
   await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
   await page.screenshot({
+    // Preserve input styles while deferred boundaries may still be hydrating.
+    caret: "initial",
     animations: "disabled",
     path: testInfo.outputPath("mobile-viewport.png"),
     fullPage: false,
@@ -527,6 +537,8 @@ test("supports mobile sidebar keyboard dismissal and link dismissal without over
     await expectNoHorizontalOverflow(page);
   }
   await page.screenshot({
+    // Preserve input styles while deferred boundaries may still be hydrating.
+    caret: "initial",
     animations: "disabled",
     path: testInfo.outputPath("mobile-reading.png"),
     fullPage: true,

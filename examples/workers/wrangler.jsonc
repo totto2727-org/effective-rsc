@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "effront-workers-example",
-  "main": "src/entry.server.ts",
+  "main": "src/entry.workers.ts",
   "compatibility_date": "2026-09-10",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {

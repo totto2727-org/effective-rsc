@@ -24,6 +24,13 @@ export const platformPages: readonly DocPage[] = [
           <code>@effront/vite</code>、実行環境との接続はホスト用プラグインが担当します。
           利用するホスト用プラグインを <code>effront()</code> と組み合わせて登録します。
         </p>
+        <p>
+          現在の構成は、アプリケーション定義の <code>entry.client.ts</code> と Fetch を公開する
+          <code>entry.workers.ts</code> を使います。Vite
+          とホスト用プラグインは後者を直接読み込みます。 将来の Node / Bun 向けには、
+          <code>entry.workers.ts</code> を読み込み、実行環境に合わせて 接続する{" "}
+          <code>entry.server.ts</code> を追加する方針です。
+        </p>
         <h2 id="support">対応状況</h2>
         <ul>
           <li>
@@ -69,7 +76,7 @@ export const platformPages: readonly DocPage[] = [
         </p>
         {code(
           `src/
-  entry.server.ts
+  entry.workers.ts
   entry.client.ts
   application.tsx
 vite.config.ts
@@ -77,7 +84,7 @@ wrangler.jsonc`,
           "text",
         )}
         <p>
-          <code>src/entry.server.ts</code> から Fetch ハンドラーを公開します。
+          <code>src/entry.workers.ts</code> から Fetch ハンドラーを公開します。
         </p>
         {code(
           `import { createFetchHandler } from "effront/workers";
@@ -92,7 +99,7 @@ export default { fetch: createFetchHandler(application) };`,
         {code(
           `{
   "name": "my-effront-app",
-  "main": "src/entry.server.ts",
+  "main": "src/entry.workers.ts",
   "compatibility_date": "2026-09-12",
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "binding": "ASSETS" }
@@ -121,7 +128,7 @@ export default defineConfig({
           <code>effrontCloudflare(&#123; ...options &#125;)</code> と 直接渡します。通常の設定では
           option は不要です。<code>cloudflare</code> で入れ子にせず、React plugin と Vite RSC plugin
           はアダプターと共通プラグインが登録します。デフォルトでは RSC entry は
-          <code>src/entry.server.ts</code>、アプリケーションの alias は{" "}
+          <code>src/entry.workers.ts</code>、アプリケーションの alias は{" "}
           <code>src/entry.client.ts</code> です。
         </p>
         <h2 id="local">ローカル実行と検証</h2>

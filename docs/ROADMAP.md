@@ -29,3 +29,14 @@ The installed React Canary exposes `ViewTransition` and `addTransitionType`; a d
 The router already tags React transitions, but an integrated public PageViewTransition API and actual browser animation acceptance are not implemented or verified.
 
 References: [React 19.3](https://react.dev/blog/2026/09/09/react-19-3), [ViewTransition](https://react.dev/reference/react/ViewTransition), [addTransitionType](https://react.dev/reference/react/addTransitionType).
+
+## Server runtime adapters
+
+Status: planned; Node and Bun server adapters will be designed separately.
+
+- Keep `src/entry.client.ts` as the application definition export.
+- Use `src/entry.workers.ts` as the Web Fetch export and the default Vite RSC entry.
+- Vite + Cloudflare consumes `entry.workers.ts` directly.
+- For future Node/Bun hosts, add `src/entry.server.ts` that imports the export from `entry.workers.ts` and adapts requests, responses, and lifecycle handling to the server runtime.
+- Keep server startup and runtime-specific adaptation outside the reusable Fetch entry.
+- Validate streaming, cancellation, request context, static assets, and server startup/shutdown through each real adapter before documenting it as supported.

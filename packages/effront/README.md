@@ -18,7 +18,7 @@ RSC produces Flight, SSR produces initial HTML, and the browser hydrates and nav
 - Host adapters add execution-environment integration separately.
 
 `src/entry.client.ts` exports the application definition, usually from `application.tsx`.
-`src/entry.server.ts` supplies the host entry.
+`src/entry.workers.ts` exports the Web Fetch handler used directly by the Vite + Cloudflare host.
 The Vite integration provides browser hydration and SSR entry points.
 The application definition is not a browser-only module despite the client entry filename.
 

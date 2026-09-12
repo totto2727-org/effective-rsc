@@ -34,6 +34,8 @@ describe("documentation catalog", () => {
     expect(gettingStarted).toContain("effrontCloudflare()");
     expect(gettingStarted).toContain("createFetchHandler(application)");
     expect(gettingStarted).toContain("nodejs_compat");
+    expect(gettingStarted).toContain("entry.workers.ts");
+    expect(gettingStarted).not.toContain("entry.server.ts");
     expect(gettingStarted).toContain("dist/rsc/wrangler.json");
     expect(gettingStarted).not.toContain("ではありません");
     expect(gettingStarted).not.toMatch(
