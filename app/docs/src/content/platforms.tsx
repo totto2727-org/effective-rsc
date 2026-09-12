@@ -27,9 +27,9 @@ export const platformPages: readonly DocPage[] = [
         <p>
           現在の構成は、アプリケーション定義の <code>entry.client.ts</code> と Fetch を公開する
           <code>entry.workers.ts</code> を使います。Vite
-          とホスト用プラグインは後者を直接読み込みます。 将来の Node / Bun 向けには、
-          <code>entry.workers.ts</code> を読み込み、実行環境に合わせて 接続する{" "}
-          <code>entry.server.ts</code> を追加する方針です。
+          とホスト用プラグインは後者を直接読み込みます。将来の Node / Bun 向けには、
+          <code>entry.server.ts</code> から Fetch を接続する方式と、Runtime を再利用して Effect HTTP
+          で直接ホストする方式を検討しています。
         </p>
         <h2 id="support">対応状況</h2>
         <ul>
