@@ -1,6 +1,42 @@
 # Effront roadmap
 
-This document records planned work, not available APIs or supported-host guarantees.
+This document records planned work and explicitly marked completed milestones; planned entries are not available APIs or supported-host guarantees.
+
+## Static site generation: HTML and Flight
+
+Status: planned by user request on 2026-09-12; no SSG implementation or static-host compatibility is claimed yet.
+
+### Goal
+
+- Generate both the initial document HTML and a separately fetchable React Server Components payload for every statically generated route.
+- Reuse Effront's native Flight format, hydration, client navigation, shared Layout retention, history handling, and ViewTransition behavior rather than introducing a second client rendering protocol.
+- Initial document requests receive HTML with the hydration data they need; subsequent client navigations and current-route refreshes can fetch only the Flight payload.
+- Aim for the same client rendering and navigation semantics as SSR for equivalent content. Static snapshots do not provide request-time freshness, personalized responses, or Server Function execution by themselves.
+
+### Serving without a Worker
+
+- The current SSR client requests Flight at the document URL with `Accept: text/x-component` (`packages/effront/src/client/flight-client.ts`).
+- Serving HTML and Flight at the same URL requires host-side content negotiation or header-aware routing. Do not assume that a plain static-file host can select different files from this header; `Vary: Accept` describes cache variation, not a rule for selecting the response file.
+- Prefer investigating distinct static payload URLs plus a generated route-to-payload manifest. For example, `/guide/routes` serves HTML and an internal versioned asset URL serves its Flight payload; these paths are illustrative, not a committed public convention.
+- The client loader would resolve the payload asset while retaining the canonical document URL for history, links, hashes, and redirect semantics. The current loader uses `response.url`, so merely changing the fetch URL would incorrectly treat the asset URL as a navigation destination.
+- Distinct resource paths allow an asset-only serving model without requiring a Worker to inspect request headers. Verify the chosen static host's MIME headers, document-path resolution, and cache rules before declaring support.
+- Preserve `text/x-component` for Flight and avoid SPA fallback rules that return HTML for a missing payload. Define a safe document-navigation fallback for missing or incompatible artifacts without redirect loops.
+- Keep header-negotiated delivery as an optional host capability, not a prerequisite for the baseline SSG output.
+
+### Build and data boundaries
+
+- Enumerate static routes and parameter values explicitly. Define handling of query-dependent variants and unknown paths rather than assuming every request maps to the same snapshot.
+- Provide build-time Effect services and complete/dispose each prerender's resources. Reject or explicitly defer routes requiring request-specific credentials, cookies, or runtime bindings.
+- Produce HTML, Flight, client chunks, and the route manifest from one build; version their references and define atomic deployment/cache invalidation so clients do not mix incompatible React module references.
+- Static refresh reads the published snapshot. Data changes require a new published build or a separately configured dynamic host; Server Functions still need a server endpoint.
+- Allow later SSR/SSG hybrid routing as a separate integration decision without making dynamic hosting necessary for purely static routes.
+
+### Acceptance before release
+
+- Serve real generated output through an asset-only host with no Worker or application server and verify direct document loads, no-JavaScript HTML, hydration, and Flight-only subsequent navigation.
+- Compare the same routes rendered by SSR and SSG for content, shared Layout state, ViewTransitions, Back/Forward, anchors, and current-route refresh. Equivalent behavior does not imply identical network timing or request-time data freshness.
+- Verify payload MIME types, parameter/query policy, redirects, unknown routes, missing payloads, cache isolation, and deployment-version mismatch handling.
+- Confirm that secrets and request-specific data cannot enter public static artifacts and that generation handles streaming failures and resource cleanup.
 
 ## Page View Transitions
 
