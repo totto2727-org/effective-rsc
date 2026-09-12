@@ -258,6 +258,7 @@ const routes = ERSC.Routes.make({ layout: RootLayout })
     headings: [
       { id: "server", title: "Effectful な Server Component" },
       { id: "client", title: "Client Component" },
+      { id: "mutations", title: "Server Function による更新" },
       { id: "boundary", title: "境界を守る" },
     ],
     content: () => (
@@ -291,6 +292,41 @@ export function Counter() {
   const [count, setCount] = useState(0);
   return <button onClick={() => setCount((n) => n + 1)}>Count: {count}</button>;
 }`)}
+        <h2 id="mutations">Server Function による更新</h2>
+        <p>
+          更新処理には <code>ERSC.ServerFn.make</code> を使います。入力は Schema で検証・decode
+          され、handler は Effect を返します。<code>Schema.fromFormData</code>{" "}
+          を使うと、戻り値をそのまま native の <code>form action</code> に渡せます。
+        </p>
+        {code(`"use server";
+
+import { Effect, Schema } from "effect";
+
+export const followAuthor = ERSC.ServerFn.make({
+  input: Schema.fromFormData(Schema.Struct({ authorId: Schema.NonEmptyString })),
+  handler: ({ authorId }) => Effect.logInfo("Followed author", { authorId }),
+});`)}
+        {code(`const FollowAuthorButton = ERSC.Component.make({
+  render: ({ authorId }: { readonly authorId: string }) =>
+    Effect.succeed(
+      <form action={followAuthor}>
+        <input name="authorId" type="hidden" value={authorId} />
+        <button type="submit">Follow author</button>
+      </form>,
+    ),
+});`)}
+        <p>
+          Server Function をサーバーグラフから通常の async
+          関数として直接呼び出すことはできません。React が呼び出せる action
+          として渡してください。入力 decode の失敗や handler の失敗は action の失敗として React
+          のエラー処理へ届くため、利用者に必要なフィードバックは error boundary や form state
+          で設計します。
+          <code>useActionState</code> を使う状態付きフォームなどの詳細は{" "}
+          <a href="https://react.dev/reference/react/useActionState">
+            React の useActionState リファレンス
+          </a>
+          を参照してください。
+        </p>
         <h2 id="boundary">境界を守る</h2>
         <p>
           Server Component から <code>&lt;Counter /&gt;</code> をレンダリングできます。しかし props
