@@ -1,5 +1,6 @@
 # effective-rsc documentation
 
+- [Upstream baseline](UPSTREAM.md): original effective-rsc version, immutable commit, and future incorporation log.
 - [Workers architecture](WORKERS.md): Fetch runtime, Effect context, RSC/SSR/browser boundaries, Vite configuration, and local hosting.
 - [Verification results](WORKERS-VALIDATION.md): requirements, observed checks, and reproducible acceptance commands.
 - [Gitignore-driven exclusions](GITIGNORE-VALIDATION.md): generated formatting/lint exclusions, verification, and native-tool limitations.
