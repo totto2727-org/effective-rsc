@@ -167,48 +167,18 @@ input {
   color: oklch(0.93 0.012 90);
   box-shadow: none;
 }
-[data-doc-page] pre[data-code-block].shiki {
+[data-doc-page] pre[data-code-block].shiki.github-dark {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   white-space: pre;
   overflow-wrap: normal;
   word-break: normal;
-  background: var(--shiki-light-bg);
-  color: var(--shiki-light);
 }
-[data-doc-page] pre[data-code-block].shiki code {
+[data-doc-page] pre[data-code-block].shiki.github-dark code {
   display: block;
   width: max-content;
   min-width: 100%;
-}
-[data-doc-page] pre[data-code-block].shiki span {
-  color: var(--shiki-light);
-  font-style: var(--shiki-light-font-style);
-  font-weight: var(--shiki-light-font-weight);
-  text-decoration: var(--shiki-light-text-decoration);
-}
-.dark [data-doc-page] pre[data-code-block].shiki {
-  background: var(--shiki-dark-bg);
-  color: var(--shiki-dark);
-}
-.dark [data-doc-page] pre[data-code-block].shiki span {
-  color: var(--shiki-dark);
-  font-style: var(--shiki-dark-font-style);
-  font-weight: var(--shiki-dark-font-weight);
-  text-decoration: var(--shiki-dark-text-decoration);
-}
-@media (prefers-color-scheme: dark) {
-  [data-doc-page] pre[data-code-block].shiki {
-    background: var(--shiki-dark-bg);
-    color: var(--shiki-dark);
-  }
-  [data-doc-page] pre[data-code-block].shiki span {
-    color: var(--shiki-dark);
-    font-style: var(--shiki-dark-font-style);
-    font-weight: var(--shiki-dark-font-weight);
-    text-decoration: var(--shiki-dark-text-decoration);
-  }
 }
 [data-doc-page] :where(code):not(pre code) {
   overflow-wrap: anywhere;
