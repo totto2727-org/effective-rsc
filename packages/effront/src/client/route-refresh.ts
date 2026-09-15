@@ -28,7 +28,7 @@ export class RouteRefresher extends Context.Service<RouteRefresher>()(
         yield* current.interruptCurrentRouteRefresh;
       });
 
-      const refreshCurrentRoute = Effect.fn("RouteRefresher.refreshCurrentRoute")(function* (
+      const refreshCurrentRoute = Effect.fnUntraced(function* (
         transitionType: RouteRefreshTransitionType,
       ) {
         const current = yield* Ref.get(implementation);
@@ -78,10 +78,10 @@ export const installRouteRefresh = Effect.gen(function* () {
     return Effect.sync(unsubscribe);
   });
 
-  const refreshRoute = Effect.fn(function* (transitionType: RouteRefreshTransitionType) {
+  const refreshRoute = Effect.fnUntraced(function* (transitionType: RouteRefreshTransitionType) {
     const responseScope = yield* Scope.make();
     const render = yield* Effect.uninterruptibleMask(
-      Effect.fn(
+      Effect.fnUntraced(
         function* (restore) {
           const currentEntry = navigationApi.getCurrentEntry();
           const destination = new URL(currentEntry?.url ?? navigationApi.getCurrentUrl());
@@ -150,7 +150,7 @@ export const installRouteRefresh = Effect.gen(function* () {
     }
   });
 
-  const refreshCurrentRoute = Effect.fn(
+  const refreshCurrentRoute = Effect.fnUntraced(
     function* (transitionType: RouteRefreshTransitionType) {
       routeLoader.invalidate();
       yield* waitForNavigationIdle;

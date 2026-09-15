@@ -236,7 +236,7 @@ const ServiceRootLayout = ServiceEFFRONT.Layout.make({
   render: ({ children }) => Effect.succeed(children),
 });
 const ServicePage = ServiceEFFRONT.Page.make({
-  render: Effect.fn(function* () {
+  render: Effect.fnUntraced(function* () {
     yield* PageService;
     return null;
   }),
@@ -267,7 +267,7 @@ const ServiceSchema = Schema.String.pipe(
   Schema.catchDecodingWithContext(() => Effect.map(LayoutService, () => Option.some("fallback"))),
 );
 const layoutServicePageOptions = {
-  render: Effect.fn(function* () {
+  render: Effect.fnUntraced(function* () {
     yield* LayoutService;
     return null;
   }),
@@ -289,7 +289,7 @@ const ProvideLayoutDependencies = NarrowEFFRONT.Middleware.make<{
 );
 const LayoutDependenciesEFFRONT = NarrowEFFRONT.withMiddleware(ProvideLayoutDependencies);
 LayoutDependenciesEFFRONT.Page.make({
-  render: Effect.fn(function* () {
+  render: Effect.fnUntraced(function* () {
     yield* LayoutService;
     yield* LayerDependency;
     return null;
@@ -317,7 +317,7 @@ NarrowEFFRONT.Middleware.make((httpEffect) =>
 NarrowEFFRONT.Layout.make({
   // @ts-expect-error LayoutService is not part of this application's declared contracts.
   // intentional invalid Effect fixture
-  render: Effect.fn(function* ({ children }) {
+  render: Effect.fnUntraced(function* ({ children }) {
     yield* LayoutService;
     return children;
   }),
@@ -325,7 +325,7 @@ NarrowEFFRONT.Layout.make({
 NarrowEFFRONT.Component.make({
   // @ts-expect-error LayoutService is not part of this application's declared contracts.
   // intentional invalid Effect fixture
-  render: Effect.fn(function* () {
+  render: Effect.fnUntraced(function* () {
     yield* LayoutService;
     return null;
   }),
@@ -334,7 +334,7 @@ NarrowEFFRONT.ServerFn.make({
   input: Schema.String,
   // @ts-expect-error LayoutService is not part of this application's declared contracts.
   // intentional invalid Effect fixture
-  handler: Effect.fn(function* () {
+  handler: Effect.fnUntraced(function* () {
     yield* LayoutService;
     return null;
   }),

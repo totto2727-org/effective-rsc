@@ -28,7 +28,7 @@ class CurrentEntry extends Context.Service<CurrentEntry, MarkdownEntry>()(
 ) {}
 
 const FindEntry = EFFRONT.Middleware.make<{ provides: CurrentEntry }>(
-  Effect.fn(function* (httpEffect) {
+  Effect.fnUntraced(function* (httpEffect) {
     const request = yield* HttpServerRequest.HttpServerRequest;
     const collection = yield* Effect.result(manual);
     if (Result.isFailure(collection)) {

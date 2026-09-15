@@ -91,7 +91,7 @@ const httpLayer = <Services, ApplicationError>(
 ): HttpApplicationLayer<ApplicationError> => {
   const applicationState = getApplicationState(application);
   const identity = getEFFRONTIdentity(application);
-  const render = Effect.fn(function* ({
+  const render = Effect.fnUntraced(function* ({
     destination,
     formState,
     middleware,
@@ -111,7 +111,7 @@ const httpLayer = <Services, ApplicationError>(
     const encodedParams = yield* destination.page.paramsSchema === null
       ? Effect.succeed(EmptyEncodedPageParams)
       : HttpRouter.params;
-    const renderResponse = Effect.fn(function* (params: PageParams) {
+    const renderResponse = Effect.fnUntraced(function* (params: PageParams) {
       const routeTree = renderRouteTree({
         destination,
         params,

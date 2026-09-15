@@ -69,7 +69,7 @@ const validateOrigin = (request: HttpServerRequest.HttpServerRequest) =>
     catch: (cause) => requestError("Rejected a cross-origin Server Function request.", 403, cause),
   });
 
-const readBodyBytes = Effect.fn(function* (request: Request) {
+const readBodyBytes = Effect.fnUntraced(function* (request: Request) {
   if (request.body === null) {
     return new Uint8Array();
   }
@@ -108,7 +108,7 @@ const readBodyBytes = Effect.fn(function* (request: Request) {
   return bytes;
 });
 
-const readBody = Effect.fn(function* (request: Request) {
+const readBody = Effect.fnUntraced(function* (request: Request) {
   const bytes = yield* readBodyBytes(request);
   const replay = new Request(request, { body: bytes, method: request.method });
   if (request.headers.get("content-type")?.toLowerCase().startsWith("multipart/form-data")) {
@@ -153,7 +153,7 @@ const prepareServerFnOperation = <ApplicationServices>(
     }
   }).pipe(normalizeServerFnFailure);
 
-const prepareClientServerFn = Effect.fn(function* <ApplicationServices>(
+const prepareClientServerFn = Effect.fnUntraced(function* <ApplicationServices>(
   request: Request,
   actionId: string,
   identity: EFFRONTIdentity<ApplicationServices>,
@@ -202,7 +202,7 @@ const prepareClientServerFn = Effect.fn(function* <ApplicationServices>(
   return prepared;
 });
 
-const prepareProgressiveServerFn = Effect.fn(function* <ApplicationServices>(
+const prepareProgressiveServerFn = Effect.fnUntraced(function* <ApplicationServices>(
   request: Request,
   identity: EFFRONTIdentity<ApplicationServices>,
 ) {
@@ -255,7 +255,7 @@ const prepareProgressiveServerFn = Effect.fn(function* <ApplicationServices>(
   return prepared;
 });
 
-export const prepareServerFnRequest = Effect.fn(function* <Services>(
+export const prepareServerFnRequest = Effect.fnUntraced(function* <Services>(
   request: HttpServerRequest.HttpServerRequest,
   identity: EFFRONTIdentity<Services>,
 ) {

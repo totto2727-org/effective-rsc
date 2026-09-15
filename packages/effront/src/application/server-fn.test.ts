@@ -43,7 +43,7 @@ describe("ServerFn.make", () => {
       const EFFRONT = Application.effront<Greeting>();
       const greet = EFFRONT.ServerFn.make({
         input: Schema.Struct({ name: Schema.NonEmptyString }),
-        handler: Effect.fn("greet")(function* ({ name }) {
+        handler: Effect.fnUntraced(function* ({ name }) {
           const greeting = yield* Greeting;
           return `${greeting.prefix}, ${name}`;
         }),
@@ -81,7 +81,7 @@ describe("ServerFn.make", () => {
           Schema.FiniteFromString,
           Schema.fromFormData(Schema.Struct({ name: Schema.NonEmptyString })),
         ],
-        handler: Effect.fn("greet")(function* (count, { name }) {
+        handler: Effect.fnUntraced(function* (count, { name }) {
           const greeting = yield* Greeting;
           return `${greeting.prefix}, ${name}: ${count + 1}`;
         }),
@@ -190,7 +190,7 @@ describe("ServerFn.make", () => {
       const EFFRONT = Application.effront();
       const serverFn = EFFRONT.ServerFn.make({
         input: Schema.Struct({ value: Schema.NonEmptyString }),
-        handler: Effect.fn("serverFn")(function* () {
+        handler: Effect.fnUntraced(function* () {
           yield* Ref.set(invoked, true);
         }),
       });
@@ -210,7 +210,7 @@ describe("ServerFn.make", () => {
       const EFFRONT = Application.effront();
       const serverFn = EFFRONT.ServerFn.make({
         input: Schema.Struct({ id: Schema.String }),
-        handler: Effect.fn("serverFn")(function* () {
+        handler: Effect.fnUntraced(function* () {
           yield* Ref.set(invoked, true);
         }),
       });

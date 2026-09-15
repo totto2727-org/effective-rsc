@@ -27,7 +27,7 @@ export class FlightRenderer extends Context.Service<FlightRenderer>()(
   "effront/server/flight-renderer/FlightRenderer",
   {
     make: Effect.succeed({
-      render: Effect.fn("FlightRenderer.render")(function* <Services>({
+      render: Effect.fnUntraced(function* <Services>({
         formState,
         middleware,
         renderRuntime,

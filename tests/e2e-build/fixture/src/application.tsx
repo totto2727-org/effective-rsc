@@ -33,7 +33,7 @@ const RootLayout = EFFRONT.Layout.make({
 });
 
 const HomePage = EFFRONT.Page.make({
-  render: Effect.fn("HomePage.render")(function* () {
+  render: Effect.fnUntraced(function* () {
     const env = yield* getWorkersEnv();
     return (
       <>
@@ -49,7 +49,7 @@ const HomePage = EFFRONT.Page.make({
 });
 
 const AboutPage = EFFRONT.Page.make({
-  render: Effect.fn("AboutPage.render")(function* () {
+  render: Effect.fnUntraced(function* () {
     const context = yield* getWorkersRequestContext();
     context.executionContext.waitUntil(Promise.resolve());
     const env = yield* getWorkersEnv();
@@ -113,7 +113,7 @@ const transitionRoutes = EFFRONT.Routes.make({ layout: TransitionLayout })
 
 class CurrentEntry extends Context.Service<CurrentEntry, MarkdownEntry>()("e2e/CurrentEntry") {}
 const FindEntry = EFFRONT.Middleware.make<{ provides: CurrentEntry }>(
-  Effect.fn(function* (httpEffect) {
+  Effect.fnUntraced(function* (httpEffect) {
     const request = yield* HttpServerRequest.HttpServerRequest;
     const collection = yield* Effect.result(manual);
     if (Result.isFailure(collection)) {
@@ -135,7 +135,7 @@ const ManualLayout = EFFRONT.Layout.make({
 });
 const ManualPage = Manual.Page.make({
   params: Schema.Struct({ path: Schema.String }),
-  render: Effect.fn(function* () {
+  render: Effect.fnUntraced(function* () {
     const entry = yield* CurrentEntry;
     const document = yield* parseMarkdown(entry);
     return (

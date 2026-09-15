@@ -87,6 +87,7 @@ D1, KV, R2, database abstractions, Node/Bun host adapters, and hosted deployment
 - Keep dependency versions in the shared catalog only when at least two active manifests reference them.
 - Preserve explicit public package subpaths rather than exporting internal modules indiscriminately.
 - Use path-qualified Effect service identifiers. Keep shared runtime contracts implementation-free.
+- Use `Effect.fnUntraced` by default for reusable Effect functions to avoid tracing overhead. Keep `Effect.fn.Return` where a generator return type is needed; it is type-only.
 - Use typed failures for input and I/O errors, and plain `TypeError` only for violated wiring invariants.
 - Do not count a build, mock, or copied-source test as proof that the public Workers fetch path works. Test both `vp dev` and the Vite-independent Wrangler artifact.
 

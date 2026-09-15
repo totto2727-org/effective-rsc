@@ -37,7 +37,7 @@ void ActionForm;
 
 const transformed = EFFRONT.ServerFn.make({
   input: [Schema.FiniteFromString, Schema.String] as const,
-  handler: Effect.fn(function* (count, text) {
+  handler: Effect.fnUntraced(function* (count, text) {
     const value: number = count;
     return yield* Effect.succeed(`${value}:${text}`);
   }),

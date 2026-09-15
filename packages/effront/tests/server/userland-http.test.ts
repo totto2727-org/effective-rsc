@@ -53,7 +53,7 @@ const makeApplication = () => {
 
   // Match the Guide HTTP example: acquire services while registering native router routes.
   const GreetingApi = HttpRouter.use(
-    Effect.fn(function* (router) {
+    Effect.fnUntraced(function* (router) {
       const greeting = yield* Greeting;
       const environment = yield* RequestEnvironment;
       yield* router.add(

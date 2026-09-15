@@ -29,7 +29,7 @@ export class HtmlRenderer extends Context.Service<HtmlRenderer>()(
   "effront/server/html-renderer/HtmlRenderer",
   {
     make: Effect.succeed({
-      render: Effect.fn("HtmlRenderer.render")(function* ({
+      render: Effect.fnUntraced(function* ({
         flight,
         formState,
       }: {

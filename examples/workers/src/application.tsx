@@ -21,7 +21,7 @@ const RootLayout = EFFRONT.Layout.make({
 });
 
 const HomePage = EFFRONT.Page.make({
-  render: Effect.fn("HomePage.render")(function* () {
+  render: Effect.fnUntraced(function* () {
     const env = yield* getWorkersEnv();
     return (
       <>
@@ -37,7 +37,7 @@ const HomePage = EFFRONT.Page.make({
 });
 
 const AboutPage = EFFRONT.Page.make({
-  render: Effect.fn("AboutPage.render")(function* () {
+  render: Effect.fnUntraced(function* () {
     const context = yield* getWorkersRequestContext();
     context.executionContext.waitUntil(Promise.resolve());
     const env = yield* getWorkersEnv();
