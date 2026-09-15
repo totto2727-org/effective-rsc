@@ -109,7 +109,7 @@ Run the fixed package-local fixture directly. Keep fixture copying, dynamic run 
 
 ## npm publication
 
-- `.github/workflows/ci.yml` runs checks, tests, package preparation, and Bun package dry runs for pull requests and `main` updates.
+- `.github/workflows/ci.yml` runs checks and tests for pull requests and `main` updates.
 - `.github/workflows/publish.yml` publishes on pushes to `main`, including merged pull requests, using the template's shared Nix, TypeScript, and npm actions on `@main`.
 - Publication is serialized and skips versions already on npm. Bump each changed public package's version in its pull request and update workspace peer ranges through `vp install --lockfile-only` when needed. There is no automatic version bump or tag trigger.
 - Public packages are `effront`, `@effront/vite`, `@effront/cloudflare`, and `@effront/markdown`. `@effront/gitignore-patterns` is local development tooling and is not included in this release workflow.

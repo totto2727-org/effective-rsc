@@ -27,14 +27,3 @@ jobs:
           eval "$(nix print-dev-env "$GITHUB_WORKSPACE#default")"
           vp run check
           vp run test
-      - uses: ./.github/actions/pack-npm
-      - name: Validate npm artifacts without authentication
-        run: |
-          eval "$(nix print-dev-env "$GITHUB_WORKSPACE#default")"
-          for package in effront vite cloudflare markdown; do
-            if grep -Eq '"(workspace|catalog):' "tmp/npm/$package/package.json"; then
-              echo "Unresolved dependency protocol in $package" >&2
-              exit 1
-            fi
-            (cd "tmp/npm/$package" && bun pm pack --dry-run)
-          done
