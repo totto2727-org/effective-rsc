@@ -1,7 +1,18 @@
 # @effront/markdown
 
-Render a directory of Markdown as React Server Components, preserving its hierarchy and resolving file-relative links and images to public URLs.
-Vite supplies content through `import.meta.glob`; comark supplies the standard React renderer and Markdown plugins.
+Collect Markdown through Vite and parse it into standard Comark documents with typed Effect failures.
+File-relative document links and asset references become public URLs in the parsed AST, ready for Comark's React renderer.
+
+## Setup
+
+Use a Vite-based application with compatible React and Effect dependencies:
+
+```sh
+vp add @effront/markdown @comark/react
+```
+
+Keep collection imports and parsing in the server graph.
+The application owns routing, typography, and layout.
 
 ## Usage
 
@@ -19,153 +30,98 @@ export const manual = createMarkdownCollection({
     eager: true,
   }),
   assets: import.meta.glob<string>("./content/**/*.{svg,png,jpg,jpeg,gif,webp,pdf}", {
-    query: "?url&no-inline",
+    query: "?url",
     import: "default",
     eager: true,
   }),
 });
 ```
 
-`content/index.md` becomes `/manual`, and `content/guide/deep/details.md` becomes `/manual/guide/deep/details`.
-Inside `content/guide/start.md`, `[Details](./deep/details.md#example)` becomes a link to `/manual/guide/deep/details#example`.
-An image such as `![Diagram](../images/diagram.svg)` resolves against the source file's directory and uses the URL emitted by Vite.
-The `no-inline` query makes even small assets individually fetchable; ordinary `?url` also supports Vite's inlining policy.
+`manual` is an Effect, evaluated where the application handles configuration failures.
+Vite owns document loading and asset URL generation, including its asset inlining policy.
+Use `?url&no-inline` when each asset should have a separately fetchable URL.
+No additional asset plugin, runtime filesystem loader, or copy step is required.
 
-Route the whole collection through one catch-all Page and look up the entry for each request:
+Parse inside your Page's Effect and pass the result to the standard Comark component:
 
 ```tsx
-import { Markdown, type MarkdownEntry } from "@effront/markdown";
-import { Context, Effect, Schema } from "effect";
-import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { MarkdownDocument } from "@comark/react/components/MarkdownDocument";
+import { parseMarkdown } from "@effront/markdown";
+import type { MarkdownEntry } from "@effront/markdown";
+import { Effect } from "effect";
 
-class CurrentEntry extends Context.Service<CurrentEntry, MarkdownEntry>()(
-  "markdown-example/CurrentEntry",
-) {}
-
-const FindEntry = EFFRONT.Middleware.make<{ provides: CurrentEntry }>(
-  Effect.fn(function* (httpEffect) {
-    const request = yield* HttpServerRequest.HttpServerRequest;
-    const entry = manual.get(request.url);
-    if (!entry) {
-      return HttpServerResponse.text("Not found", { status: 404 });
-    }
-    return yield* httpEffect.pipe(Effect.provideService(CurrentEntry, entry));
-  }),
-);
-const Manual = EFFRONT.withMiddleware(FindEntry);
-const ManualPage = Manual.Page.make({
-  params: Schema.Struct({ path: Schema.String }),
-  render: () =>
-    Effect.gen(function* () {
-      const entry = yield* CurrentEntry;
-      return (
-        <article className="comark" data-markdown-page={entry.url}>
-          <Markdown entry={entry} />
-        </article>
-      );
-    }),
-});
-
-export default EFFRONT.make({
-  routes: Manual.Routes.make({ layout: RootLayout }).page("/manual/*path", ManualPage),
-});
+export const renderArticle = (entry: MarkdownEntry) =>
+  Effect.gen(function* () {
+    const document = yield* parseMarkdown(entry);
+    return <MarkdownDocument value={document} />;
+  });
 ```
 
-Here `EFFRONT` is your `Application.effront()` identity, `manual` is the collection above, and `RootLayout` is a Layout created by that identity.
-The [complete example](../../examples/markdown/src/application.tsx) includes their wiring.
-`/manual/*path` matches `/manual`, `/manual/`, and any nested path; `params.path` is an already-decoded string without a leading slash.
-The Middleware uses the original request URL for collection lookup, avoiding a second decoding of captured parameters.
-It returns a real 404 before response streaming begins when no article exists and provides the found entry to the Page's request scope.
-Adding or removing documents updates the collection, while the single catch-all route stays unchanged.
-
-## Key features
-
-- Directory-to-URL prefix mapping with arbitrary directory depth.
-- Relative Markdown links, local asset links, and images resolved from their source files.
-- Native React/Flight rendering and shared Effront Layout behavior.
-- Footnotes, math, Mermaid, syntax highlighting, alerts, and task lists.
-- Public component mappings and additional standard comark plugins.
-
-## Prerequisites
-
-Use a Vite-based React Server Components application with compatible React peer dependencies.
-For Effront, use matching `effront`, `@effront/vite`, and host integration packages.
-Keep collection imports and rendering in the server graph.
-
-## Setup
-
-```sh
-vp add @effront/markdown
-```
-
-Import the provided stylesheet from a rendered Client Component's stylesheet or module, so the host includes it in the initial document:
-
-```ts
-import "@effront/markdown/styles.css";
-```
-
-It includes KaTeX styling and minimal content overflow rules; the application owns typography and page layout.
+Use `yield* manual` to obtain the collection, then call `collection.get(request.url)` with the original request pathname or relative request URL.
+`get` returns `undefined` for unknown pages, so the application can return a 404 before streaming begins.
+The [complete Effront example](../../examples/markdown/src/application.tsx) uses one catch-all route with request-local entry selection.
 
 ## API
 
 ### `createMarkdownCollection(options)`
 
-- `source`: source directory prefix matching the glob keys, beginning with `./`.
+Returns `Effect<MarkdownCollection, MarkdownError>`.
+
+- `source`: directory prefix matching the glob keys, beginning with `./`.
 - `basePath`: absolute public prefix such as `/manual` or `/`.
 - `documents`: eager raw-string glob map of `.md` files.
-- `assets`: optional eager URL-string glob map of linked files and images.
+- `assets`: optional eager Vite URL-string glob map of linked files and images.
 
-The collection exposes `entries`, `get(pathname)`, `resolveLink(entry, href)`, and `resolveImage(entry, src)`.
-Each entry exposes `source`, `content`, public `url`/`pathname`, and its own `resolveLink`/`resolveImage` functions.
-Use `url` for browser links and pass the original request pathname to `get`; URL escapes are decoded once for lookup.
+The resulting collection exposes pure `entries` and `get(pathname)` operations.
+Each entry has `source`, `content`, and public `url`/`pathname` fields.
+Only `index.md` maps to its containing directory's URL, while `README.md` keeps `/README`.
+Filenames are percent-encoded independently of route patterns, and lookup decodes URL escapes once.
+A single trailing slash is accepted for page lookup.
+
+### Reference resolution
+
+`entry.resolveLink(href)` and `entry.resolveImage(src)` return `Effect<string, MarkdownError>`.
+The collection also exposes `resolveLink(entry, href)` and `resolveImage(entry, src)` with the same result type.
+
+Inside `content/guide/start.md`, `[Details](./deep/details.md#example)` becomes `/manual/guide/deep/details#example`.
+An image such as `![Diagram](../images/diagram.svg)` resolves from the Markdown file's directory and uses its imported Vite URL.
+Queries and fragments are retained, and site-absolute, fragment-only, and external references pass through unchanged.
+Reference queries and fragments are appended literally to the imported asset URL, without merging existing URL queries or fragments.
+When an imported URL already contains a query or fragment, use a reference without a conflicting suffix or provide the final URL directly.
+Relative `.md` links must identify an imported document, and relative asset references must identify an imported asset.
+Unresolved references, references outside the collection, invalid configuration, and duplicate public routes return `MarkdownError` through the Effect error channel.
 The source Markdown remains unchanged.
 
-Only `index.md` maps to the containing directory's URL; `README.md` keeps `/README`.
-Query strings and fragments are preserved.
-Fragment-only links, site-absolute links, and external URLs retain their original destination.
-Relative `.md` links must identify an imported document, and relative asset references must identify an imported asset.
-Missing references and attempts to leave the source directory produce an error naming the reference and source file.
-Duplicate generated routes and invalid glob maps fail during collection creation.
+### `parseMarkdown(entry, options?)`
 
-Unicode and spaces are supported in source names and emitted URLs.
-Source filenames are URL-encoded independently of the fixed catch-all route pattern.
-Assets use the URLs emitted by Vite.
+Returns `Effect<MarkdownDocument, MarkdownError>`, where `MarkdownDocument` is Comark's standard parsed-document type.
+`options` accepts standard Comark `ParserOptions`; additional `plugins` are appended after the package's mdts plugins.
+Parser exceptions become `MarkdownError`, preserving their original `cause`.
+After parsing and plugin execution, the package maps literal `a.href` and `img.src` references in the AST.
+Application-specific components and dynamic attribute bindings retain their normal Comark behavior.
 
-### `Markdown({ entry, components?, plugins? })`
+Comark's default configuration remains enabled, including frontmatter, HTML, alerts, task lists, components, and attributes.
+The mdts defaults add `footnotes()`, `math()`, `mermaid({ theme: "tokyo-night", themeDark: "tokyo-night" })`, and `shiki()`.
+Treat Markdown and its plugins as trusted authored content, not sanitized user submissions.
 
-An async server component using comark's standard parsed-document React renderer (`parseMarkdown` and `MarkdownDocument`).
-`components` supplies standard React component mappings.
-`plugins` appends standard comark plugins after the package defaults.
-The link/image mappings resolve source URLs before forwarding props to custom link/image components.
+### Rendering and component mappings
 
-### `createMarkdownRenderer(options?)`
+Use `MarkdownDocument` from `@comark/react/components/MarkdownDocument` directly.
+Pass user mappings through its normal `components` prop, for example `<MarkdownDocument value={document} components={{ ProseA: MyLink }} />`.
+Resolved AST URLs reach those components without wrappers or forced link/image mappings.
+Comark 0.6.2 does not automatically register Math or Mermaid React components or merge `document.meta.components`.
+The package preserves the standard renderer's output and does not replace components, rewrite SVG/fonts, or add SSR workarounds.
+Complete Math and Mermaid SSR support is deferred in the [roadmap](../../docs/ROADMAP.md).
 
-Creates reusable component and plugin defaults.
-Its `render({ entry, components?, plugins? })` method returns a Promise of React content.
-Per-render component mappings override renderer mappings; plugin arrays are appended in renderer-then-render order.
+The application owns all rendering styles.
+The package retains KaTeX as a dependency because Comark's math parser plugin imports it directly, independently of React rendering.
 
-### Default plugin policy
+## References
 
-The defaults follow the main monorepo's `mdts-example/mdts.config.ts`: `footnotes()`, `math()`, `mermaid({ theme: "tokyo-night", themeDark: "tokyo-night" })`, and `shiki()`.
-Comark's frontmatter, alerts, task lists, component syntax, and attributes are also enabled.
-Shiki uses comark's default light/dark themes and JavaScript regex engine.
-
-Math and Mermaid use thin synchronous KaTeX and beautiful-mermaid component mappings so their content is present in server-rendered HTML.
-This replaces the upstream React mappings that wait for client effects, while retaining the standard comark parser and React rendering pipeline.
-Raw HTML parsing is disabled by default, an intentional difference from mdts's implicit HTML plugin.
-Treat Markdown, component mappings, and plugins as trusted authored content; this component-capable renderer is not a sanitizer for arbitrary user submissions.
-
-### Content lifecycle
-
-Vite performs collection discovery, raw imports, and asset URL generation during development/build.
-SSR renders the collected content per request without a runtime filesystem dependency.
-The current API provides file-based collection and rendering; schema-typed metadata, relationships, and remote loaders are future content-collection extensions.
-
-References: [comark React](https://comark.dev/rendering/react), [Vite glob imports](https://vite.dev/guide/features.html#glob-import), [Astro Content Collections](https://docs.astro.build/en/guides/content-collections/).
-
-## Development
-
-See the [repository contributor instructions](../../AGENTS.md).
+- [Comark React rendering](https://comark.dev/rendering/react)
+- [Vite glob imports](https://vite.dev/guide/features.html#glob-import)
+- [Effect expected errors](https://effect.website/docs/error-management/expected-errors/)
+- [Repository contributor instructions](../../AGENTS.md)
 
 ## License
 

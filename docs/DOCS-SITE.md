@@ -56,7 +56,7 @@ The site links upstream only through its [official website](https://effective-rs
 
 Architecture excerpts are exact contiguous selections of the current `packages/effront/src` files, embedded as authored strings.
 `core.test.tsx` compares every excerpt with the current implementation during testing.
-The browser suite also compares the actual no-JavaScript SSR text against local source, including whitespace and Shiki output.
+The colocated rendering tests cover server-highlighted excerpt output.
 Rendering performs no filesystem reads, Git execution, or GitHub requests to obtain code.
 When implementation changes, update the relevant explanation and excerpt together.
 
@@ -74,9 +74,10 @@ Contributor workflow and framework-level acceptance requirements belong here and
 
 Run `vp run check` and `vp run test` at the repository root.
 The site's colocated tests validate its content registry, rendered headings, source excerpts, and server-side highlighting.
-From `tests/e2e`, run `vp run test` for framework browser acceptance using a dedicated application rather than starting or modifying this site.
-Its `build` project covers SSR, Flight, hydration, shared-layout navigation, sidebar state, and Markdown rendering on the generated Wrangler artifact; `dev` covers HMR on a temporary fixture copy.
-The E2E package owns one Vite configuration, one Playwright configuration, random ports, isolated output, screenshots, and traces.
+Run `vp run test` from `tests/e2e-build` for framework browser acceptance using its dedicated fixture on the generated Wrangler artifact.
+Run `vp run test` from `tests/e2e-dev` for HMR-only acceptance using its separate minimal fixture.
+These packages do not start or modify the documentation site.
+Each owns one Vite configuration, one Playwright configuration, one fixed webServer command, an isolated fixture copy, an available HTTP port, and failure traces.
 Build the documentation application with `vp build` from `app/docs` when changing site integration; this is a separate application build, not an alternate E2E configuration.
 
 The stream injector preserves HTML chunk boundaries and emits embedded Flight payloads after HTML EOF, before the closing document trailer.

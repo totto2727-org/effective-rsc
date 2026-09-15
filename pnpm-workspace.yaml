@@ -5,6 +5,7 @@ packages:
   - examples/*
 
 catalog:
+  "@comark/react": 0.6.2
   shiki: 4.4.3
   "@tailwindcss/vite": ^4.3.3
   vite-plus: 0.3.1

@@ -89,7 +89,8 @@ The workspace contains the framework and its Workers example.
 
 - `vp check` checks every retained framework source file, the consumer, and test source.
 - `vp test run` checks the retained framework tests, including the public Fetch adapter's request-context and lifecycle behavior.
-- `(cd tests/e2e && vp run test)` uses Playwright webServer to host the example source in VitePlus development mode and isolated Wrangler builds with default and overridden runtime variables.
+- `(cd tests/e2e-build && vp run test)` builds its package-local fixture and runs browser acceptance through standalone Wrangler with test runtime bindings.
+- `(cd tests/e2e-dev && vp run test)` runs HMR-only acceptance through Vite/workerd with a separate minimal fixture.
 - Browser checks cover HTML, Flight, hydrated interaction, navigation, unknown routes, and secret non-disclosure.
 - Successful compilation alone does not establish Workers runtime or hydration correctness.
 

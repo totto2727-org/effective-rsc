@@ -51,7 +51,20 @@ Status: initial glob-based collections and SSR rendering implemented in `@effron
 
 The initial package maps a source directory to a public prefix, preserves nested paths, resolves file-relative links and images, and uses standard comark React rendering with the mdts plugin defaults.
 See [the package API and example](../packages/markdown/README.md).
-Follow-up issue creation for typed metadata, relationships, and loaders is blocked because the fork currently has GitHub Issues disabled; this milestone remains recorded here until the tracker is available.
+These milestones are tracked here, as requested, until they are selected for implementation.
+
+### Standard rendering and deferred rich SSR
+
+The 2026-09-15 simplification keeps Vite responsible for raw document imports, asset URLs, bundling, and development updates.
+The package prepares collections and parsed documents through typed Effect operations and resolves source-file references to application page URLs or Vite-provided asset URLs.
+Applications render the result with Comark's standard `MarkdownDocument` and own any component mappings.
+The package does not register replacement Math/Mermaid components, generate their SSR markup, or rewrite generated SVG font imports.
+
+Comark React 0.6.2's standard document renderer does not automatically register its separate Math and Mermaid components.
+With no application mapping, math remains plain expression content and Mermaid does not produce a rendered diagram.
+Full no-JavaScript math and diagram rendering remains a future task, rather than a current compatibility guarantee.
+Before adding support, verify the chosen upstream components through real RSC, Workers HTML/Flight, hydration, and no-JavaScript browser paths, including user mapping precedence and client dependency/network behavior.
+Keep Comark's standard parser defaults and treat content, plugins, and embedded components as trusted authored inputs, not sanitized user submissions.
 
 ### Direction
 

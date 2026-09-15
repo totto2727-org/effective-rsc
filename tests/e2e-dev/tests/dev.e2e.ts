@@ -14,13 +14,9 @@ test("updates edited Markdown and discovers added and removed source pages in de
     if (/hydrat|server rendered html|did not match/i.test(message.text()))
       errors.push(message.text());
   });
-  const appRoot = process.env["EFFRONT_E2E_DEV_APP_ROOT"];
+  const appRoot = process.env["EFFRONT_E2E_APP_ROOT"];
   const runDirectory = process.env["EFFRONT_E2E_RUN_DIR"];
-  if (
-    !appRoot ||
-    !runDirectory ||
-    relative(resolve(runDirectory), resolve(appRoot)) !== join("dev", "app")
-  ) {
+  if (!appRoot || !runDirectory || relative(resolve(runDirectory), resolve(appRoot)) !== "app") {
     throw new TypeError("HMR acceptance may only modify its isolated run-directory app copy");
   }
   const indexFile = join(appRoot, "content/index.md");

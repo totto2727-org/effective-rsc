@@ -1,5 +1,6 @@
-import { Markdown, type MarkdownEntry } from "@effront/markdown";
-import { Context, Effect, Schema } from "effect";
+import { MarkdownDocument as ComarkMarkdownDocument } from "@comark/react/components/MarkdownDocument";
+import { parseMarkdown, type MarkdownEntry } from "@effront/markdown";
+import { Context, Effect, Result, Schema } from "effect";
 import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { manual } from "../content";
 import { ManualShell } from "./manual-shell";
@@ -114,7 +115,11 @@ class CurrentEntry extends Context.Service<CurrentEntry, MarkdownEntry>()("e2e/C
 const FindEntry = EFFRONT.Middleware.make<{ provides: CurrentEntry }>(
   Effect.fn(function* (httpEffect) {
     const request = yield* HttpServerRequest.HttpServerRequest;
-    const entry = manual.get(request.url);
+    const collection = yield* Effect.result(manual);
+    if (Result.isFailure(collection)) {
+      return HttpServerResponse.text("Unable to load Markdown collection", { status: 500 });
+    }
+    const entry = collection.success.get(request.url);
     if (!entry) return HttpServerResponse.text("Not found", { status: 404 });
     return yield* httpEffect.pipe(Effect.provideService(CurrentEntry, entry));
   }),
@@ -132,9 +137,10 @@ const ManualPage = Manual.Page.make({
   params: Schema.Struct({ path: Schema.String }),
   render: Effect.fn(function* () {
     const entry = yield* CurrentEntry;
+    const document = yield* parseMarkdown(entry);
     return (
       <article className="comark" data-markdown-page={entry.url} data-doc-page={entry.url}>
-        <Markdown entry={entry} />
+        <ComarkMarkdownDocument value={document} />
       </article>
     );
   }),

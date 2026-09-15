@@ -1,13 +1,12 @@
 {
-  "name": "@effront/e2e",
+  "name": "@effront/e2e-build",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "playwright test",
-    "test:build": "playwright test --project build",
-    "test:dev": "playwright test --project dev"
+    "test": "playwright test"
   },
   "devDependencies": {
+    "@comark/react": "catalog:",
     "@effect/platform-browser": "catalog:",
     "@effront/cloudflare": "workspace:*",
     "@effront/markdown": "workspace:*",

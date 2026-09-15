@@ -1,57 +1,45 @@
 # Markdown integration
 
-## Public contract
+## Purpose
 
-`@effront/markdown` receives eager Vite glob maps, indexes Markdown documents under a public prefix, and renders entries with comark's standard parsed-document React integration.
-The runnable consumer is `examples/markdown`; run `vp dev`, `vp build`, or `vp run local` from that directory.
-See [the package README](../packages/markdown/README.md) for installation, component overrides, URL rules, and complete usage.
+This document describes the repository's Markdown integration and its verification boundaries.
+For application setup and the public API, see [the package README](../packages/markdown/README.md).
+The runnable example is `examples/markdown`.
 
-`content/index.md` maps to `/manual`, while `content/guide/deep/details.md` maps to `/manual/guide/deep/details`.
-Relative links resolve from the containing source file, preserving query strings and fragments.
-Images and non-document links resolve through the supplied Vite asset map.
-A single named catch-all Page handles the collection. Middleware looks up the original request URL, returns 404 before streaming for missing entries, and provides the found entry through request-scoped Effect context.
-Core delegates URL matching and capture decoding to Effect HTTP and only renames the catch-all parameter.
-Collection lookup decodes each original URL path segment once and re-encodes it for the document index, so encoded separators do not become directory boundaries.
-Paths without an indexed document produce a lookup miss rather than a collection error.
-Valid escapes are decoded once, while malformed escapes remain literal filename text, preserving percent characters without a second decode.
+## Responsibilities
 
-## Default rendering
+Vite discovers documents with `import.meta.glob` and imports their contents with `?raw`.
+Vite also resolves assets with `?url` and owns their development URLs, production emission, and hashing.
+The Markdown package consumes those maps rather than implementing a filesystem loader, asset copier, or bundler.
 
-The reference configuration is the main monorepo's `js/app/mdts-example/mdts.config.ts`, using the main monorepo's mdts comark integration.
-The plugin set includes footnotes, math, Mermaid with Tokyo Night in both modes, and Shiki, alongside comark's non-HTML defaults.
-Comark React 0.6.2's convenience Markdown component statically imports client parsing branches, so this package uses the public `parseMarkdown` and `MarkdownDocument` path.
-Math and Mermaid use standard component mappings backed by synchronous KaTeX and beautiful-mermaid rendering, making their output visible without JavaScript.
-The generated Mermaid font imports are removed because beautiful-mermaid 1.1.3 emits a remote Google Fonts import even with a system font configured.
+The package maps source files to application URLs while preserving directory hierarchy.
+For example, `content/index.md` maps to `/manual` and `content/guide/deep/details.md` maps to `/manual/guide/deep/details`.
+Relative document links resolve from their containing source file and retain queries and fragments.
+Asset references use URLs supplied by Vite.
 
-Raw HTML parsing is disabled by default, unlike mdts's implicit HTML default.
-Content, plugins, and component mappings remain trusted authored inputs; the renderer is not a sanitizer for arbitrary user submissions.
-Custom link and image components receive collection-resolved URLs.
+`createMarkdownCollection`, `parseMarkdown`, and URL resolvers expose expected failures through `MarkdownError` in Effect's error channel.
+Collection entries and `get` remain ordinary values and lookup operations.
+A missing document is a lookup miss, allowing the application's catch-all middleware to return 404 before streaming.
+Core delegates URL matching and decoding to Effect HTTP and only translates the named catch-all capture.
+Collection lookup preserves segment boundaries and decodes each URL segment once, including literal percent filenames.
 
-## Verification entry points
+## Rendering
 
-- `vp run check` from the repository root checks formatting, lint rules, and types.
-- `vp run test` from the root covers collection URL semantics, standard React SSR rendering, core route contracts, and retained regressions.
-- `vp run test` from `tests/e2e` runs the dedicated fixture application: the `build` project verifies Markdown SSR, navigation, and assets through standalone Wrangler, while the `dev` project verifies HMR on an isolated copy.
-- The Markdown browser suite checks no-JavaScript HTML, standard plugins, nested direct and Flight responses, image response bytes, shared Layout state, history, query/hash links, Unicode paths, unknown routes, and actual client bundle modules.
-- The `dev` project edits, adds, and deletes Markdown only in its per-run fixture copy; examples and fixture originals remain unchanged.
-- Bundle inspection belongs to the `build` project, while content HMR belongs to `dev`; tests are selected by project instead of runtime host-name skips.
+Parsing retains Comark's standard defaults and adds the mdts plugins for footnotes, math, Mermaid with Tokyo Night, and Shiki.
+`parseMarkdown` prepares a Comark document and resolves link/image attributes before rendering.
+Applications import Comark's standard `MarkdownDocument` directly and supply their own component mappings.
+The package provides no React renderer factory, forced component mappings, or custom Math/Mermaid SSR replacements.
 
-Temporary logs, browser traces, build graphs, and package tarballs remain under ignored repository `tmp` directories.
-No Cloudflare deployment, npm publication, or upstream pull request is required for this verification.
+Content and plugins are trusted authored inputs.
+This integration is not a sanitizer for untrusted submissions.
+Standard Comark document rendering does not automatically register its separate Math/Mermaid components; rich no-JavaScript rendering is tracked in [the roadmap](ROADMAP.md#standard-rendering-and-deferred-rich-ssr).
 
-## Future collection features
+## Verification
 
-Schema-validated metadata, typed relationships, and extensible loaders remain a separate milestone in [the roadmap](ROADMAP.md).
-Creating its follow-up issue is currently blocked because the fork has GitHub Issues disabled.
+- Repository root: `vp run check` and `vp run test` validate formatting, lint, types, collection errors, URL mapping, parsing, and core contracts.
+- `tests/e2e-build`: `vp run test` builds a dedicated fixture and runs browser checks against standalone Wrangler.
+- `tests/e2e-dev`: `vp run test` starts Vite development and verifies Markdown edits, additions, and deletion using a minimal fixture.
+- Each E2E project has its own fixed Vite and Playwright configuration and only the fixture assets needed for its tests.
+- Temporary mutable fixture copies and artifacts stay in ignored package-local `tmp` directories.
 
-## Catch-all SSR acceptance on 2026-09-12
-
-- Root VitePlus check passed; Vitest passed 356 tests in 45 files.
-- Markdown browser acceptance passed 32 cases, with two intentional host-specific skips.
-- Existing Workers acceptance passed 36 cases; documentation acceptance passed 12 cases.
-- One `/manual/*path` route serves the directory root and arbitrary nested documents through request-time lookup.
-- Unknown documents return 404 for HTML and Flight before streaming begins. Current collection lookup preserves segment boundaries, so encoded separators do not alias nested documents.
-- Real dev content editing, glob addition, and glob deletion update the collection while the route stays fixed. The added filename includes literal `%20`, exercising decode-once behavior through its `%2520` URL.
-- Built client module inspection found no Markdown parser or highlighter implementation; browser requests required no remote font service.
-- The npm tarball contains public source, stylesheet, README, and license, without tests or temporary evidence.
-- The earlier enumeration prototype is preserved only on the backup branch recorded in the SSG roadmap. Its public API, opaque types, dedicated tests, and static-registration entry property have been removed from the current source tree.
+Typed metadata, relationships, loaders, and richer SSR support remain separate roadmap items.

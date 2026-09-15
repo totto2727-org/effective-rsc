@@ -1,8 +1,14 @@
+import { Effect } from "effect";
+import { MarkdownError } from "./error.ts";
+import type { MarkdownCollectionOptions } from "./collection.ts";
 import { describe, expect, it } from "vite-plus/test";
 import { createMarkdownCollection } from "./collection.ts";
 
+const create = (options: MarkdownCollectionOptions) =>
+  Effect.runSync(createMarkdownCollection(options));
+
 const collection = () =>
-  createMarkdownCollection({
+  create({
     source: "./content",
     basePath: "/manual",
     documents: {
@@ -53,7 +59,7 @@ describe("createMarkdownCollection", () => {
   });
 
   it("looks up URL-encoded filenames without interpreting them as route patterns", () => {
-    const markdown = createMarkdownCollection({
+    const markdown = create({
       source: "./content",
       basePath: "/manual",
       documents: {
@@ -101,7 +107,7 @@ describe("createMarkdownCollection", () => {
   );
 
   it.each(["/", "/?mode=full#top"])("looks up a root index: %s", (pathname) => {
-    const markdown = createMarkdownCollection({
+    const markdown = create({
       source: "./content",
       basePath: "/",
       documents: { "./content/index.md": "# Root" },
@@ -112,7 +118,7 @@ describe("createMarkdownCollection", () => {
   it.each(["//", "///", "/./", "/%2E/", "/%00", "/%2F"])(
     "does not alias unknown paths to a root index: %s",
     (pathname) => {
-      const markdown = createMarkdownCollection({
+      const markdown = create({
         source: "./content",
         basePath: "/",
         documents: { "./content/index.md": "# Root" },
@@ -124,7 +130,7 @@ describe("createMarkdownCollection", () => {
   it.each(["%2F", "%5C", "%00", "%2E", "%", "%E0%A4"])(
     "looks up a literal escape filename after decoding once: %s",
     (filename) => {
-      const markdown = createMarkdownCollection({
+      const markdown = create({
         source: "./content",
         basePath: "/manual",
         documents: { [`./content/${filename}.md`]: "# Literal escape" },
@@ -135,96 +141,94 @@ describe("createMarkdownCollection", () => {
     },
   );
 
-  it.each(["%2F", "%5C", "%00"])(
-    "keeps encoded separator and NUL validation for content references: %s",
-    (segment) => {
-      const entry = collection().get("/manual/guides/advanced")!;
-      // Links and images share the local-reference validation contract.
-      expect(() => entry.resolveLink(`${segment}.md`)).toThrow(/invalid path segment/u);
-      expect(() => entry.resolveImage(`${segment}.svg`)).toThrow(/invalid path segment/u);
-    },
-  );
-
-  it("resolves Markdown relative to its source directory and preserves suffixes", () => {
+  it("resolves document URLs, queries, fragments, and Vite asset URLs", () => {
     const markdown = collection();
-    const entry = markdown.get("/manual/guides/advanced");
-    expect(entry).toBeDefined();
-
-    expect(entry?.resolveLink("index.md?mode=full#top")).toBe("/manual/guides?mode=full#top");
-    expect(markdown.resolveLink(entry!, "getting%20started.md#install")).toBe(
+    const entry = markdown.get("/manual/guides/advanced")!;
+    expect(Effect.runSync(entry.resolveLink("index.md?mode=full#top"))).toBe(
+      "/manual/guides?mode=full#top",
+    );
+    expect(Effect.runSync(markdown.resolveLink(entry, "getting%20started.md#install"))).toBe(
       "/manual/guides/getting%20started#install",
     );
-    expect(entry?.resolveLink("100%25.md")).toBe("/manual/guides/100%25");
-    expect(entry?.resolveLink("?tab=examples#heading")).toBe(
+    expect(Effect.runSync(entry.resolveLink("100%25.md"))).toBe("/manual/guides/100%25");
+    expect(Effect.runSync(entry.resolveLink("?tab=examples#heading"))).toBe(
       "/manual/guides/advanced?tab=examples#heading",
     );
-    expect(entry?.resolveLink("#heading")).toBe("#heading");
-  });
-
-  it("resolves eager Vite asset URLs for links and images", () => {
-    const markdown = collection();
-    const entry = markdown.get("/manual/guides/advanced");
-    expect(entry).toBeDefined();
-
-    expect(entry?.resolveImage("diagram%20one.svg#icon")).toBe("/assets/diagram-one.a1b2.svg#icon");
-    expect(markdown.resolveLink(entry!, "../logo.svg?download=1")).toBe(
+    expect(Effect.runSync(entry.resolveImage("diagram%20one.svg#icon"))).toBe(
+      "/assets/diagram-one.a1b2.svg#icon",
+    );
+    expect(Effect.runSync(markdown.resolveLink(entry, "../logo.svg?download=1"))).toBe(
       "/assets/logo.c3d4.svg?download=1",
     );
   });
 
-  it("leaves external, site-absolute, and hash-only references untouched", () => {
-    const markdown = collection();
-    const entry = markdown.get("/manual/guides/advanced");
-    expect(entry).toBeDefined();
-
+  it("leaves URL policy to Comark and the application", () => {
+    const entry = collection().get("/manual/guides/advanced")!;
     for (const href of [
-      "https://example.com/docs?q=1#top",
+      "https://example.com/?q=1#top",
       "mailto:hello@example.com",
-      "/assets/global.svg",
+      "/global.svg",
       "//cdn.example.com/logo.svg",
       "#details",
+      "data:image/png;base64,AA==",
     ]) {
-      expect(entry?.resolveLink(href)).toBe(href);
+      expect(Effect.runSync(entry.resolveLink(href))).toBe(href);
     }
   });
 
-  it("rejects invalid static maps and unsafe or unresolved local references", () => {
-    expect(() =>
-      createMarkdownCollection({
-        source: "./content",
-        basePath: "/manual",
-        documents: { "./content/foo.md": "", "./content/foo/index.md": "" },
-      }),
-    ).toThrow(/same public pathname/u);
-    expect(() =>
-      createMarkdownCollection({
-        source: "./content",
-        basePath: "/manual",
-        documents: { "./elsewhere/page.md": "" },
-      }),
-    ).toThrow(/outside source/u);
-
-    const entry = collection().get("/manual/guides/advanced");
-    expect(entry).toBeDefined();
-    expect(() => entry?.resolveLink("missing.md")).toThrow(/imported Markdown/u);
-    expect(() => entry?.resolveImage("missing.svg")).toThrow(/imported local asset/u);
-    expect(() => entry?.resolveLink("../../../outside.md")).toThrow(/outside source/u);
-    expect(() => entry?.resolveLink("javascript:alert(1)")).toThrow(/unsafe javascript/u);
-    expect(() => entry?.resolveLink("java\nscript:alert(1)")).toThrow(/control characters/u);
-    expect(() => entry?.resolveImage("data:image/svg+xml,unsafe")).toThrow(/unsafe data/u);
-  });
-
-  it("does not create ambiguous URLs when an imported asset already has a query or fragment", () => {
-    const markdown = createMarkdownCollection({
+  it("uses Vite's already-resolved asset URLs including inline assets", () => {
+    const markdown = create({
       source: "./content",
       basePath: "/manual",
-      documents: { "./content/index.md": "# Manual" },
-      assets: { "./content/logo.svg": "/assets/logo.svg?compiled=1" },
+      documents: { "./content/index.md": "" },
+      assets: { "./content/logo.svg": "data:image/svg+xml;base64,AAAA" },
     });
-    const entry = markdown.get("/manual");
-    expect(entry).toBeDefined();
+    expect(Effect.runSync(markdown.get("/manual")!.resolveImage("logo.svg"))).toBe(
+      "data:image/svg+xml;base64,AAAA",
+    );
+  });
 
-    expect(entry?.resolveImage("logo.svg#mark")).toBe("/assets/logo.svg?compiled=1#mark");
-    expect(() => entry?.resolveImage("logo.svg?download=1")).toThrow(/cannot append a query/u);
+  it.each([
+    { source: "content", basePath: "/manual", documents: {} },
+    { source: "./content", basePath: "manual", documents: {} },
+    { source: "./content", basePath: "/manual?query=1", documents: {} },
+    { source: "./content", basePath: "/manual", documents: { "./elsewhere/page.md": "" } },
+    {
+      source: "./content",
+      basePath: "/manual",
+      documents: { "./content/foo.md": "", "./content/foo/index.md": "" },
+    },
+    { source: "./content", basePath: "/manual", documents: { "./content/file.txt": "" } },
+    {
+      source: "./content",
+      basePath: "/manual",
+      documents: {},
+      assets: { "./elsewhere/logo.svg": "/logo.svg" },
+    },
+  ])("returns configuration failures through the typed error channel: %j", (options) => {
+    const error = Effect.runSync(Effect.flip(createMarkdownCollection(options)));
+    expect(error).toBeInstanceOf(MarkdownError);
+    expect(error._tag).toBe("MarkdownError");
+  });
+
+  it("returns missing and out-of-source references through the typed error channel", () => {
+    const entry = collection().get("/manual/guides/advanced")!;
+    for (const operation of [
+      entry.resolveLink("missing.md"),
+      entry.resolveImage("missing.svg"),
+      entry.resolveLink("../../../outside.md"),
+      entry.resolveLink("%2F.md"),
+    ]) {
+      expect(Effect.runSync(Effect.flip(operation))).toBeInstanceOf(MarkdownError);
+    }
+  });
+
+  it("constructs a fresh collection on each Effect execution", () => {
+    const effect = createMarkdownCollection({
+      source: "./content",
+      basePath: "/",
+      documents: { "./content/index.md": "# Home" },
+    });
+    expect(Effect.runSync(effect)).not.toBe(Effect.runSync(effect));
   });
 });

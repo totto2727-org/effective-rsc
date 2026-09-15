@@ -1,7 +1,7 @@
 {
   "name": "@effront/markdown",
   "version": "0.1.4-workers.0",
-  "description": "Comark React rendering and file-based Markdown collections for Effront.",
+  "description": "Typed Effect Markdown collections and Comark parsing for Vite applications.",
   "license": "MIT",
   "files": [
     "src",
@@ -12,23 +12,20 @@
   ],
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./styles.css": "./src/styles.css"
+    ".": "./src/index.ts"
   },
   "dependencies": {
-    "@comark/react": "0.6.2",
-    "beautiful-mermaid": "^1.1.3",
     "comark": "0.6.2",
+    "effect": "catalog:",
     "katex": "^0.17.0",
     "shiki": "catalog:"
   },
   "devDependencies": {
+    "@comark/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "react": "catalog:",
     "react-dom": "catalog:",
     "vitest": "4.1.11"
-  },
-  "peerDependencies": {
-    "react": "catalog:"
   }
 }

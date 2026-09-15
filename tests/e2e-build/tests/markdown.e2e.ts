@@ -57,9 +57,18 @@ test.describe("Markdown without JavaScript", () => {
     await footnote.click();
     await expect.poll(() => new URL(page.url()).hash).toBe(footnoteHref);
 
-    await expect(page.locator("math")).toHaveCount(2);
-    await expect(page.locator(".mermaid svg")).toBeVisible();
-    await expect(page.locator(".mermaid svg")).toContainText("Markdown");
+    // Standard Comark preserves plain math and Mermaid source metadata here.
+    // Rich Math/Mermaid SSR is deferred, without application-owned renderers.
+    await expect(page.locator("math")).toHaveText(["E = mc^2", "a^2 + b^2 = c^2"]);
+    await expect(page.locator("math .katex, math mrow")).toHaveCount(0);
+    const mermaid = page.locator("mermaid");
+    await expect(mermaid).toHaveCount(1);
+    await expect(mermaid).toHaveAttribute(
+      "content",
+      "flowchart LR\n  Markdown --> React --> HTML\n",
+    );
+    await expect(mermaid).toBeEmpty();
+    await expect(page.locator("mermaid svg, .mermaid svg")).toHaveCount(0);
     const code = page.locator("pre.shiki").first();
     await expect(code).toBeVisible();
     await expect(code.locator("code")).toHaveText('const message: string = "Hello Markdown";');
@@ -126,7 +135,7 @@ test.describe("Markdown without JavaScript", () => {
     expect(asset.status()).toBe(200);
     expect(asset.headers()["content-type"]).toMatch(/^image\//);
     expect(await asset.body()).toEqual(
-      await readFile(new URL("../fixtures/app/content/images/diagram.svg", import.meta.url)),
+      await readFile(new URL("../fixture/content/images/diagram.svg", import.meta.url)),
     );
     await expect
       .poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth))

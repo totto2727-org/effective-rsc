@@ -9,7 +9,8 @@
 - `examples/markdown/`: file-relative Markdown routing and asset consumer.
 - `examples/workers/`: consumer using the public package exports, Workers `fetch`, and runtime `env`.
 - `app/docs/`: SSR Guide, API reference, and implementation architecture site, using the framework itself with shadcn/ui and Tailwind Typography.
-- `tests/e2e/`: independently managed Playwright acceptance against the real consumer.
+- `tests/e2e-build/`: independent Playwright acceptance against its package-local fixture built for standalone Wrangler.
+- `tests/e2e-dev/`: independent Vite/workerd HMR acceptance using its own minimal package-local fixture.
 - `packages/gitignore-patterns/`: Gitignore generator and its colocated unit / package-owned Vitest CLI integration tests.
 - `docs/`: current architecture and verification documentation.
 - Removed upstream implementations and references remain available in Git history, not in the working tree.
@@ -37,11 +38,11 @@ From the repository root:
 - `vp run test` runs retained unit/integration tests through `js:test` (`vp test run`).
 - Root task definitions live in `vite.config.ts` `run.tasks`, not duplicated package scripts.
 - Do not add standalone formatter/linter tasks; use the fix/check workflow.
-- Run `vp run test` from `tests/e2e/` for real browser acceptance.
+- Run `vp run test` from `tests/e2e-build/` for built-artifact browser acceptance and from `tests/e2e-dev/` for development HMR acceptance.
 - Run `vp run test` from `packages/gitignore-patterns/` for that package's unit and real CLI integration tests.
 
 For the documentation site, enter `app/docs/` and use `vp dev`, `vp build`, or `vp run local`; see [site operations](docs/DOCS-SITE.md).
-Run `vp run test:docs` from `tests/e2e/` for its independent browser acceptance.
+The site has colocated content and rendering tests; framework browser acceptance uses the independent E2E fixtures rather than starting this site.
 
 To run the example, enter `examples/workers/` and use `vp dev`, `vp build`, or `vp run local`.
 The repository root intentionally provides no example dev, build, or local-hosting script.
@@ -100,6 +101,6 @@ _This AGENTS.md was generated from the [share-artifact skill](https://raw.github
 - Architecture > Implementation chapters explain the current packages/effront implementation. Display the reviewed package version and commit, and keep embedded source excerpts synchronized with both that baseline and current files; validate them locally; retain upstream provenance separately in docs/UPSTREAM.md.
 - Deferred features belong in docs/ROADMAP.md and must not be presented as implemented APIs.
 
-Run `vp run test` from `tests/e2e/` for framework browser acceptance using one Playwright configuration and one Vite configuration.
-The `build` project validates the built Wrangler application; the `dev` project covers HMR using an isolated fixture copy.
-Keep their startup commands explicit rather than selecting between dev and build commands by test file or array index.
+Each of `tests/e2e-build/` and `tests/e2e-dev/` owns its fixture, Playwright configuration, Vite configuration, and `vp run test` entry point.
+Keep one fixed `webServer` command per package: build then standalone Wrangler for `e2e-build`, and Vite development for `e2e-dev`.
+The dev package covers HMR only. Do not introduce shared build/dev mode branches or start both hosts from either package.
