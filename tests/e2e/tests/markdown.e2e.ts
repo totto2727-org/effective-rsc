@@ -1,5 +1,4 @@
-import { randomUUID } from "node:crypto";
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { expect, test as base } from "@playwright/test";
 
 const unicodePath = `/manual/guide/${encodeURIComponent("日本語 space")}`;
@@ -86,27 +85,29 @@ test.describe("Markdown without JavaScript", () => {
     page,
   }) => {
     await page.goto("/manual");
-    await expect(page.getByRole("link", { name: "Getting started", exact: true })).toHaveAttribute(
-      "href",
-      "/manual/guide/getting-started?from=manual#installation",
-    );
-    await expect(page.getByRole("link", { name: "Deep details", exact: true })).toHaveAttribute(
-      "href",
-      "/manual/guide/deep/details",
-    );
-    await expect(page.getByRole("link", { name: "Unicode page", exact: true })).toHaveAttribute(
-      "href",
-      `${unicodePath}?from=manual#details`,
-    );
     await expect(
-      page.getByRole("link", { name: "External reference", exact: true }),
+      page.locator("main article").getByRole("link", { name: "Getting started", exact: true }),
+    ).toHaveAttribute("href", "/manual/guide/getting-started?from=manual#installation");
+    await expect(
+      page.locator("main article").getByRole("link", { name: "Deep details", exact: true }),
+    ).toHaveAttribute("href", "/manual/guide/deep/details");
+    await expect(
+      page.locator("main article").getByRole("link", { name: "Unicode page", exact: true }),
+    ).toHaveAttribute("href", `${unicodePath}?from=manual#details`);
+    await expect(
+      page.locator("main article").getByRole("link", { name: "External reference", exact: true }),
     ).toHaveAttribute("href", "https://example.com/reference?q=markdown#section");
-    const localSection = page.getByRole("link", { name: "Local section", exact: true });
+    const localSection = page
+      .locator("main article")
+      .getByRole("link", { name: "Local section", exact: true });
     await expect(localSection).toHaveAttribute("href", "#features");
     await localSection.click();
     await expect.poll(() => new URL(page.url()).hash).toBe("#features");
     await expect(page.locator("#features")).toBeInViewport();
-    await page.getByRole("link", { name: "Getting started", exact: true }).click();
+    await page
+      .locator("main article")
+      .getByRole("link", { name: "Getting started", exact: true })
+      .click();
     await expect(page).toHaveURL(/\/manual\/guide\/getting-started\?from=manual#installation$/);
     await expect(page.locator("#installation")).toBeVisible();
   });
@@ -125,9 +126,7 @@ test.describe("Markdown without JavaScript", () => {
     expect(asset.status()).toBe(200);
     expect(asset.headers()["content-type"]).toMatch(/^image\//);
     expect(await asset.body()).toEqual(
-      await readFile(
-        new URL("../../../examples/markdown/content/images/diagram.svg", import.meta.url),
-      ),
+      await readFile(new URL("../fixtures/app/content/images/diagram.svg", import.meta.url)),
     );
     await expect
       .poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth))
@@ -144,10 +143,9 @@ test.describe("Markdown without JavaScript", () => {
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(destination.title);
       if (destination.hash)
         await expect(page.locator(`[id=${JSON.stringify(destination.hash)}]`)).toBeVisible();
-      await expect(page.getByRole("link", { name: "Manual home", exact: true })).toHaveAttribute(
-        "href",
-        "/manual",
-      );
+      await expect(
+        page.locator("main article").getByRole("link", { name: "Manual home", exact: true }),
+      ).toHaveAttribute("href", "/manual");
     });
   }
 });
@@ -216,7 +214,10 @@ test("hydrates and follows Markdown links with Flight while retaining shared lay
         new URL(response.url()).pathname === destination.path &&
         response.headers()["content-type"]?.includes("text/x-component") === true,
     );
-    await page.getByRole("link", { name: destination.title, exact: true }).click();
+    await page
+      .locator("main article")
+      .getByRole("link", { name: destination.title, exact: true })
+      .click();
     const flight = await flightPromise;
     expect(flight.status()).toBe(200);
     expect(await flight.text()).toContain(destination.title);
@@ -235,7 +236,10 @@ test("hydrates and follows Markdown links with Flight while retaining shared lay
   }
   await page.goForward();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Unicode page");
-  await page.getByRole("link", { name: "Manual home", exact: true }).click();
+  await page
+    .locator("main article")
+    .getByRole("link", { name: "Manual home", exact: true })
+    .click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Markdown manual");
   await page.getByRole("button", { name: "Count: 1", exact: true }).click();
   await expect(page.getByRole("button", { name: "Count: 2", exact: true })).toBeVisible();
@@ -246,70 +250,22 @@ test("hydrates and follows Markdown links with Flight while retaining shared lay
 
 test("keeps the Markdown renderer, parser and highlighters outside the actual browser build", async ({
   request,
-}, testInfo) => {
-  test.skip(testInfo.project.name !== "markdown-wrangler", "Audit the independent built artifact");
+}) => {
   const response = await request.get("/acceptance-client-graph.json");
   expect(response.status()).toBe(200);
   const graph: { modules: string[]; assets: string[] } = await response.json();
   expect(graph.modules.length, "Audit a real nonempty client build").toBeGreaterThan(10);
-  expect(graph.modules.some((id) => id.includes("/examples/markdown/"))).toBe(true);
+  expect(graph.modules.some((id) => id.includes("/app/src/"))).toBe(true);
   // KaTeX styles and local fonts are presentation assets, not browser parsing code.
   const implementation = [...graph.modules, ...graph.assets].filter(
     (id) => !/\.(?:css|woff2?|ttf|otf)(?:$|\?)/i.test(id),
   );
   expect(
     implementation.filter((id) =>
-      /@comark|comark[+_/]|packages\/markdown\/src|shiki|oniguruma|vscode-textmate|beautiful-mermaid|katex|mathjax|markdown-it|micromark/i.test(
+      /@comark|comark[+_/]|packages\/markdown\/src|shiki|oniguruma|vscode-textmate|beautiful-mermaid|katex|mathjax|markdown-it|micromark|oxc-transform-react/i.test(
         id,
       ),
     ),
     "No browser Markdown parsing, math/diagram rendering, or syntax-highlighting implementation",
   ).toEqual([]);
-});
-
-test("updates edited Markdown and discovers added and removed source pages in development", async ({
-  page,
-  request,
-}, testInfo) => {
-  test.skip(
-    testInfo.project.name !== "markdown-dev",
-    "Source updates belong to the development host",
-  );
-  test.setTimeout(45_000);
-  const indexFile = new URL("../../../examples/markdown/content/index.md", import.meta.url);
-  const stem = `acceptance-added-${randomUUID()}%20literal`;
-  const encodedStem = encodeURIComponent(stem);
-  const addedFile = new URL(
-    `../../../examples/markdown/content/guide/${encodedStem}.md`,
-    import.meta.url,
-  );
-  const addedPath = `/manual/guide/${encodedStem}`;
-  const original = await readFile(indexFile);
-  await page.goto("/manual");
-  await page.waitForLoadState("networkidle");
-  try {
-    await writeFile(
-      indexFile,
-      Buffer.concat([original, Buffer.from("\n\nAcceptance live update\n")]),
-    );
-    await expect(page.getByText("Acceptance live update", { exact: true })).toBeVisible({
-      timeout: 15_000,
-    });
-    await writeFile(addedFile, "# Added Markdown page\n\nDiscovered from the source glob.\n", {
-      flag: "wx",
-    });
-    await expect
-      .poll(async () => (await request.get(addedPath)).status(), { timeout: 10_000 })
-      .toBe(200);
-    await page.goto(addedPath);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Added Markdown page");
-    await rm(addedFile);
-    await expect
-      .poll(async () => (await request.get(addedPath)).status(), { timeout: 10_000 })
-      .toBe(404);
-    await expect(page.locator("vite-error-overlay")).toHaveCount(0);
-  } finally {
-    await writeFile(indexFile, original);
-    await rm(addedFile, { force: true });
-  }
 });

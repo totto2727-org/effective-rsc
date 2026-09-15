@@ -2,25 +2,13 @@ import { expect, test } from "@playwright/test";
 
 const serverSecret = "acceptance-test-secret";
 
-const expectations = {
-  "workers-dev": { label: "Workers example", secretConfigured: false },
-  "workers-wrangler-default": { label: "Workers example", secretConfigured: false },
-  "workers-wrangler-overridden": { label: "Workers override", secretConfigured: true },
-} as const;
-
-const configuredProject = (name: string) => {
-  const expected = expectations[name as keyof typeof expectations];
-  if (expected === undefined) {
-    throw new TypeError(`Unexpected Workers acceptance project: ${name}`);
-  }
-  return expected;
-};
+// The independent Wrangler host supplies these test-only runtime overrides.
+const expected = { label: "Workers override", secretConfigured: true };
 
 test("serves HTML and Flight responses without leaking server bindings", async ({
   page,
   request,
-}, testInfo) => {
-  const expected = configuredProject(testInfo.project.name);
+}) => {
   const html = await request.get("/");
   const htmlBody = await html.text();
 
@@ -62,16 +50,14 @@ test("serves HTML and Flight responses without leaking server bindings", async (
   }
 });
 
-test("hydrates the client counter and navigates application links", async ({ page }, testInfo) => {
-  const expected = configuredProject(testInfo.project.name);
-
+test("hydrates the client counter and navigates application links", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("Effront Workers");
   await page.waitForLoadState("networkidle");
   const counter = page.getByRole("button", { name: "Count: 0" });
   await expect(counter).toBeVisible();
   await counter.click();
-  await expect(page.getByRole("button")).toHaveText("Count: 1");
+  await expect(page.getByRole("button", { name: "Count: 1", exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "About" }).click();
   await expect(page).toHaveURL(/\/about$/);

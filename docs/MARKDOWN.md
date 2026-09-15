@@ -31,10 +31,10 @@ Custom link and image components receive collection-resolved URLs.
 
 - `vp run check` from the repository root checks formatting, lint rules, and types.
 - `vp run test` from the root covers collection URL semantics, standard React SSR rendering, core route contracts, and retained regressions.
-- `vp run test:markdown` from `tests/e2e` builds and runs the actual example through Vite/workerd and independent Wrangler.
+- `vp run test` from `tests/e2e` runs the dedicated fixture application: the `build` project verifies Markdown SSR, navigation, and assets through standalone Wrangler, while the `dev` project verifies HMR on an isolated copy.
 - The Markdown browser suite checks no-JavaScript HTML, standard plugins, nested direct and Flight responses, image response bytes, shared Layout state, history, query/hash links, Unicode paths, unknown routes, and actual client bundle modules.
-- Its dev-only case edits, adds, and deletes real Markdown files and restores its temporary changes.
-- The bundle audit is built-host-only, while content HMR is dev-only; the other host's corresponding cases are intentionally skipped.
+- The `dev` project edits, adds, and deletes Markdown only in its per-run fixture copy; examples and fixture originals remain unchanged.
+- Bundle inspection belongs to the `build` project, while content HMR belongs to `dev`; tests are selected by project instead of runtime host-name skips.
 
 Temporary logs, browser traces, build graphs, and package tarballs remain under ignored repository `tmp` directories.
 No Cloudflare deployment, npm publication, or upstream pull request is required for this verification.

@@ -23,7 +23,7 @@ The following suites remain under `packages/effront/tests/` because they exercis
 | `vite/cloudflare.test.ts`              | Real Vite configuration resolution integrating Effront and Cloudflare plugins.            |
 
 The package-owned `packages/gitignore-patterns/tests/cli.test.ts` validates the public generator under Vitest through actual Git and VitePlus CLI processes.
-The E2E project's `tests/e2e/tests/workers-fetch.e2e.ts` validates the actual browser application through Vite/workerd and standalone Wrangler.
+The E2E project validates its dedicated fixture application through the generated Wrangler artifact; development-only HMR checks run against Vite/workerd.
 Playwright explicitly selects the `.e2e.ts` suite, keeping it outside Vitest's standard `.test`/`.spec` discovery without a Vitest include override.
 
 ## Verification
@@ -31,7 +31,7 @@ Playwright explicitly selects the `.e2e.ts` suite, keeping it outside Vitest's s
 - `vp test run` discovers both colocated unit tests and retained integration tests by default.
 - `vp check` checks all source and retained tests, including the colocated files.
 - `(cd packages/gitignore-patterns && vp run test)` builds the generator and executes real formatter/linter acceptance.
-- `(cd tests/e2e && vp run test)` builds the Workers example and runs the real browser acceptance matrix.
+- `(cd tests/e2e && vp run test)` runs the dedicated application with explicit `build` and `dev` projects in one Playwright configuration.
 - Package archives must omit colocated tests; source-package file exclusions and the generator declaration-build exclusions enforce that boundary, not test-discovery exclusions.
 
 ## Observed migration results (2026-09-12)
@@ -45,8 +45,8 @@ Both package archives were inspected and contained no unit, integration, or brow
 ## Independent test ownership
 
 `tests/e2e` owns its Playwright dependency, configuration, standard webServer settings, test environment file, browser suites, and generated reports.
-It references the existing `examples/workers` app without copying or relocating it.
-From that package, `vp run test` runs all three local-hosting variants and `vp check` checks its configuration and test source.
+Its application lives in `tests/e2e/fixtures/app`, uses public package exports, and does not import or modify the examples or documentation site.
+From that package, `vp run test` runs built-artifact acceptance and development-only HMR tests; `vp check` checks configuration, fixture, and test source.
 The root package has no E2E runner script or Playwright dependency.
 
 `packages/gitignore-patterns` owns both `src/index.test.ts` and `tests/cli.test.ts`.
@@ -60,9 +60,11 @@ Package-local test fixtures were removed by their lifecycle cleanup.
 ## Standard E2E server lifecycle
 
 The E2E package uses Playwright's [webServer](https://playwright.dev/docs/test-webserver) for startup, readiness, and shutdown instead of a custom `run.mjs` runner.
-The Vite host configuration reuses the example source and public integration plugin while isolating test-only output, inspector, and persistence settings.
-Three dynamically selected HTTP ports and one unique run directory keep simultaneous invocations separate.
-Both Wrangler hosts build their own isolated artifacts before starting; overrides are applied at Wrangler startup, not during compilation.
+One Vite configuration uses the public integration plugins with a dedicated fixture and a single build output root.
+Two dynamically selected HTTP ports and a unique run directory keep simultaneous invocations separate.
+The `build` server explicitly runs `vp build` followed by Wrangler with test binding overrides; the `dev` server explicitly runs `vp dev` against a per-run fixture copy.
+The projects select built-artifact tests and HMR tests separately, without per-file configuration selection or conditional dev/build command construction.
+Playwright owns both global webServer definitions; `--project` filters tests, not server startup.
 See [the E2E project instructions](../tests/e2e/AGENTS.md) for commands and retained diagnostic artifacts.
 
 ## Task entry points

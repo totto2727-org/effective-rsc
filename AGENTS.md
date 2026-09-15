@@ -100,4 +100,6 @@ _This AGENTS.md was generated from the [share-artifact skill](https://raw.github
 - Architecture > Implementation chapters explain the current packages/effront implementation. Display the reviewed package version and commit, and keep embedded source excerpts synchronized with both that baseline and current files; validate them locally; retain upstream provenance separately in docs/UPSTREAM.md.
 - Deferred features belong in docs/ROADMAP.md and must not be presented as implemented APIs.
 
-Run `vp run test:markdown` from `tests/e2e/` for Markdown SSR, navigation, assets, and content-change acceptance.
+Run `vp run test` from `tests/e2e/` for framework browser acceptance using one Playwright configuration and one Vite configuration.
+The `build` project validates the built Wrangler application; the `dev` project covers HMR using an isolated fixture copy.
+Keep their startup commands explicit rather than selecting between dev and build commands by test file or array index.
