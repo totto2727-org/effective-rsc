@@ -432,7 +432,7 @@ const RootLayout = EFFRONT.Layout.make({
 });
 
 const HomePage = EFFRONT.Page.make({
-  render: Effect.fnUntraced(function* () {
+  render: Effect.fn("HomePage.render")(function* () {
     const greeting = yield* Greeting;
     const message = yield* greeting.message("Ada");
     return <h1>{message}</h1>;

@@ -50,7 +50,7 @@ describe("EFFRONT.Layout.make", () => {
     Effect.gen(function* () {
       const runtime = yield* FiberSet.makeRuntimePromise<ShellTitle>();
       const LayoutComponent = EFFRONT.Layout.make({
-        render: Effect.fnUntraced(function* ({ children }) {
+        render: Effect.fn(function* ({ children }) {
           const inferredChildren: ReactNode = children;
           const title = yield* ShellTitle;
           return (
@@ -96,7 +96,7 @@ describe("EFFRONT.Layout.make", () => {
       const runtime = yield* FiberSet.makeRuntimePromise<never>().pipe(Scope.provide(scope));
       const InterruptEFFRONT = Application.effront();
       const LayoutComponent = InterruptEFFRONT.Layout.make({
-        render: Effect.fnUntraced(function* (_props) {
+        render: Effect.fn(function* (_props) {
           yield* Deferred.succeed(started, void 0);
           return yield* Effect.never.pipe(Effect.onInterrupt(() => Ref.set(interrupted, true)));
         }),

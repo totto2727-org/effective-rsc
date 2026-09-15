@@ -40,7 +40,7 @@ describe("EFFRONT.Page.make", () => {
         params: Schema.Struct({
           day: Schema.Literals(["saturday", "sunday"]),
         }),
-        render: Effect.fnUntraced(function* ({ params }) {
+        render: Effect.fn(function* ({ params }) {
           const greeting = yield* Greeting;
           return `${greeting.value} ${params.day}`;
         }),
@@ -59,11 +59,11 @@ describe("EFFRONT.Page.make", () => {
     }).pipe(Effect.provideService(Greeting, { value: "hello" })),
   );
 
-  it.effect("runs an Effect.fnUntraced operation with request services", () =>
+  it.effect("runs an Effect.fn operation with request services", () =>
     Effect.gen(function* () {
       const runtime = yield* FiberSet.makeRuntimePromise<Greeting>();
       const PageComponent = EFFRONT.Page.make({
-        render: Effect.fnUntraced(function* () {
+        render: Effect.fn(function* () {
           const greeting = yield* Greeting;
           return greeting.value;
         }),

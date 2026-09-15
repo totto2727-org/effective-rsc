@@ -8,7 +8,7 @@ import { manual } from "../content";
 const EFFRONT = Application.effront();
 class CurrentEntry extends Context.Service<CurrentEntry, MarkdownEntry>()("e2e-dev/CurrentEntry") {}
 const FindEntry = EFFRONT.Middleware.make<{ provides: CurrentEntry }>(
-  Effect.fnUntraced(function* (httpEffect) {
+  Effect.fn(function* (httpEffect) {
     const request = yield* HttpServerRequest.HttpServerRequest;
     const collection = yield* Effect.result(manual);
     if (Result.isFailure(collection))
@@ -32,7 +32,7 @@ const Layout = EFFRONT.Layout.make({
 });
 const Page = Manual.Page.make({
   params: Schema.Struct({ path: Schema.String }),
-  render: Effect.fnUntraced(function* () {
+  render: Effect.fn(function* () {
     const entry = yield* CurrentEntry;
     const document = yield* parseMarkdown(entry);
     return <MarkdownDocument value={document} />;
