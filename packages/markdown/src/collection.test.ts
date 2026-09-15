@@ -9,20 +9,19 @@ const create = (options: MarkdownCollectionOptions) =>
 
 const collection = () =>
   create({
-    source: "./content",
     basePath: "/manual",
     documents: {
-      "./content/README.md": "# Read me",
-      "./content/index.md": "# Manual",
-      "./content/guides/index.md": "# Guides",
-      "./content/guides/advanced.md": "# Advanced",
-      "./content/guides/getting started.md": "# Getting started",
-      "./content/guides/100%.md": "# Percent",
-      "./content/guides/$&+,=@.md": "# Punctuation",
+      "./README.md": "# Read me",
+      "./index.md": "# Manual",
+      "./guides/index.md": "# Guides",
+      "./guides/advanced.md": "# Advanced",
+      "./guides/getting started.md": "# Getting started",
+      "./guides/100%.md": "# Percent",
+      "./guides/$&+,=@.md": "# Punctuation",
     },
     assets: {
-      "./content/guides/diagram one.svg": "/assets/diagram-one.a1b2.svg",
-      "./content/logo.svg": "/assets/logo.c3d4.svg",
+      "./guides/diagram one.svg": "/assets/diagram-one.a1b2.svg",
+      "./logo.svg": "/assets/logo.c3d4.svg",
     },
   });
 
@@ -31,21 +30,21 @@ describe("createMarkdownCollection", () => {
     const markdown = collection();
 
     expect(markdown.entries.map((entry) => [entry.source, entry.pathname, entry.url])).toEqual([
-      ["./content/index.md", "/manual", "/manual"],
-      ["./content/guides/index.md", "/manual/guides", "/manual/guides"],
+      ["./index.md", "/manual", "/manual"],
+      ["./guides/index.md", "/manual/guides", "/manual/guides"],
       [
-        "./content/guides/$&+,=@.md",
+        "./guides/$&+,=@.md",
         "/manual/guides/%24%26%2B%2C%3D%40",
         "/manual/guides/%24%26%2B%2C%3D%40",
       ],
-      ["./content/guides/100%.md", "/manual/guides/100%25", "/manual/guides/100%25"],
-      ["./content/guides/advanced.md", "/manual/guides/advanced", "/manual/guides/advanced"],
+      ["./guides/100%.md", "/manual/guides/100%25", "/manual/guides/100%25"],
+      ["./guides/advanced.md", "/manual/guides/advanced", "/manual/guides/advanced"],
       [
-        "./content/guides/getting started.md",
+        "./guides/getting started.md",
         "/manual/guides/getting%20started",
         "/manual/guides/getting%20started",
       ],
-      ["./content/README.md", "/manual/README", "/manual/README"],
+      ["./README.md", "/manual/README", "/manual/README"],
     ]);
     expect(markdown.get("/manual/guides/getting%20started")?.content).toBe("# Getting started");
     expect(markdown.get("/manual/guides/getting started")).toBe(
@@ -58,15 +57,33 @@ describe("createMarkdownCollection", () => {
     expect(markdown.get("/outside")).toBeUndefined();
   });
 
-  it("looks up URL-encoded filenames without interpreting them as route patterns", () => {
+  it("uses the glob-base-relative hierarchy without stripping a source directory", () => {
     const markdown = create({
-      source: "./content",
       basePath: "/manual",
       documents: {
-        "./content/literal%20.md": "# Literal escape",
-        "./content/what?.md": "# Question",
-        "./content/hash#.md": "# Hash",
-        "./content/:name.md": "# Colon",
+        "./index.md": "# Manual",
+        "./content/index.md": "# Nested content",
+        "./guide/deep/details.md": "# Details",
+      },
+      assets: { "./images/diagram.svg": "/assets/diagram.hash.svg" },
+    });
+    const details = markdown.get("/manual/guide/deep/details")!;
+    expect(markdown.get("/manual/content")?.source).toBe("./content/index.md");
+    expect(details.source).toBe("./guide/deep/details.md");
+    expect(Effect.runSync(details.resolveLink("../../index.md#top"))).toBe("/manual#top");
+    expect(Effect.runSync(details.resolveImage("../../images/diagram.svg"))).toBe(
+      "/assets/diagram.hash.svg",
+    );
+  });
+
+  it("looks up URL-encoded filenames without interpreting them as route patterns", () => {
+    const markdown = create({
+      basePath: "/manual",
+      documents: {
+        "./literal%20.md": "# Literal escape",
+        "./what?.md": "# Question",
+        "./hash#.md": "# Hash",
+        "./:name.md": "# Colon",
       },
     });
     expect(markdown.get("/manual/literal%2520")?.content).toBe("# Literal escape");
@@ -108,9 +125,8 @@ describe("createMarkdownCollection", () => {
 
   it.each(["/", "/?mode=full#top"])("looks up a root index: %s", (pathname) => {
     const markdown = create({
-      source: "./content",
       basePath: "/",
-      documents: { "./content/index.md": "# Root" },
+      documents: { "./index.md": "# Root" },
     });
     expect(markdown.get(pathname)?.content).toBe("# Root");
   });
@@ -119,9 +135,8 @@ describe("createMarkdownCollection", () => {
     "does not alias unknown paths to a root index: %s",
     (pathname) => {
       const markdown = create({
-        source: "./content",
         basePath: "/",
-        documents: { "./content/index.md": "# Root" },
+        documents: { "./index.md": "# Root" },
       });
       expect(markdown.get(pathname)).toBeUndefined();
     },
@@ -131,9 +146,8 @@ describe("createMarkdownCollection", () => {
     "looks up a literal escape filename after decoding once: %s",
     (filename) => {
       const markdown = create({
-        source: "./content",
         basePath: "/manual",
-        documents: { [`./content/${filename}.md`]: "# Literal escape" },
+        documents: { [`./${filename}.md`]: "# Literal escape" },
       });
       expect(markdown.get(`/manual/${encodeURIComponent(filename)}`)?.content).toBe(
         "# Literal escape",
@@ -178,10 +192,9 @@ describe("createMarkdownCollection", () => {
 
   it("uses Vite's already-resolved asset URLs including inline assets", () => {
     const markdown = create({
-      source: "./content",
       basePath: "/manual",
-      documents: { "./content/index.md": "" },
-      assets: { "./content/logo.svg": "data:image/svg+xml;base64,AAAA" },
+      documents: { "./index.md": "" },
+      assets: { "./logo.svg": "data:image/svg+xml;base64,AAAA" },
     });
     expect(Effect.runSync(markdown.get("/manual")!.resolveImage("logo.svg"))).toBe(
       "data:image/svg+xml;base64,AAAA",
@@ -189,21 +202,19 @@ describe("createMarkdownCollection", () => {
   });
 
   it.each([
-    { source: "content", basePath: "/manual", documents: {} },
-    { source: "./content", basePath: "manual", documents: {} },
-    { source: "./content", basePath: "/manual?query=1", documents: {} },
-    { source: "./content", basePath: "/manual", documents: { "./elsewhere/page.md": "" } },
+    { basePath: "/manual", documents: { "index.md": "" } },
+    { basePath: "manual", documents: {} },
+    { basePath: "/manual?query=1", documents: {} },
+    { basePath: "/manual", documents: { "../elsewhere/page.md": "" } },
     {
-      source: "./content",
       basePath: "/manual",
-      documents: { "./content/foo.md": "", "./content/foo/index.md": "" },
+      documents: { "./foo.md": "", "./foo/index.md": "" },
     },
-    { source: "./content", basePath: "/manual", documents: { "./content/file.txt": "" } },
+    { basePath: "/manual", documents: { "./file.txt": "" } },
     {
-      source: "./content",
       basePath: "/manual",
       documents: {},
-      assets: { "./elsewhere/logo.svg": "/logo.svg" },
+      assets: { "../elsewhere/logo.svg": "/logo.svg" },
     },
   ])("returns configuration failures through the typed error channel: %j", (options) => {
     const error = Effect.runSync(Effect.flip(createMarkdownCollection(options)));
@@ -211,7 +222,7 @@ describe("createMarkdownCollection", () => {
     expect(error._tag).toBe("MarkdownError");
   });
 
-  it("returns missing and out-of-source references through the typed error channel", () => {
+  it("returns missing and out-of-base references through the typed error channel", () => {
     const entry = collection().get("/manual/guides/advanced")!;
     for (const operation of [
       entry.resolveLink("missing.md"),
@@ -225,9 +236,8 @@ describe("createMarkdownCollection", () => {
 
   it("constructs a fresh collection on each Effect execution", () => {
     const effect = createMarkdownCollection({
-      source: "./content",
       basePath: "/",
-      documents: { "./content/index.md": "# Home" },
+      documents: { "./index.md": "# Home" },
     });
     expect(Effect.runSync(effect)).not.toBe(Effect.runSync(effect));
   });

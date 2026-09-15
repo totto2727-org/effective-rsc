@@ -11,10 +11,9 @@ import { parseMarkdown } from "./parse.ts";
 const entry = (content: string) =>
   Effect.runSync(
     createMarkdownCollection({
-      source: "./content",
       basePath: "/manual",
-      documents: { "./content/index.md": content, "./content/guide.md": "# Guide" },
-      assets: { "./content/logo.svg": "/assets/logo.hash.svg" },
+      documents: { "./index.md": content, "./guide.md": "# Guide" },
+      assets: { "./logo.svg": "/assets/logo.hash.svg" },
     }),
   ).get("/manual")!;
 

@@ -22,14 +22,15 @@ Place a collection module beside a `content/` directory:
 import { createMarkdownCollection } from "@effront/markdown";
 
 export const manual = createMarkdownCollection({
-  source: "./content",
   basePath: "/manual",
-  documents: import.meta.glob<string>("./content/**/*.md", {
+  documents: import.meta.glob<string>("./**/*.md", {
+    base: "./content",
     query: "?raw",
     import: "default",
     eager: true,
   }),
-  assets: import.meta.glob<string>("./content/**/*.{svg,png,jpg,jpeg,gif,webp,pdf}", {
+  assets: import.meta.glob<string>("./**/*.{svg,png,jpg,jpeg,gif,webp,pdf}", {
+    base: "./content",
     query: "?url",
     import: "default",
     eager: true,
@@ -37,6 +38,8 @@ export const manual = createMarkdownCollection({
 });
 ```
 
+Both globs use Vite's native `base` option, so their keys are relative to `content/`, such as `./index.md` and `./guide/start.md`.
+Use the same base for the document and asset maps.
 `manual` is an Effect, evaluated where the application handles configuration failures.
 Vite owns document loading and asset URL generation, including its asset inlining policy.
 Use `?url&no-inline` when each asset should have a separately fetchable URL.
@@ -67,13 +70,12 @@ The [complete Effront example](../../examples/markdown/src/application.tsx) uses
 
 Returns `Effect<MarkdownCollection, MarkdownError>`.
 
-- `source`: directory prefix matching the glob keys, beginning with `./`.
 - `basePath`: absolute public prefix such as `/manual` or `/`.
-- `documents`: eager raw-string glob map of `.md` files.
-- `assets`: optional eager Vite URL-string glob map of linked files and images.
+- `documents`: eager raw-string glob map of `.md` files, with `./`-prefixed keys relative to the glob base.
+- `assets`: optional eager Vite URL-string glob map of linked files and images, relative to the same glob base.
 
 The resulting collection exposes pure `entries` and `get(pathname)` operations.
-Each entry has `source`, `content`, and public `url`/`pathname` fields.
+Each entry has its base-relative glob key in `source`, Markdown text in `content`, and public `url`/`pathname` fields.
 Only `index.md` maps to its containing directory's URL, while `README.md` keeps `/README`.
 Filenames are percent-encoded independently of route patterns, and lookup decodes URL escapes once.
 A single trailing slash is accepted for page lookup.

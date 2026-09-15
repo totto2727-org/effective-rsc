@@ -9,11 +9,13 @@ The runnable example is `examples/markdown`.
 ## Responsibilities
 
 Vite discovers documents with `import.meta.glob` and imports their contents with `?raw`.
+Set the same `base: "./content"` on the document and asset globs so their keys are relative to that directory.
+The collection receives these relative keys directly and has no separate `source` option.
 Vite also resolves assets with `?url` and owns their development URLs, production emission, and hashing.
 The Markdown package consumes those maps rather than implementing a filesystem loader, asset copier, or bundler.
 
 The package maps source files to application URLs while preserving directory hierarchy.
-For example, `content/index.md` maps to `/manual` and `content/guide/deep/details.md` maps to `/manual/guide/deep/details`.
+For example, the keys `./index.md` and `./guide/deep/details.md` map to `/manual` and `/manual/guide/deep/details` when `basePath` is `/manual`.
 Relative document links resolve from their containing source file and retain queries and fragments.
 Asset references use URLs supplied by Vite.
 
@@ -36,19 +38,19 @@ Markdownの構文解析とReact描画は別の処理です。
 
 ```mermaid
 flowchart TD
-    A["Effect実行: source / basePath / documents / assets"] --> B["sourceとbasePathをセグメント化"]
+    A["Effect実行: basePath / documents / assets"] --> B["basePathをセグメント化"]
     B --> C{"設定条件を満たすか"}
     C -->|いいえ| E["MarkdownErrorでEffect失敗"]
     C -->|はい| D["公開URL索引・ソース索引・アセット索引を作成"]
     D --> F{"未処理のアセットがあるか"}
-    F -->|はい| G{"globキーがsource配下か"}
+    F -->|はい| G{"globキーがコレクション基準の相対パスか"}
     G -->|いいえ| E
     G -->|はい| H["キーをセグメント単位でencodeして登録<br/>値はViteのURLをそのまま保持"]
     H --> F
     F -->|いいえ| I{"未処理のMarkdownがあるか"}
-    I -->|はい| J{"globキーがsource配下で<br/>ファイル名が.mdで終わるか"}
+    I -->|はい| J{"globキーがコレクション基準の相対パスで<br/>ファイル名が.mdで終わるか"}
     J -->|いいえ| E
-    J -->|はい| K["sourceからの相対階層とbasePathを結合<br/>.mdを除去し、indexはディレクトリURLへ"]
+    J -->|はい| K["globキーの相対階層とbasePathを結合<br/>.mdを除去し、indexはディレクトリURLへ"]
     K --> L["各セグメントをencodeして公開URLを作成"]
     L --> M{"公開URLが重複するか"}
     M -->|はい| E
@@ -57,9 +59,10 @@ flowchart TD
     I -->|いいえ| O["URL順のentries / get / resolveLink / resolveImageを返す"]
 ```
 
-設定確認では、`source`が`./`で始まる空でないディレクトリであること、`basePath`が`/`で始まりquery・fragmentを含まないこと、いずれにも`..`セグメントがないことを確認します。
-globキーにも`./`・source配下・`..`なしを求め、`.md`だけのファイル名は受け付けません。
-例: `./content/guide/index.md` → `/manual/guide`、`./content/guide/start.md` → `/manual/guide/start`。
+設定確認では、`basePath`が`/`で始まり、query・fragment・`..`セグメントを含まないことを確認します。
+globキーは`./`で始まるコレクション基準の相対パスとして扱い、`..`による基準外参照や`.md`だけのファイル名は受け付けません。
+`Entry.source`は診断と相対リンク解決用のキーとして残りますが、読み込みディレクトリの指定ではありません。
+例: globの`base: "./content"`が返す`./guide/index.md` → `/manual/guide`、`./guide/start.md` → `/manual/guide/start`。
 
 ### 2. リクエストURLからEntryを検索
 
@@ -98,9 +101,9 @@ flowchart TD
     E -->|いいえ| G["元Markdownのディレクトリを基準にする"]
     G --> H["参照を分割し各セグメントを1回decode<br/>失敗時は元の文字列を保持"]
     H --> I["空とドットは読み飛ばす<br/>..は親へ移動、その他は追加"]
-    I --> J{"..によってsourceの外へ出るか"}
+    I --> J{"..によってコレクション基準の外へ出るか"}
     J -->|はい| X["MarkdownErrorでEffect失敗"]
-    J -->|いいえ| K["sourceと解決済み相対パスを結合<br/>セグメント単位でencode"]
+    J -->|いいえ| K["解決済み相対パスを<br/>セグメント単位でencode"]
     K --> L{"リンクであり、対象が.mdか"}
     L -->|はい| M["ソース索引からEntryの公開URLを取得"]
     L -->|いいえ| N["アセット索引からViteのURLを取得"]

@@ -3,17 +3,16 @@ import { Effect } from "effect";
 import { MarkdownError } from "./error.ts";
 
 export interface MarkdownCollectionOptions {
-  /** Directory shared by the eager Vite glob maps, for example `./content`. */
-  readonly source: string;
   /** Absolute public page prefix, for example `/manual`. */
   readonly basePath: string;
-  /** Eager Vite `?raw` imports. */
+  /** Eager Vite `?raw` imports with keys relative to the glob `base`. */
   readonly documents: Readonly<Record<string, string>>;
-  /** Eager Vite `?url` imports. Vite owns asset loading and output. */
+  /** Eager Vite `?url` imports using the same glob `base`. Vite owns asset output. */
   readonly assets?: Readonly<Record<string, string>>;
 }
 
 export interface MarkdownEntry {
+  /** Glob-base-relative source key, for example `./guides/start.md`. */
   readonly source: string;
   readonly content: string;
   readonly url: string;
@@ -44,8 +43,6 @@ const segments = (path: string): string[] =>
   path.split("/").filter((part) => part !== "" && part !== ".");
 const encodedPathname = (parts: readonly string[]): string =>
   `/${parts.map(encodeURIComponent).join("/")}`;
-const hasPrefix = (parts: readonly string[], prefix: readonly string[]): boolean =>
-  parts.length > prefix.length && prefix.every((part, index) => parts[index] === part);
 const markdownExtension = /\.md$/iu;
 
 /** Creates a collection from Vite's already-loaded document and asset maps. */
@@ -53,13 +50,7 @@ export const createMarkdownCollection = (
   options: MarkdownCollectionOptions,
 ): Effect.Effect<MarkdownCollection, MarkdownError> =>
   Effect.gen(function* () {
-    const root = segments(options.source);
     const base = segments(options.basePath);
-    if (!options.source.startsWith("./") || root.length === 0 || root.includes("..")) {
-      return yield* new MarkdownError({
-        message: 'source must name a relative directory beginning with "./"',
-      });
-    }
     if (
       !options.basePath.startsWith("/") ||
       /[?#]/u.test(options.basePath) ||
@@ -75,8 +66,10 @@ export const createMarkdownCollection = (
 
     for (const [key, url] of Object.entries(options.assets ?? {})) {
       const parts = segments(key);
-      if (!key.startsWith("./") || !hasPrefix(parts, root) || parts.includes("..")) {
-        return yield* new MarkdownError({ message: `asset glob key is outside source: ${key}` });
+      if (!key.startsWith("./") || parts.length === 0 || parts.includes("..")) {
+        return yield* new MarkdownError({
+          message: `asset glob key must be relative to the collection base: ${key}`,
+        });
       }
       assetMap.set(encodedPathname(parts), url);
     }
@@ -97,13 +90,13 @@ export const createMarkdownCollection = (
         }
         const [path, suffix] = splitReference(reference);
         if (path === "") return `${entry.url}${suffix}`;
-        const relative = segments(entry.source).slice(root.length, -1);
+        const relative = segments(entry.source).slice(0, -1);
         for (const part of path.split("/").map(decodeSegment)) {
           if (part === "" || part === ".") continue;
           if (part === "..") {
             if (relative.length === 0) {
               return yield* new MarkdownError({
-                message: `reference resolves outside source: ${reference} from ${entry.source}`,
+                message: `reference resolves outside the collection base: ${reference} from ${entry.source}`,
               });
             }
             relative.pop();
@@ -111,7 +104,7 @@ export const createMarkdownCollection = (
             relative.push(part);
           }
         }
-        const target = encodedPathname([...root, ...relative]);
+        const target = encodedPathname(relative);
         const isDocument = !image && markdownExtension.test(relative.at(-1) ?? "");
         const url = isDocument ? entriesBySource.get(target)?.url : assetMap.get(target);
         if (url === undefined) {
@@ -124,10 +117,12 @@ export const createMarkdownCollection = (
 
     for (const [key, content] of Object.entries(options.documents)) {
       const parts = segments(key);
-      if (!key.startsWith("./") || !hasPrefix(parts, root) || parts.includes("..")) {
-        return yield* new MarkdownError({ message: `document glob key is outside source: ${key}` });
+      if (!key.startsWith("./") || parts.length === 0 || parts.includes("..")) {
+        return yield* new MarkdownError({
+          message: `document glob key must be relative to the collection base: ${key}`,
+        });
       }
-      const relative = parts.slice(root.length);
+      const relative = parts;
       const filename = relative.at(-1)!;
       if (!markdownExtension.test(filename) || filename.length === 3) {
         return yield* new MarkdownError({

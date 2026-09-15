@@ -1,14 +1,15 @@
 import { createMarkdownCollection } from "@effront/markdown";
 
 export const manual = createMarkdownCollection({
-  source: "./content",
   basePath: "/manual",
-  documents: import.meta.glob<string>("./content/**/*.md", {
+  documents: import.meta.glob<string>("./**/*.md", {
+    base: "./content",
     query: "?raw",
     import: "default",
     eager: true,
   }),
-  assets: import.meta.glob<string>("./content/**/*.{svg,png,jpg,jpeg,gif,webp,pdf}", {
+  assets: import.meta.glob<string>("./**/*.{svg,png,jpg,jpeg,gif,webp,pdf}", {
+    base: "./content",
     query: "?url&no-inline",
     import: "default",
     eager: true,
