@@ -1,8 +1,13 @@
 {
   "name": "@effront/markdown",
-  "version": "0.1.4-workers.0",
+  "version": "0.1.0",
   "description": "Typed Effect Markdown collections and Comark parsing for Vite applications.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/totto2727-org/effront.git",
+    "directory": "packages/markdown"
+  },
   "files": [
     "src",
     "README.md",
@@ -13,6 +18,10 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
   },
   "dependencies": {
     "@effect/platform-node-shared": "catalog:",

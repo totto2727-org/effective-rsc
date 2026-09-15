@@ -1,6 +1,6 @@
 {
   "name": "effront",
-  "version": "0.1.4-workers.0",
+  "version": "0.1.0",
   "description": "Effect-native React Server Components with a portable Web Fetch runtime.",
   "keywords": [
     "cloudflare-workers",
@@ -8,6 +8,11 @@
     "react-server-components"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/totto2727-org/effront.git",
+    "directory": "packages/effront"
+  },
   "files": [
     "src",
     "README.md",
@@ -27,6 +32,10 @@
     "./workers": "./src/workers.ts",
     "./internal/client-entry": "./src/client/entry.ts",
     "./internal/ssr-entry": "./src/server/ssr.tsx"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
   },
   "dependencies": {
     "@vitejs/plugin-rsc": "catalog:"

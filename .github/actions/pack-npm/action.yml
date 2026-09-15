@@ -1,0 +1,18 @@
+name: Prepare npm packages
+description: Resolve pnpm workspace and catalog protocols into standalone source packages.
+
+runs:
+  using: composite
+  steps:
+    - name: Pack public packages
+      shell: bash
+      run: |
+        eval "$(nix print-dev-env "$GITHUB_WORKSPACE#default")"
+        for package in effront vite cloudflare markdown; do
+          destination="$GITHUB_WORKSPACE/tmp/npm/$package"
+          rm -rf "$destination"
+          mkdir -p "$destination"
+          (cd "packages/$package" && vp pm pack --pack-destination "$destination")
+          tar -xzf "$destination"/*.tgz -C "$destination" --strip-components=1
+          rm "$destination"/*.tgz
+        done

@@ -1,0 +1,43 @@
+name: Publish to npm
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'totto2727-org/effront'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: totto2727-org/monorepo/.github/actions/setup-nix@main
+      - uses: totto2727-org/monorepo/.github/actions/setup-typescript@main
+        with:
+          install-args: --frozen-lockfile
+      - uses: ./.github/actions/pack-npm
+      - name: Publish effront
+        uses: totto2727-org/monorepo/.github/actions/publish-npm@main
+        with:
+          working-directory: tmp/npm/effront
+      - name: Publish @effront/vite
+        uses: totto2727-org/monorepo/.github/actions/publish-npm@main
+        with:
+          working-directory: tmp/npm/vite
+      - name: Publish @effront/cloudflare
+        uses: totto2727-org/monorepo/.github/actions/publish-npm@main
+        with:
+          working-directory: tmp/npm/cloudflare
+      - name: Publish @effront/markdown
+        uses: totto2727-org/monorepo/.github/actions/publish-npm@main
+        with:
+          working-directory: tmp/npm/markdown

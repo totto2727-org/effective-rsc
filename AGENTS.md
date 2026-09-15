@@ -1,4 +1,4 @@
-# Effront Workers
+# Effront
 
 ## Repository structure
 
@@ -21,8 +21,8 @@ Workspace discovery uses `app/*`, `packages/*`, `tests/*`, and `examples/*`, wit
 
 ### Execution rules
 
-- Work on this independent clone, not the parent virtual monorepo.
-- Push and create pull requests only in `totto2727-org/effective-rsc`, as authorized by the user. Never target the upstream repository. Do not publish packages or deploy without explicit authorization.
+- Work in this independent repository at `workspace/packages/effront/`, not the parent virtual monorepo.
+- Push and create pull requests only in `totto2727-org/effront`, as authorized by the user. Never target the upstream repository. Do not publish packages or deploy without explicit authorization.
 - Use VitePlus for formatting, linting, checks, package management, and test entry points.
 - Formatting follows the parent workspace's default VitePlus baseline. Lint rules stay at VitePlus defaults. Do not restore the upstream custom Effect/Oxlint rules or add unrelated lint overrides.
 - Keep temporary evidence under this repository's ignored `tmp/` directory. Never commit `.dev.vars` or real secrets.
@@ -106,3 +106,15 @@ Each of `tests/e2e-build/` and `tests/e2e-dev/` owns its fixture, Playwright con
 Keep one fixed `webServer` command per package: build then standalone Wrangler for `e2e-build`, and Vite development for `e2e-dev`.
 The dev package covers HMR only. Do not introduce shared build/dev mode branches or start both hosts from either package.
 Run the fixed package-local fixture directly. Keep fixture copying, dynamic run directories, and concurrent-run isolation out of Playwright configuration; HMR tests restore their own file changes in `finally`.
+
+## npm publication
+
+- `.github/workflows/ci.yml` runs checks and tests for pull requests and `main` updates.
+- `.github/workflows/publish.yml` publishes on pushes to `main`, including merged pull requests, using the template's shared Nix, TypeScript, and npm actions on `@main`.
+- Publication is serialized and skips versions already on npm. Bump each changed public package's version in its pull request and update workspace peer ranges through `vp install --lockfile-only` when needed. There is no automatic version bump or tag trigger.
+- Public packages are `effront`, `@effront/vite`, `@effront/cloudflare`, and `@effront/markdown`. `@effront/gitignore-patterns` is local development tooling and is not included in this release workflow.
+- The packages ship TypeScript sources for Vite/RSC processing. `.github/actions/pack-npm` uses `vp pm pack` to resolve `workspace:` and `catalog:` protocols, then stages the exact source archives under ignored `tmp/npm/` for the shared Bun publisher. Do not replace this with bundled `vp pack` output without reviewing RSC module directives and public exports.
+- The public packages start at stable version `0.1.0` and use public access with the `latest` dist-tag through `publishConfig`.
+- Before merging the publishing workflow, the package owner must ensure all four npm packages exist and configure each Trusted Publisher for GitHub owner `totto2727-org`, repository `effront`, workflow `publish.yml`, and direct publication. No GitHub environment is configured. Initial publication, if required by npm, must be performed by the owner.
+- The workflow uses GitHub-hosted runners and job-scoped `id-token: write`, without long-lived npm tokens. Protect `main` and require the CI check before merging. Local checks and dry runs do not verify registry trust or package ownership.
+- Reference: [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) and [shared publish action](https://github.com/totto2727-org/monorepo/blob/main/.github/actions/publish-npm/action.yaml).
