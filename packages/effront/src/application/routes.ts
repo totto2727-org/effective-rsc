@@ -88,6 +88,11 @@ export interface RoutesDefinition<
 > extends EFFRONTStatefulMember<Services, "Routes", RoutesImplementationState<Services>> {
   readonly [RoutesContractTypeId]: RoutesState<HasLayout, Paths, Shapes>;
 
+  /**
+   * Register a literal, `:parameter`, or terminal `*parameter` route.
+   * A catch-all captures the remaining decoded path, including an empty string at its prefix.
+   * Its prefix is reserved too, so `/manual` cannot coexist with `/manual/*path`.
+   */
   page<const Path extends AbsolutePath, const Page extends AnyPageDefinition<Services>>(
     path: Path & ValidRoutePath<Path> & NoPathCollision<Shapes, Path>,
     page: Page & MatchingPageParams<Path, Page>,
@@ -201,7 +206,7 @@ class RoutesDefinitionImpl<
     page: Page & MatchingPageParams<Path, Page>,
   ): RoutesDefinitionImpl<Services, HasLayout, Paths | Path, Shapes | RouteShape<Path>> {
     const route = analyzeRoutePath(path);
-    if (this.#routeShapes.has(route.shape)) {
+    if (route.shapes.some((shape) => this.#routeShapes.has(shape))) {
       throw new TypeError(`Route "${path}" conflicts with an existing route pattern.`);
     }
     const pageState = getPageState(page);
@@ -217,7 +222,9 @@ class RoutesDefinitionImpl<
     }
 
     const routeShapes = new Set(this.#routeShapes);
-    routeShapes.add(route.shape);
+    for (const shape of route.shapes) {
+      routeShapes.add(shape);
+    }
 
     return new RoutesDefinitionImpl(this[EFFRONTIdentityTypeId], {
       layout: this.layout,
@@ -259,11 +266,12 @@ class RoutesDefinitionImpl<
     const mountedPaths = routesState.paths.map((childPath) => joinRoutePaths(path, childPath));
     const routeShapes = new Set(this.#routeShapes);
     for (const mountedPath of mountedPaths) {
-      const shape = analyzeRoutePath(mountedPath).shape;
-      if (routeShapes.has(shape)) {
-        throw new TypeError(`Route "${mountedPath}" conflicts with an existing route pattern.`);
+      for (const shape of analyzeRoutePath(mountedPath).shapes) {
+        if (routeShapes.has(shape)) {
+          throw new TypeError(`Route "${mountedPath}" conflicts with an existing route pattern.`);
+        }
+        routeShapes.add(shape);
       }
-      routeShapes.add(shape);
     }
 
     return new RoutesDefinitionImpl(this[EFFRONTIdentityTypeId], {

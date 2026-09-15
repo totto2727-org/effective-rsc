@@ -28,7 +28,7 @@ export class RouteRefresher extends Context.Service<RouteRefresher>()(
         yield* current.interruptCurrentRouteRefresh;
       });
 
-      const refreshCurrentRoute = Effect.fn("RouteRefresher.refreshCurrentRoute")(function* (
+      const refreshCurrentRoute = Effect.fnUntraced(function* (
         transitionType: RouteRefreshTransitionType,
       ) {
         const current = yield* Ref.get(implementation);

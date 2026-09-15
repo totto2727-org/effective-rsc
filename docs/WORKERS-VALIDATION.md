@@ -29,7 +29,8 @@ Current code uses `effront/*`, `Application.effront()`, and separate `effront()`
 
 ## Historical reproduction commands
 
-For the current checkout, use `vp run fix`, `vp run check`, and `vp run test` from the root, then `vp run test` from `tests/e2e`.
+For the current checkout, use `vp run fix`, `vp run check`, and `vp run test` from the root.
+Then run `vp run test` independently from `tests/e2e-build` for built-artifact acceptance and `tests/e2e-dev` for HMR-only acceptance.
 The following commands describe the original verification, not the current task interface.
 
 ```sh

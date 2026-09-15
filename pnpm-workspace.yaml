@@ -5,10 +5,13 @@ packages:
   - examples/*
 
 catalog:
+  "@comark/react": 0.6.2
+  shiki: 4.4.3
   "@tailwindcss/vite": ^4.3.3
   vite-plus: 0.3.1
   effect: 4.0.0-rc.113
   "@effect/platform-browser": 4.0.0-rc.113
+  "@effect/platform-node-shared": 4.0.0-rc.113
   react: 19.3.0-canary-1d34f91d-20260909
   react-dom: 19.3.0-canary-1d34f91d-20260909
   "@types/react": 19.3.0

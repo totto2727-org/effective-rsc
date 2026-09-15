@@ -13,6 +13,13 @@ Status: planned by user request on 2026-09-12; no SSG implementation or static-h
 - Initial document requests receive HTML with the hydration data they need; subsequent client navigations and current-route refreshes can fetch only the Flight payload.
 - Aim for the same client rendering and navigation semantics as SSR for equivalent content. Static snapshots do not provide request-time freshness, personalized responses, or Server Function execution by themselves.
 
+### Saved route-enumeration prototype
+
+The earlier Markdown route-enumeration implementation is preserved only on branch `backup/markdown-from-pages`, commit `e08074f`, in the fork.
+It is a historical SSR prototype, not an SSG implementation or a current public API.
+When designing SSG, consult that branch for file-to-route enumeration and initialization validation; design HTML/Flight generation and static parameters against the requirements below rather than restoring its API automatically.
+Current Markdown SSR uses request-time collection lookup through catch-all routing.
+
 ### Serving without a Worker
 
 - The current SSR client requests Flight at the document URL with `Accept: text/x-component` (`packages/effront/src/client/flight-client.ts`).
@@ -40,7 +47,24 @@ Status: planned by user request on 2026-09-12; no SSG implementation or static-h
 
 ## Markdown rendering and content collections
 
-Status: planned by user request on 2026-09-12; implementation and public API design are deferred.
+Status: initial glob-based collections and SSR rendering implemented in `@effront/markdown` on 2026-09-12; typed metadata and extensible loaders remain planned.
+
+The initial package maps a source directory to a public prefix, preserves nested paths, resolves file-relative links and images, and uses standard comark React rendering with the mdts plugin defaults.
+See [the package API and example](../packages/markdown/README.md).
+These milestones are tracked here, as requested, until they are selected for implementation.
+
+### Standard rendering and deferred rich SSR
+
+The 2026-09-15 simplification keeps Vite responsible for raw document imports, asset URLs, bundling, and development updates.
+The package prepares collections and parsed documents through typed Effect operations and resolves source-file references to application page URLs or Vite-provided asset URLs.
+Applications render the result with Comark's standard `MarkdownDocument` and own any component mappings.
+The package does not register replacement Math/Mermaid components, generate their SSR markup, or rewrite generated SVG font imports.
+
+Comark React 0.6.2's standard document renderer does not automatically register its separate Math and Mermaid components.
+With no application mapping, math remains plain expression content and Mermaid does not produce a rendered diagram.
+Full no-JavaScript math and diagram rendering remains a future task, rather than a current compatibility guarantee.
+Before adding support, verify the chosen upstream components through real RSC, Workers HTML/Flight, hydration, and no-JavaScript browser paths, including user mapping precedence and client dependency/network behavior.
+Keep Comark's standard parser defaults and treat content, plugins, and embedded components as trusted authored inputs, not sanitized user submissions.
 
 ### Direction
 
@@ -57,7 +81,7 @@ Status: planned by user request on 2026-09-12; implementation and public API des
 - Separate content loading and indexing from route creation so an application can choose URLs, parameters, Layouts, and rendering policy.
 - Integrate local content discovery, changes, additions, and removals with Vite development and the production build. Preprocess or bundle local files as needed so Workers SSR does not depend on a runtime filesystem.
 - Begin with SSR as the rendering target. Content collections do not require SSG; the separate HTML/Flight SSG milestone can later consume the same entries and route enumeration.
-- Keep runtime-specific loading and build integration outside the portable core. Decide package boundaries during implementation rather than committing to package names now.
+- Keep future runtime-specific loaders outside the portable core and extend the collection contract in `@effront/markdown`.
 
 ### Acceptance before release
 

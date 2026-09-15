@@ -76,5 +76,6 @@ The adapter requires Vite integration but does not register it automatically.
 The core still uses `@vitejs/plugin-rsc` runtime exports for Flight and its SSR module-loading protocol; this split is not a claim of bundler-independent React Flight support.
 Core `internal/client-entry` and `internal/ssr-entry` exports let the matching Vite integration resolve shipped entries without relative cross-package source paths.
 
-The documentation app is located at `app/docs`, and independent Playwright acceptance at `tests/e2e`.
+The documentation app is located at `app/docs`.
+Independent Playwright packages live at `tests/e2e-build` for built-artifact acceptance and `tests/e2e-dev` for HMR-only acceptance, each using its own fixture and `vp run test` command.
 Workspace discovery uses role-based wildcards instead of individual project paths.

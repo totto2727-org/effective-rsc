@@ -16,7 +16,7 @@ import {
 } from "../application/middleware";
 import type { EncodedPageParams, PageParams } from "../application/page";
 import type { CompiledDestination } from "../application/route-graph";
-import { isAbsolutePath } from "../application/route-path";
+import { analyzeRoutePath, isAbsolutePath } from "../application/route-path";
 import { FlightMediaType } from "../rsc/flight";
 import { renderRouteTree } from "../rsc/render-route-tree";
 import { FlightRenderer } from "./flight-renderer";
@@ -211,7 +211,22 @@ const httpLayer = <Services, ApplicationError>(
         ),
       );
       const makeRouteLayer = (destination: CompiledDestination<Services>) => {
-        const GetLayer = HttpRouter.add("GET", destination.pattern, (request) =>
+        const { catchAll, matcher } = analyzeRoutePath(destination.pattern);
+        const RouteParamsMiddleware = HttpRouter.middleware()((httpEffect) =>
+          Effect.gen(function* () {
+            if (catchAll === null) {
+              return yield* httpEffect;
+            }
+            const context = yield* HttpRouter.RouteContext;
+            const { "*": captured, ...parameters } = context.params;
+            // Matching and decoding belong to Effect HTTP. Only adapt its wildcard key.
+            return yield* Effect.provideService(httpEffect, HttpRouter.RouteContext, {
+              route: context.route,
+              params: Object.freeze({ ...parameters, [catchAll]: captured ?? "" }),
+            });
+          }),
+        );
+        const GetLayer = HttpRouter.add("GET", matcher, (request) =>
           render({
             destination,
             formState: null,
@@ -228,8 +243,10 @@ const httpLayer = <Services, ApplicationError>(
             : combinePageMiddleware(destination.middleware, lastPageMiddleware).combine(
                 RequestContextMiddleware,
               );
-        const PageLayer = GetLayer.pipe(Layer.provide(PageMiddleware.layer));
-        const ServerFnLayer = HttpRouter.add("POST", destination.pattern, (request) =>
+        const PageLayer = GetLayer.pipe(
+          Layer.provide(PageMiddleware.combine(RouteParamsMiddleware).layer),
+        );
+        const ServerFnLayer = HttpRouter.add("POST", matcher, (request) =>
           prepareServerFnRequest(request, identity).pipe(
             Effect.flatMap((prepared) => executeServerFnAndRefresh(prepared, destination, request)),
             Effect.catchTag("ServerFnRequestError", (error) =>
@@ -242,7 +259,7 @@ const httpLayer = <Services, ApplicationError>(
             ),
             HttpEffect.withPreResponseHandler(acceptVaryPreResponseHandler),
           ),
-        ).pipe(Layer.provide(RequestContextMiddleware.layer));
+        ).pipe(Layer.provide(RequestContextMiddleware.combine(RouteParamsMiddleware).layer));
 
         return Layer.mergeAll(PageLayer, ServerFnLayer);
       };

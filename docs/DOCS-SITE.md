@@ -56,7 +56,7 @@ The site links upstream only through its [official website](https://effective-rs
 
 Architecture excerpts are exact contiguous selections of the current `packages/effront/src` files, embedded as authored strings.
 `core.test.tsx` compares every excerpt with the current implementation during testing.
-The browser suite also compares the actual no-JavaScript SSR text against local source, including whitespace and Shiki output.
+The colocated rendering tests cover server-highlighted excerpt output.
 Rendering performs no filesystem reads, Git execution, or GitHub requests to obtain code.
 When implementation changes, update the relevant explanation and excerpt together.
 
@@ -73,11 +73,12 @@ Contributor workflow and framework-level acceptance requirements belong here and
 ## Validation
 
 Run `vp run check` and `vp run test` at the repository root.
-From `tests/e2e`, run `vp run test:docs` for real Chromium acceptance against Vite/workerd and standalone Wrangler.
-That project owns random ports, isolated builds, screenshots, and traces.
-The suite checks all thirty pages, local links and heading targets with JavaScript disabled, source excerpts, default dark contrast, Flight, hydration, sidebar filtering and mobile behavior, and removed-route 404 responses.
-A real client build graph excludes Shiki and compiler implementations; browser interception rejects unexpected external requests during rendering and navigation.
-Browser interception does not observe server-side outbound traffic; the source and highlighter architecture use only embedded local data.
+The site's colocated tests validate its content registry, rendered headings, source excerpts, and server-side highlighting.
+Run `vp run test` from `tests/e2e-build` for framework browser acceptance using its dedicated fixture on the generated Wrangler artifact.
+Run `vp run test` from `tests/e2e-dev` for HMR-only acceptance using its separate minimal fixture.
+These packages do not start or modify the documentation site.
+Each owns one Vite configuration, one Playwright configuration, one fixed webServer command, a fixed fixture and test port, and standard Playwright failure traces.
+Build the documentation application with `vp build` from `app/docs` when changing site integration; this is a separate application build, not an alternate E2E configuration.
 
 The stream injector preserves HTML chunk boundaries and emits embedded Flight payloads after HTML EOF, before the closing document trailer.
 Cancellation during a pending Flight flush is covered by the core stream tests.

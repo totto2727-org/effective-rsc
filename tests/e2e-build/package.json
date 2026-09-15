@@ -1,0 +1,28 @@
+{
+  "name": "@effront/e2e-build",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@comark/react": "catalog:",
+    "@effect/platform-browser": "catalog:",
+    "@effront/cloudflare": "workspace:*",
+    "@effront/markdown": "workspace:*",
+    "@effront/vite": "workspace:*",
+    "@playwright/test": "1.63.0",
+    "@tsconfig/strictest": "2.0.8",
+    "@types/node": "22.20.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-rsc": "catalog:",
+    "effect": "catalog:",
+    "effront": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typescript": "7.0.2",
+    "vite-plus": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

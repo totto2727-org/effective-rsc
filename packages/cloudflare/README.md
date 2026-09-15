@@ -43,4 +43,5 @@ For both custom Env and ExecutionContext types, use `createWorkersContextAccesso
 ## Validation
 
 Run `vp check` and `vp test run` in this package.
-Real Vite and independent Wrangler browser acceptance lives in `tests/e2e`.
+Built-Worker browser acceptance lives in `tests/e2e-build`, while Vite development HMR acceptance lives in `tests/e2e-dev`.
+Run `vp run test` from each package independently.

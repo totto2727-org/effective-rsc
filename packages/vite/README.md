@@ -31,4 +31,5 @@ The `effront/internal/*` exports are an integration contract with the matching c
 ## Validation
 
 Run `vp check` and `vp test run` in this package.
-Real browser and built-Worker acceptance lives in `tests/e2e`.
+Built-Worker browser acceptance lives in `tests/e2e-build`, while Vite development HMR acceptance lives in `tests/e2e-dev`.
+Run `vp run test` from each package independently.

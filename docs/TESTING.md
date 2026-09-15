@@ -23,7 +23,8 @@ The following suites remain under `packages/effront/tests/` because they exercis
 | `vite/cloudflare.test.ts`              | Real Vite configuration resolution integrating Effront and Cloudflare plugins.            |
 
 The package-owned `packages/gitignore-patterns/tests/cli.test.ts` validates the public generator under Vitest through actual Git and VitePlus CLI processes.
-The E2E project's `tests/e2e/tests/workers-fetch.e2e.ts` validates the actual browser application through Vite/workerd and standalone Wrangler.
+The build E2E package validates its dedicated fixture application through the generated Wrangler artifact.
+The separate dev E2E package runs only HMR checks against Vite/workerd with its own minimal fixture.
 Playwright explicitly selects the `.e2e.ts` suite, keeping it outside Vitest's standard `.test`/`.spec` discovery without a Vitest include override.
 
 ## Verification
@@ -31,7 +32,8 @@ Playwright explicitly selects the `.e2e.ts` suite, keeping it outside Vitest's s
 - `vp test run` discovers both colocated unit tests and retained integration tests by default.
 - `vp check` checks all source and retained tests, including the colocated files.
 - `(cd packages/gitignore-patterns && vp run test)` builds the generator and executes real formatter/linter acceptance.
-- `(cd tests/e2e && vp run test)` builds the Workers example and runs the real browser acceptance matrix.
+- `(cd tests/e2e-build && vp run test)` runs browser acceptance against the built fixture hosted by standalone Wrangler.
+- `(cd tests/e2e-dev && vp run test)` runs only development HMR checks against its minimal fixture.
 - Package archives must omit colocated tests; source-package file exclusions and the generator declaration-build exclusions enforce that boundary, not test-discovery exclusions.
 
 ## Observed migration results (2026-09-12)
@@ -44,9 +46,10 @@ Both package archives were inspected and contained no unit, integration, or brow
 
 ## Independent test ownership
 
-`tests/e2e` owns its Playwright dependency, configuration, standard webServer settings, test environment file, browser suites, and generated reports.
-It references the existing `examples/workers` app without copying or relocating it.
-From that package, `vp run test` runs all three local-hosting variants and `vp check` checks its configuration and test source.
+`tests/e2e-build` and `tests/e2e-dev` each own their Playwright dependency, configuration, standard webServer settings, browser suites, and generated reports.
+Each application lives in its package's `fixture/`, uses public package exports, and does not import or modify the examples or documentation site.
+The dev fixture contains only what its HMR checks need.
+From either package, `vp run test` runs that package's browser suite; `vp check` checks configuration, fixture, and test source.
 The root package has no E2E runner script or Playwright dependency.
 
 `packages/gitignore-patterns` owns both `src/index.test.ts` and `tests/cli.test.ts`.
@@ -59,11 +62,15 @@ Package-local test fixtures were removed by their lifecycle cleanup.
 
 ## Standard E2E server lifecycle
 
-The E2E package uses Playwright's [webServer](https://playwright.dev/docs/test-webserver) for startup, readiness, and shutdown instead of a custom `run.mjs` runner.
-The Vite host configuration reuses the example source and public integration plugin while isolating test-only output, inspector, and persistence settings.
-Three dynamically selected HTTP ports and one unique run directory keep simultaneous invocations separate.
-Both Wrangler hosts build their own isolated artifacts before starting; overrides are applied at Wrangler startup, not during compilation.
-See [the E2E project instructions](../tests/e2e/AGENTS.md) for commands and retained diagnostic artifacts.
+Each E2E package uses Playwright's [webServer](https://playwright.dev/docs/test-webserver) for startup, readiness, and shutdown.
+Each has one Vite configuration and one fixed `webServer` command, with no build/dev mode branch or shared multi-host configuration.
+The build package runs `vp build` followed by standalone Wrangler with test binding overrides.
+The dev package runs `vp dev` and tests only HMR.
+Each package runs its fixed `fixture/` directly, using test ports 4173 for build and 4174 for dev.
+Build output stays under `fixture/dist/`; Playwright uses its standard `test-results/` directory.
+The HMR test edits its own fixture and restores the original bytes and removes added files in `finally`.
+Same-package concurrent execution is outside this setup; isolation, when needed, belongs to the execution environment rather than Playwright configuration.
+Run the packages independently with their own `vp run test` commands.
 
 ## Task entry points
 

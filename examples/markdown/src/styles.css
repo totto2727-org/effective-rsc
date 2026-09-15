@@ -1,0 +1,51 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  color: #e2e8f0;
+  background: #111827;
+}
+body {
+  margin: 0;
+}
+header {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #334155;
+}
+main {
+  max-width: 54rem;
+  margin: auto;
+  padding: 2rem;
+  line-height: 1.8;
+}
+a {
+  color: #93c5fd;
+}
+button {
+  padding: 0.5rem 1rem;
+}
+pre {
+  overflow-x: auto;
+  padding: 1rem;
+  background: #1e293b;
+  border-radius: 0.5rem;
+}
+img,
+svg {
+  max-width: 100%;
+}
+table {
+  border-collapse: collapse;
+}
+td,
+th {
+  border: 1px solid #475569;
+  padding: 0.4rem 1rem;
+}
+blockquote {
+  margin-left: 0;
+  border-left: 3px solid #60a5fa;
+  padding-left: 1rem;
+}
