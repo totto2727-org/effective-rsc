@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   publish:
-    if: github.repository == 'totto2727-org/effective-rsc'
+    if: github.repository == 'totto2727-org/effront'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
