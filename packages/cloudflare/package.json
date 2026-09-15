@@ -3,6 +3,11 @@
   "version": "0.1.4-workers.0",
   "description": "Effront Cloudflare Workers Vite integration and typed request context accessors.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/totto2727-org/effective-rsc.git",
+    "directory": "packages/cloudflare"
+  },
   "files": [
     "src",
     "README.md",
@@ -15,6 +20,10 @@
   "exports": {
     ".": "./src/index.ts",
     "./workers": "./src/workers.ts"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "next"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "1.54.7"

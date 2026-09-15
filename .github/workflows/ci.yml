@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: totto2727-org/monorepo/.github/actions/setup-nix@main
+      - uses: totto2727-org/monorepo/.github/actions/setup-typescript@main
+        with:
+          install-args: --frozen-lockfile
+      - name: Check and test
+        run: |
+          eval "$(nix print-dev-env "$GITHUB_WORKSPACE#default")"
+          vp run check
+          vp run test
+      - uses: ./.github/actions/pack-npm
+      - name: Validate npm artifacts without authentication
+        run: |
+          eval "$(nix print-dev-env "$GITHUB_WORKSPACE#default")"
+          for package in effront vite cloudflare markdown; do
+            if grep -Eq '"(workspace|catalog):' "tmp/npm/$package/package.json"; then
+              echo "Unresolved dependency protocol in $package" >&2
+              exit 1
+            fi
+            (cd "tmp/npm/$package" && bun pm pack --dry-run)
+          done

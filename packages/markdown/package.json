@@ -3,6 +3,11 @@
   "version": "0.1.4-workers.0",
   "description": "Typed Effect Markdown collections and Comark parsing for Vite applications.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/totto2727-org/effective-rsc.git",
+    "directory": "packages/markdown"
+  },
   "files": [
     "src",
     "README.md",
@@ -13,6 +18,10 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "next"
   },
   "dependencies": {
     "@effect/platform-node-shared": "catalog:",

@@ -8,6 +8,11 @@
     "react-server-components"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/totto2727-org/effective-rsc.git",
+    "directory": "packages/effront"
+  },
   "files": [
     "src",
     "README.md",
@@ -27,6 +32,10 @@
     "./workers": "./src/workers.ts",
     "./internal/client-entry": "./src/client/entry.ts",
     "./internal/ssr-entry": "./src/server/ssr.tsx"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "next"
   },
   "dependencies": {
     "@vitejs/plugin-rsc": "catalog:"
