@@ -1,6 +1,6 @@
 # Getting started
 
-[Manual home](../index.md)
+[Manual home](../../manual.md)
 
 ## Installation
 

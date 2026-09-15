@@ -2,13 +2,13 @@
 
 This page is rendered on the server with comark's React integration.
 
-- [Getting started](./guide/getting-started.md?from=manual#installation)
-- [Deep details](./guide/deep/details.md)
-- [Unicode page](./guide/日本語%20space.md?from=manual#details)
+- [Getting started](./manual/guide/getting-started.md?from=manual#installation)
+- [Deep details](./manual/guide/deep/details.md)
+- [Unicode page](./manual/guide/日本語%20space.md?from=manual#details)
 - [External reference](https://example.com/reference?q=markdown#section)
 - [Local section](#features)
 
-![Markdown diagram](./images/diagram.svg)
+![Markdown diagram](./manual/images/diagram.svg)
 
 ## Features
 

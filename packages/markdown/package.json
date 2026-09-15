@@ -15,6 +15,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@effect/platform-node-shared": "catalog:",
     "comark": "0.6.2",
     "effect": "catalog:",
     "katex": "^0.17.0",

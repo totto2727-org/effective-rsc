@@ -15,9 +15,12 @@ Vite also resolves assets with `?url` and owns their development URLs, productio
 The Markdown package consumes those maps rather than implementing a filesystem loader, asset copier, or bundler.
 
 The package maps source files to application URLs while preserving directory hierarchy.
-For example, the keys `./index.md` and `./guide/deep/details.md` map to `/manual` and `/manual/guide/deep/details` when `basePath` is `/manual`.
+For example, the keys `./manual.md` and `./manual/guide/deep/details.md` map to `/manual` and `/manual/guide/deep/details` when `basePath` is `/`.
+A directory's page is its same-named sibling Markdown file: `guide.md` represents `guide/`, and every document URL is formed by removing only the `.md` extension.
 Relative document links resolve from their containing source file and retain queries and fragments.
 Asset references use URLs supplied by Vite.
+Source-relative path operations use Effect's [`NodePath.layerPosix`](https://effect.website/docs/v4/api/platform-node-shared/NodePath), keeping Vite's slash-separated paths consistent across hosts.
+The runtime must support `node:path` and `node:url`; the Workers example enables `nodejs_compat`.
 
 `createMarkdownCollection`, `parseMarkdown`, and URL resolvers expose expected failures through `MarkdownError` in Effect's error channel.
 Collection entries and `get` remain ordinary values and lookup operations.
@@ -38,7 +41,8 @@ Markdownの構文解析とReact描画は別の処理です。
 
 ```mermaid
 flowchart TD
-    A["Effect実行: basePath / documents / assets"] --> B["basePathをセグメント化"]
+    A["Effect実行: basePath / documents / assets"] --> P["NodePath.layerPosixからPathサービスを取得"]
+    P --> B["basePathをセグメント化"]
     B --> C{"設定条件を満たすか"}
     C -->|いいえ| E["MarkdownErrorでEffect失敗"]
     C -->|はい| D["公開URL索引・ソース索引・アセット索引を作成"]
@@ -50,7 +54,7 @@ flowchart TD
     F -->|いいえ| I{"未処理のMarkdownがあるか"}
     I -->|はい| J{"globキーがコレクション基準の相対パスで<br/>ファイル名が.mdで終わるか"}
     J -->|いいえ| E
-    J -->|はい| K["globキーの相対階層とbasePathを結合<br/>.mdを除去し、indexはディレクトリURLへ"]
+    J -->|はい| K["globキーの相対階層とbasePathを結合<br/>.md拡張子だけを除去"]
     K --> L["各セグメントをencodeして公開URLを作成"]
     L --> M{"公開URLが重複するか"}
     M -->|はい| E
@@ -62,7 +66,7 @@ flowchart TD
 設定確認では、`basePath`が`/`で始まり、query・fragment・`..`セグメントを含まないことを確認します。
 globキーは`./`で始まるコレクション基準の相対パスとして扱い、`..`による基準外参照や`.md`だけのファイル名は受け付けません。
 `Entry.source`は診断と相対リンク解決用のキーとして残りますが、読み込みディレクトリの指定ではありません。
-例: globの`base: "./content"`が返す`./guide/index.md` → `/manual/guide`、`./guide/start.md` → `/manual/guide/start`。
+例: `basePath: "/manual"`とglobの`base: "./content"`で、`./guide.md` → `/manual/guide`、`./guide/start.md` → `/manual/guide/start`。
 
 ### 2. リクエストURLからEntryを検索
 
@@ -98,12 +102,12 @@ flowchart TD
     B -->|いいえ| D["パスとquery / fragmentのsuffixを分離"]
     D --> E{"パスが空か"}
     E -->|はい| F["現在のEntry URL + suffixを返す"]
-    E -->|いいえ| G["元Markdownのディレクトリを基準にする"]
-    G --> H["参照を分割し各セグメントを1回decode<br/>失敗時は元の文字列を保持"]
-    H --> I["空とドットは読み飛ばす<br/>..は親へ移動、その他は追加"]
-    I --> J{"..によってコレクション基準の外へ出るか"}
+    E -->|いいえ| G["encodeしたソースパスからPath.dirnameで基準ディレクトリを取得"]
+    G --> H["参照を分割し各セグメントを1回decodeして再encode<br/>encoded slashをセグメント内に保持"]
+    H --> I["Path.joinで相対参照を結合・正規化"]
+    I --> J{"結果が .. または ../ で始まるか"}
     J -->|はい| X["MarkdownErrorでEffect失敗"]
-    J -->|いいえ| K["解決済み相対パスを<br/>セグメント単位でencode"]
+    J -->|いいえ| K["Path.resolveで固定の / 基準の索引キーへ"]
     K --> L{"リンクであり、対象が.mdか"}
     L -->|はい| M["ソース索引からEntryの公開URLを取得"]
     L -->|いいえ| N["アセット索引からViteのURLを取得"]

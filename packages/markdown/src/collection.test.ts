@@ -26,12 +26,10 @@ const collection = () =>
   });
 
 describe("createMarkdownCollection", () => {
-  it("maps nested documents to public routes without README magic", () => {
+  it("maps nested documents to public routes by removing only the Markdown extension", () => {
     const markdown = collection();
 
     expect(markdown.entries.map((entry) => [entry.source, entry.pathname, entry.url])).toEqual([
-      ["./index.md", "/manual", "/manual"],
-      ["./guides/index.md", "/manual/guides", "/manual/guides"],
       [
         "./guides/$&+,=@.md",
         "/manual/guides/%24%26%2B%2C%3D%40",
@@ -44,6 +42,8 @@ describe("createMarkdownCollection", () => {
         "/manual/guides/getting%20started",
         "/manual/guides/getting%20started",
       ],
+      ["./guides/index.md", "/manual/guides/index", "/manual/guides/index"],
+      ["./index.md", "/manual/index", "/manual/index"],
       ["./README.md", "/manual/README", "/manual/README"],
     ]);
     expect(markdown.get("/manual/guides/getting%20started")?.content).toBe("# Getting started");
@@ -68,9 +68,9 @@ describe("createMarkdownCollection", () => {
       assets: { "./images/diagram.svg": "/assets/diagram.hash.svg" },
     });
     const details = markdown.get("/manual/guide/deep/details")!;
-    expect(markdown.get("/manual/content")?.source).toBe("./content/index.md");
+    expect(markdown.get("/manual/content/index")?.source).toBe("./content/index.md");
     expect(details.source).toBe("./guide/deep/details.md");
-    expect(Effect.runSync(details.resolveLink("../../index.md#top"))).toBe("/manual#top");
+    expect(Effect.runSync(details.resolveLink("../../index.md#top"))).toBe("/manual/index#top");
     expect(Effect.runSync(details.resolveImage("../../images/diagram.svg"))).toBe(
       "/assets/diagram.hash.svg",
     );
@@ -114,7 +114,7 @@ describe("createMarkdownCollection", () => {
     expect(collection().get(pathname)).toBeUndefined();
   });
 
-  it.each(["/manual/", "/manual/guides/", "/manual/guides/advanced/"])(
+  it.each(["/manual/index/", "/manual/guides/index/", "/manual/guides/advanced/"])(
     "preserves a single trailing slash alias: %s",
     (pathname) => {
       const markdown = collection();
@@ -123,16 +123,19 @@ describe("createMarkdownCollection", () => {
     },
   );
 
-  it.each(["/", "/?mode=full#top"])("looks up a root index: %s", (pathname) => {
-    const markdown = create({
-      basePath: "/",
-      documents: { "./index.md": "# Root" },
-    });
-    expect(markdown.get(pathname)?.content).toBe("# Root");
-  });
+  it.each(["/index", "/index?mode=full#top"])(
+    "looks up index.md at its explicit pathname: %s",
+    (pathname) => {
+      const markdown = create({
+        basePath: "/",
+        documents: { "./index.md": "# Root" },
+      });
+      expect(markdown.get(pathname)?.content).toBe("# Root");
+    },
+  );
 
-  it.each(["//", "///", "/./", "/%2E/", "/%00", "/%2F"])(
-    "does not alias unknown paths to a root index: %s",
+  it.each(["/", "/?mode=full#top", "//", "///", "/./", "/%2E/", "/%00", "/%2F"])(
+    "does not alias root or unknown paths to index.md: %s",
     (pathname) => {
       const markdown = create({
         basePath: "/",
@@ -159,7 +162,7 @@ describe("createMarkdownCollection", () => {
     const markdown = collection();
     const entry = markdown.get("/manual/guides/advanced")!;
     expect(Effect.runSync(entry.resolveLink("index.md?mode=full#top"))).toBe(
-      "/manual/guides?mode=full#top",
+      "/manual/guides/index?mode=full#top",
     );
     expect(Effect.runSync(markdown.resolveLink(entry, "getting%20started.md#install"))).toBe(
       "/manual/guides/getting%20started#install",
@@ -196,7 +199,7 @@ describe("createMarkdownCollection", () => {
       documents: { "./index.md": "" },
       assets: { "./logo.svg": "data:image/svg+xml;base64,AAAA" },
     });
-    expect(Effect.runSync(markdown.get("/manual")!.resolveImage("logo.svg"))).toBe(
+    expect(Effect.runSync(markdown.get("/manual/index")!.resolveImage("logo.svg"))).toBe(
       "data:image/svg+xml;base64,AAAA",
     );
   });
@@ -208,7 +211,7 @@ describe("createMarkdownCollection", () => {
     { basePath: "/manual", documents: { "../elsewhere/page.md": "" } },
     {
       basePath: "/manual",
-      documents: { "./foo.md": "", "./foo/index.md": "" },
+      documents: { "./foo.md": "", "./foo.MD": "" },
     },
     { basePath: "/manual", documents: { "./file.txt": "" } },
     {
@@ -232,6 +235,53 @@ describe("createMarkdownCollection", () => {
     ]) {
       expect(Effect.runSync(Effect.flip(operation))).toBeInstanceOf(MarkdownError);
     }
+  });
+
+  it("keeps file stems distinct from directories and supports an explicit manual page", () => {
+    const markdown = create({
+      basePath: "/",
+      documents: {
+        "./manual.md": "# Manual",
+        "./guide.md": "# Guide",
+        "./guide/index.md": "# Guide index",
+        "./index.md": "# Index",
+      },
+    });
+    expect(markdown.entries.map((entry) => entry.url)).toEqual([
+      "/guide",
+      "/guide/index",
+      "/index",
+      "/manual",
+    ]);
+    expect(markdown.get("/")).toBeUndefined();
+    expect(markdown.get("/manual")?.source).toBe("./manual.md");
+    expect(Effect.runSync(markdown.get("/guide/index")!.resolveLink("../guide.md"))).toBe("/guide");
+  });
+
+  it("normalizes POSIX references while keeping URL-encoded separators and percents literal", () => {
+    const markdown = create({
+      basePath: "/manual",
+      documents: {
+        "./guide/start.md": "# Start",
+        "./guide/literal%2F.md": "# Literal slash escape",
+        "./guide/back\\slash.md": "# POSIX backslash",
+        "./guide/日本語 space.md": "# Unicode",
+      },
+    });
+    const start = markdown.get("/manual/guide/start")!;
+    expect(Effect.runSync(start.resolveLink("./nested/../literal%252F.md"))).toBe(
+      "/manual/guide/literal%252F",
+    );
+    expect(Effect.runSync(start.resolveLink("back%5Cslash.md"))).toBe("/manual/guide/back%5Cslash");
+    expect(Effect.runSync(start.resolveLink("日本語%20space.md"))).toBe(
+      "/manual/guide/%E6%97%A5%E6%9C%AC%E8%AA%9E%20space",
+    );
+    expect(Effect.runSync(Effect.flip(start.resolveLink("literal%2F.md")))).toBeInstanceOf(
+      MarkdownError,
+    );
+    expect(Effect.runSync(Effect.flip(start.resolveLink("../../guide/start.md")))).toBeInstanceOf(
+      MarkdownError,
+    );
   });
 
   it("constructs a fresh collection on each Effect execution", () => {

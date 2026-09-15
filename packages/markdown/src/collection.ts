@@ -1,4 +1,5 @@
-import { Effect } from "effect";
+import * as NodePath from "@effect/platform-node-shared/NodePath";
+import { Effect, Path } from "effect";
 
 import { MarkdownError } from "./error.ts";
 
@@ -50,6 +51,7 @@ export const createMarkdownCollection = (
   options: MarkdownCollectionOptions,
 ): Effect.Effect<MarkdownCollection, MarkdownError> =>
   Effect.gen(function* () {
+    const pathService = yield* Path.Path;
     const base = segments(options.basePath);
     if (
       !options.basePath.startsWith("/") ||
@@ -90,22 +92,22 @@ export const createMarkdownCollection = (
         }
         const [path, suffix] = splitReference(reference);
         if (path === "") return `${entry.url}${suffix}`;
-        const relative = segments(entry.source).slice(0, -1);
-        for (const part of path.split("/").map(decodeSegment)) {
-          if (part === "" || part === ".") continue;
-          if (part === "..") {
-            if (relative.length === 0) {
-              return yield* new MarkdownError({
-                message: `reference resolves outside the collection base: ${reference} from ${entry.source}`,
-              });
-            }
-            relative.pop();
-          } else {
-            relative.push(part);
-          }
+        // Encode each decoded URL segment before POSIX normalization so %2F stays
+        // a filename character rather than becoming another path separator.
+        const encodedReference = path
+          .split("/")
+          .map(decodeSegment)
+          .map(encodeURIComponent)
+          .join("/");
+        const directory = pathService.dirname(encodedPathname(segments(entry.source))).slice(1);
+        const relative = pathService.join(directory, encodedReference);
+        if (relative === ".." || relative.startsWith("../")) {
+          return yield* new MarkdownError({
+            message: `reference resolves outside the collection base: ${reference} from ${entry.source}`,
+          });
         }
-        const target = encodedPathname(relative);
-        const isDocument = !image && markdownExtension.test(relative.at(-1) ?? "");
+        const target = pathService.resolve("/", relative);
+        const isDocument = !image && markdownExtension.test(pathService.basename(target));
         const url = isDocument ? entriesBySource.get(target)?.url : assetMap.get(target);
         if (url === undefined) {
           return yield* new MarkdownError({
@@ -130,7 +132,7 @@ export const createMarkdownCollection = (
         });
       }
       const stem = filename.slice(0, -3);
-      const page = [...base, ...relative.slice(0, -1), ...(stem === "index" ? [] : [stem])];
+      const page = [...base, ...relative.slice(0, -1), stem];
       const url = encodedPathname(page);
       if (entriesByPathname.has(url)) {
         return yield* new MarkdownError({
@@ -164,5 +166,5 @@ export const createMarkdownCollection = (
       },
       resolveLink: (entry, href) => resolveLocal(entry, href, false),
       resolveImage: (entry, source) => resolveLocal(entry, source, true),
-    };
-  });
+    } satisfies MarkdownCollection;
+  }).pipe(Effect.provide(NodePath.layerPosix));

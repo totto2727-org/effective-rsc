@@ -11,6 +11,7 @@ catalog:
   vite-plus: 0.3.1
   effect: 4.0.0-rc.113
   "@effect/platform-browser": 4.0.0-rc.113
+  "@effect/platform-node-shared": 4.0.0-rc.113
   react: 19.3.0-canary-1d34f91d-20260909
   react-dom: 19.3.0-canary-1d34f91d-20260909
   "@types/react": 19.3.0

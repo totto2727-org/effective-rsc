@@ -15,7 +15,7 @@ const entry = (content: string) =>
       documents: { "./index.md": content, "./guide.md": "# Guide" },
       assets: { "./logo.svg": "/assets/logo.hash.svg" },
     }),
-  ).get("/manual")!;
+  ).get("/manual/index")!;
 
 describe("parseMarkdown", () => {
   it("resolves nested links and images in the Comark AST before rendering", async () => {

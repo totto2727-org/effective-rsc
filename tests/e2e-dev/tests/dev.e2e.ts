@@ -16,17 +16,17 @@ test("updates edited Markdown and discovers added and removed source pages in de
       errors.push(message.text());
   });
   const appRoot = fileURLToPath(new URL("../fixture/", import.meta.url));
-  const indexFile = join(appRoot, "content/index.md");
+  const manualFile = join(appRoot, "content/manual.md");
   const stem = `acceptance-added-${randomUUID()}%20literal`;
   const encodedStem = encodeURIComponent(stem);
-  const addedFile = join(appRoot, "content/guide", `${stem}.md`);
+  const addedFile = join(appRoot, "content/manual/guide", `${stem}.md`);
   const addedPath = `/manual/guide/${encodedStem}`;
-  const original = await readFile(indexFile);
+  const original = await readFile(manualFile);
   await page.goto("/manual");
   await page.waitForLoadState("networkidle");
   try {
     await writeFile(
-      indexFile,
+      manualFile,
       Buffer.concat([original, Buffer.from("\n\nAcceptance live update\n")]),
     );
     await expect(page.getByText("Acceptance live update", { exact: true })).toBeVisible({
@@ -47,6 +47,6 @@ test("updates edited Markdown and discovers added and removed source pages in de
     await expect(page.locator("vite-error-overlay")).toHaveCount(0);
     expect(errors, "Content updates must not introduce browser or hydration faults").toEqual([]);
   } finally {
-    await Promise.all([writeFile(indexFile, original), rm(addedFile, { force: true })]);
+    await Promise.all([writeFile(manualFile, original), rm(addedFile, { force: true })]);
   }
 });

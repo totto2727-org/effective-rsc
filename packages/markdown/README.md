@@ -38,7 +38,7 @@ export const manual = createMarkdownCollection({
 });
 ```
 
-Both globs use Vite's native `base` option, so their keys are relative to `content/`, such as `./index.md` and `./guide/start.md`.
+Both globs use Vite's native `base` option, so their keys are relative to `content/`, such as `./guide.md` and `./guide/start.md`.
 Use the same base for the document and asset maps.
 `manual` is an Effect, evaluated where the application handles configuration failures.
 Vite owns document loading and asset URL generation, including its asset inlining policy.
@@ -76,7 +76,9 @@ Returns `Effect<MarkdownCollection, MarkdownError>`.
 
 The resulting collection exposes pure `entries` and `get(pathname)` operations.
 Each entry has its base-relative glob key in `source`, Markdown text in `content`, and public `url`/`pathname` fields.
-Only `index.md` maps to its containing directory's URL, while `README.md` keeps `/README`.
+Each page URL removes only the `.md` extension from its base-relative filename.
+With `basePath: "/manual"`, `guide.md` becomes `/manual/guide`, `index.md` becomes `/manual/index`, and `guide/index.md` becomes `/manual/guide/index`.
+To serve `/manual`, use `content/manual.md` with `basePath: "/"`.
 Filenames are percent-encoded independently of route patterns, and lookup decodes URL escapes once.
 A single trailing slash is accepted for page lookup.
 
@@ -87,6 +89,9 @@ The collection also exposes `resolveLink(entry, href)` and `resolveImage(entry, 
 
 Inside `content/guide/start.md`, `[Details](./deep/details.md#example)` becomes `/manual/guide/deep/details#example`.
 An image such as `![Diagram](../images/diagram.svg)` resolves from the Markdown file's directory and uses its imported Vite URL.
+File paths use Effect's `Path` service with `NodePath.layerPosix`, preserving POSIX semantics independently of the host operating system or working directory.
+The server runtime must support `node:path` and `node:url`.
+For Cloudflare Workers, enable the `nodejs_compat` compatibility flag in your Wrangler configuration.
 Queries and fragments are retained, and site-absolute, fragment-only, and external references pass through unchanged.
 Reference queries and fragments are appended literally to the imported asset URL, without merging existing URL queries or fragments.
 When an imported URL already contains a query or fragment, use a reference without a conflicting suffix or provide the final URL directly.
@@ -122,6 +127,7 @@ The package retains KaTeX as a dependency because Comark's math parser plugin im
 
 - [Comark React rendering](https://comark.dev/rendering/react)
 - [Vite glob imports](https://vite.dev/guide/features.html#glob-import)
+- [Effect NodePath](https://effect.website/docs/v4/api/platform-node-shared/NodePath)
 - [Effect expected errors](https://effect.website/docs/error-management/expected-errors/)
 - [Repository contributor instructions](../../AGENTS.md)
 

@@ -4,7 +4,7 @@
 
 The nested directory structure is preserved in the public URL.
 
-[Manual home](../../index.md)
+[Manual home](../../../manual.md)
 
 [Getting started](../getting-started.md#installation)
 

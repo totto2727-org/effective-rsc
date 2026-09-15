@@ -135,7 +135,7 @@ test.describe("Markdown without JavaScript", () => {
     expect(asset.status()).toBe(200);
     expect(asset.headers()["content-type"]).toMatch(/^image\//);
     expect(await asset.body()).toEqual(
-      await readFile(new URL("../fixture/content/images/diagram.svg", import.meta.url)),
+      await readFile(new URL("../fixture/content/manual/images/diagram.svg", import.meta.url)),
     );
     await expect
       .poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth))
