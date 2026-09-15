@@ -66,9 +66,10 @@ Each E2E package uses Playwright's [webServer](https://playwright.dev/docs/test-
 Each has one Vite configuration and one fixed `webServer` command, with no build/dev mode branch or shared multi-host configuration.
 The build package runs `vp build` followed by standalone Wrangler with test binding overrides.
 The dev package runs `vp dev` and tests only HMR.
-Each invocation copies its package-local fixture into an ignored `tmp/run-*` directory and selects one available HTTP port.
-Build output, Wrangler state, and failure traces remain within that package's run directory.
-The HMR suite changes the per-run fixture copy, leaving authored fixtures, examples, and the documentation site unchanged.
+Each package runs its fixed `fixture/` directly, using test ports 4173 for build and 4174 for dev.
+Build output stays under `fixture/dist/`; Playwright uses its standard `test-results/` directory.
+The HMR test edits its own fixture and restores the original bytes and removes added files in `finally`.
+Same-package concurrent execution is outside this setup; isolation, when needed, belongs to the execution environment rather than Playwright configuration.
 Run the packages independently with their own `vp run test` commands.
 
 ## Task entry points

@@ -134,6 +134,6 @@ Standard Comark document rendering does not automatically register its separate 
 - `tests/e2e-build`: `vp run test` builds a dedicated fixture and runs browser checks against standalone Wrangler.
 - `tests/e2e-dev`: `vp run test` starts Vite development and verifies Markdown edits, additions, and deletion using a minimal fixture.
 - Each E2E project has its own fixed Vite and Playwright configuration and only the fixture assets needed for its tests.
-- Temporary mutable fixture copies and artifacts stay in ignored package-local `tmp` directories.
+- Each package runs its fixed fixture directly. The HMR test restores edited files and removes added files in `finally`; browser artifacts use the ignored standard `test-results/` directory.
 
 Typed metadata, relationships, loaders, and richer SSR support remain separate roadmap items.

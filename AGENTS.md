@@ -104,3 +104,4 @@ _This AGENTS.md was generated from the [share-artifact skill](https://raw.github
 Each of `tests/e2e-build/` and `tests/e2e-dev/` owns its fixture, Playwright configuration, Vite configuration, and `vp run test` entry point.
 Keep one fixed `webServer` command per package: build then standalone Wrangler for `e2e-build`, and Vite development for `e2e-dev`.
 The dev package covers HMR only. Do not introduce shared build/dev mode branches or start both hosts from either package.
+Run the fixed package-local fixture directly. Keep fixture copying, dynamic run directories, and concurrent-run isolation out of Playwright configuration; HMR tests restore their own file changes in `finally`.

@@ -15,7 +15,7 @@ The outgoing and incoming pages keep their own settings.
 - Root `vp run test` passes 308 tests in 41 files, including configuration defaults, partial overrides, per-request isolation, static and parameterized pages, SSR output, and reduced-motion selection.
 - The real documentation suite passes 10 cases against Vite dev and an independently started Wrangler production artifact, including no-JavaScript SSR, Flight, hydration, navigation, typography, mobile sidebar, and exact architecture excerpts.
 - The Workers example passes 36 browser cases across Vite dev and two independently built Wrangler hosts: default/custom/link-selected animations, history navigation, page opt-out, reduced motion, live preference changes with input value and focus preservation, simulated missing ViewTransition API, direct stylesheet loading, retained Layout, and the existing Fetch cases.
-- Current browser artifacts are generated under `tests/e2e-build/tmp/run-*/test-results` by the independent build E2E suite.
+- Current browser artifacts are generated under `tests/e2e-build/test-results` by the independent build E2E suite.
 - Browser animation assertions observe `document.getAnimations()` on animation frames, including pseudo-elements, running progress, and actual opacity/transform keyframes. They do not replace `startViewTransition` or infer success from callbacks alone.
 - Local `pnpm pack` includes the public configuration module and client boundary, and excludes colocated tests. No package was published.
 

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFile, rm, writeFile } from "node:fs/promises";
-import { join, relative, resolve } from "node:path";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 
 test("updates edited Markdown and discovers added and removed source pages in development", async ({
@@ -14,11 +15,7 @@ test("updates edited Markdown and discovers added and removed source pages in de
     if (/hydrat|server rendered html|did not match/i.test(message.text()))
       errors.push(message.text());
   });
-  const appRoot = process.env["EFFRONT_E2E_APP_ROOT"];
-  const runDirectory = process.env["EFFRONT_E2E_RUN_DIR"];
-  if (!appRoot || !runDirectory || relative(resolve(runDirectory), resolve(appRoot)) !== "app") {
-    throw new TypeError("HMR acceptance may only modify its isolated run-directory app copy");
-  }
+  const appRoot = fileURLToPath(new URL("../fixture/", import.meta.url));
   const indexFile = join(appRoot, "content/index.md");
   const stem = `acceptance-added-${randomUUID()}%20literal`;
   const encodedStem = encodeURIComponent(stem);
@@ -50,7 +47,6 @@ test("updates edited Markdown and discovers added and removed source pages in de
     await expect(page.locator("vite-error-overlay")).toHaveCount(0);
     expect(errors, "Content updates must not introduce browser or hydration faults").toEqual([]);
   } finally {
-    await writeFile(indexFile, original);
-    await rm(addedFile, { force: true });
+    await Promise.all([writeFile(indexFile, original), rm(addedFile, { force: true })]);
   }
 });

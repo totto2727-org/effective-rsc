@@ -77,7 +77,7 @@ The site's colocated tests validate its content registry, rendered headings, sou
 Run `vp run test` from `tests/e2e-build` for framework browser acceptance using its dedicated fixture on the generated Wrangler artifact.
 Run `vp run test` from `tests/e2e-dev` for HMR-only acceptance using its separate minimal fixture.
 These packages do not start or modify the documentation site.
-Each owns one Vite configuration, one Playwright configuration, one fixed webServer command, an isolated fixture copy, an available HTTP port, and failure traces.
+Each owns one Vite configuration, one Playwright configuration, one fixed webServer command, a fixed fixture and test port, and standard Playwright failure traces.
 Build the documentation application with `vp build` from `app/docs` when changing site integration; this is a separate application build, not an alternate E2E configuration.
 
 The stream injector preserves HTML chunk boundaries and emits embedded Flight payloads after HTML EOF, before the closing document trailer.

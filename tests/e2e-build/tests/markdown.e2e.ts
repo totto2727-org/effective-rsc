@@ -264,7 +264,7 @@ test("keeps the Markdown renderer, parser and highlighters outside the actual br
   expect(response.status()).toBe(200);
   const graph: { modules: string[]; assets: string[] } = await response.json();
   expect(graph.modules.length, "Audit a real nonempty client build").toBeGreaterThan(10);
-  expect(graph.modules.some((id) => id.includes("/app/src/"))).toBe(true);
+  expect(graph.modules.some((id) => id.includes("/e2e-build/fixture/src/"))).toBe(true);
   // KaTeX styles and local fonts are presentation assets, not browser parsing code.
   const implementation = [...graph.modules, ...graph.assets].filter(
     (id) => !/\.(?:css|woff2?|ttf|otf)(?:$|\?)/i.test(id),
