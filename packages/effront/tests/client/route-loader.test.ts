@@ -77,7 +77,7 @@ const makeNavigationApiLayer = (navigationHistory: TestNavigationHistory) =>
     subscribe: () => () => undefined,
   });
 
-const makeRouteLoader = Effect.fnUntraced(function* (
+const makeRouteLoader = Effect.fn(function* (
   navigationHistory: TestNavigationHistory,
   initialRouteTree: RouteTreeModel,
   initialFlightCompleted: Effect.Effect<void> = Effect.void,

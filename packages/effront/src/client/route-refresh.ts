@@ -78,10 +78,10 @@ export const installRouteRefresh = Effect.gen(function* () {
     return Effect.sync(unsubscribe);
   });
 
-  const refreshRoute = Effect.fnUntraced(function* (transitionType: RouteRefreshTransitionType) {
+  const refreshRoute = Effect.fn(function* (transitionType: RouteRefreshTransitionType) {
     const responseScope = yield* Scope.make();
     const render = yield* Effect.uninterruptibleMask(
-      Effect.fnUntraced(
+      Effect.fn(
         function* (restore) {
           const currentEntry = navigationApi.getCurrentEntry();
           const destination = new URL(currentEntry?.url ?? navigationApi.getCurrentUrl());
@@ -150,7 +150,7 @@ export const installRouteRefresh = Effect.gen(function* () {
     }
   });
 
-  const refreshCurrentRoute = Effect.fnUntraced(
+  const refreshCurrentRoute = Effect.fn(
     function* (transitionType: RouteRefreshTransitionType) {
       routeLoader.invalidate();
       yield* waitForNavigationIdle;

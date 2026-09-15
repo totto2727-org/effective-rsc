@@ -93,7 +93,7 @@ export class RouteLoader extends Context.Service<RouteLoader>()("effront/client/
       };
     };
 
-    const load = Effect.fnUntraced(function* (request: RouteLoadRequest) {
+    const load = Effect.fn(function* (request: RouteLoadRequest) {
       const cache = MutableRef.get(cacheRef);
       if (request.navigationType === "traverse") {
         const cached = cache.get(request.destination.id);

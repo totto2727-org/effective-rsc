@@ -24,7 +24,7 @@ describe("EFFRONT.Component.make", () => {
       const EFFRONT = Application.effront<Greeting>();
       const runtime = yield* FiberSet.makeRuntimePromise<Greeting>();
       const GreetingComponent = EFFRONT.Component.make({
-        render: Effect.fnUntraced(function* ({ name }: { readonly name: string }) {
+        render: Effect.fn(function* ({ name }: { readonly name: string }) {
           const greeting = yield* Greeting;
           return <p>{`${greeting.prefix}, ${name}`}</p>;
         }),
@@ -96,7 +96,7 @@ describe("EFFRONT.Component.make", () => {
       const runtime = yield* FiberSet.makeRuntimePromise<never>().pipe(Scope.provide(scope));
       const EFFRONT = Application.effront();
       const Component = EFFRONT.Component.make({
-        render: Effect.fnUntraced(function* () {
+        render: Effect.fn(function* () {
           yield* Deferred.succeed(started, void 0);
           return yield* Effect.never.pipe(Effect.onInterrupt(() => Ref.set(interrupted, true)));
         }),

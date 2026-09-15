@@ -68,7 +68,7 @@ export class FlightClient extends Context.Service<FlightClient>()("effront/clien
       } satisfies DecodedFlight;
     });
 
-    const load = Effect.fnUntraced(function* (flightRequest: FlightRequest) {
+    const load = Effect.fn(function* (flightRequest: FlightRequest) {
       const parentScope = yield* Effect.scope;
       const responseScope = yield* Scope.fork(parentScope);
       const release = Scope.close(responseScope, Exit.void);

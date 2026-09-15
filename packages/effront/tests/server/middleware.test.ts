@@ -5,10 +5,7 @@ import { HttpEffect, HttpRouter, HttpServerResponse } from "effect/unstable/http
 import { Application } from "../../src/application/effront";
 import { getScopedMiddlewareHandler } from "../../src/application/middleware";
 
-const makeHandler = Effect.fnUntraced(function* (
-  events: Array<string>,
-  stream: Stream.Stream<Uint8Array>,
-) {
+const makeHandler = Effect.fn(function* (events: Array<string>, stream: Stream.Stream<Uint8Array>) {
   const EFFRONT = Application.effront();
   const Middleware = EFFRONT.Middleware.make((httpEffect) =>
     Effect.acquireRelease(

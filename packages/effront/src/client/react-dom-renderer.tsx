@@ -85,7 +85,7 @@ export class ReactDOMRenderer extends Context.Service<ReactDOMRenderer>()(
       const run = yield* BrowserEffectRunner;
       const renderStatus = yield* BrowserRenderStatus;
 
-      const hydrate = Effect.fnUntraced(function* (
+      const hydrate = Effect.fn(function* (
         container: Element | Document,
         initialPayload: FlightPayload,
       ) {

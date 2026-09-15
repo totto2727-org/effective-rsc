@@ -86,7 +86,7 @@ type CallServerDependencies =
   | RouteLoader
   | RouteRefresher;
 
-const listen = Effect.fnUntraced(function* (
+const listen = Effect.fn(function* (
   dependencies: Layer.Layer<CallServerDependencies, never, HttpClient.HttpClient>,
 ) {
   const installed = yield* Deferred.make<void>();

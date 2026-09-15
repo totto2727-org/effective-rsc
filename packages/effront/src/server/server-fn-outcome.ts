@@ -3,7 +3,7 @@ import { Cause, Effect } from "effect";
 import type { ServerFnResult } from "../rsc/flight";
 import type { RequestOutcome } from "./request-outcome";
 
-export const serverFnOutcome = Effect.fnUntraced(function* <Output, Error, Requirements>(
+export const serverFnOutcome = Effect.fn(function* <Output, Error, Requirements>(
   operation: Effect.Effect<Output, Error, Requirements>,
 ) {
   const exit = yield* Effect.exit(operation);

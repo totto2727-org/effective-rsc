@@ -306,7 +306,7 @@ const invokePrecommitHandler = (
   controller: NavigationPrecommitController,
 ) => Promise.resolve(handler(controller));
 
-const prepareNavigation = Effect.fnUntraced(function* (navigation: TestNavigationApi, url: string) {
+const prepareNavigation = Effect.fn(function* (navigation: TestNavigationApi, url: string) {
   const pendingNavigation = makeNavigationEvent({ destination: { url } });
   navigation.dispatch(pendingNavigation.event);
   const precommitHandler = pendingNavigation.interception()?.precommitHandler;
@@ -324,7 +324,7 @@ const prepareNavigation = Effect.fnUntraced(function* (navigation: TestNavigatio
   return handler;
 });
 
-const makeControlledRoute = Effect.fnUntraced(function* (url: string) {
+const makeControlledRoute = Effect.fn(function* (url: string) {
   const completed = yield* Deferred.make<void>();
   const released = Promise.withResolvers<void>();
   const cachedEntries: Array<NavigationHistoryEntry> = [];

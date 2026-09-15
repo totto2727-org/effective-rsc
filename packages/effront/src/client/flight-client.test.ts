@@ -38,7 +38,7 @@ const FlightClientTestLayer = FlightClient.layer.pipe(
   Layer.provide(InitialFlightStream.layerTest({ stream: initialFlightStream })),
 );
 
-const loadFlight = Effect.fnUntraced(function* (request: FlightRequest) {
+const loadFlight = Effect.fn(function* (request: FlightRequest) {
   const client = yield* FlightClient;
   return yield* client.load(request);
 }, Effect.provide(FlightClientTestLayer));

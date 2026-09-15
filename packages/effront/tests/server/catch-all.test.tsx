@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
 
 import { Application } from "../../src/index";
@@ -41,46 +41,53 @@ const makeHandler = () => {
   return createFetchHandler(App.make({ routes }));
 };
 
+// The oracle uses Effect's real router with the same native matchers, without Effront's
+// param adapter. A POST without Origin must reach the existing Server Function guard.
+const makeNativeHandler = () => {
+  const respond = Effect.map(HttpRouter.RouteContext, ({ route, params }) =>
+    HttpServerResponse.text(JSON.stringify({ pattern: route.path, params })),
+  );
+  const routes = [
+    "/manual/*",
+    "/manual/about",
+    "/manual/:slug",
+    "/localized/:lang/*",
+    "/plain",
+    "/日本語/入門",
+  ] as const;
+  const routeLayers = routes.map((path) =>
+    Layer.mergeAll(
+      HttpRouter.add("GET", path, respond),
+      HttpRouter.add(
+        "POST",
+        path,
+        HttpServerResponse.text("Rejected a cross-origin Server Function request.", {
+          status: 403,
+        }),
+      ),
+    ),
+  );
+  return HttpRouter.toWebHandler(Layer.mergeAll(routeLayers[0]!, ...routeLayers.slice(1)), {
+    disableLogger: true,
+  });
+};
+
 describe("catch-all public Fetch routing", () => {
   it.each([
-    ["/manual", "/manual/*path", { path: "" }],
-    ["/manual/", "/manual/*path", { path: "" }],
-    ["/manual/a/b/c/d", "/manual/*path", { path: "a/b/c/d" }],
-    [
-      "/manual/guide/%E6%97%A5%E6%9C%AC%E8%AA%9E%20space",
-      "/manual/*path",
-      { path: "guide/日本語 space" },
-    ],
-    ["/manual/guide/%252F%252e%252e%25", "/manual/*path", { path: "guide/%2F%2e%2e%" }],
-    [
-      "/manual/guide/punctuation!()'$&+,=@",
-      "/manual/*path",
-      { path: "guide/punctuation!()'$&+,=@" },
-    ],
-    ["/manual/guide/a%3Fb%23c", "/manual/*path", { path: "guide/a?b#c" }],
-    ["/manual/about", "/manual/about", {}],
-    ["/manual/hello%20there", "/manual/:slug", { slug: "hello there" }],
-    ["/localized/ja", "/localized/:lang/*path", { lang: "ja", path: "" }],
-    ["/localized/ja/a/b", "/localized/:lang/*path", { lang: "ja", path: "a/b" }],
-    ["/plain", "/plain", {}],
-    ["/%E6%97%A5%E6%9C%AC%E8%AA%9E/%E5%85%A5%E9%96%80", "/日本語/入門", {}],
-  ])(
-    "matches %s with normalized named params before user middleware",
-    async (pathname, pattern, params) => {
-      const handler = makeHandler();
-      for (const accept of ["text/html", "text/x-component"]) {
-        const response = await handler(
-          new Request(`https://routes.test${pathname}`, { headers: { accept } }),
-          {},
-          {},
-        );
-        expect(response.status).toBe(200);
-        expect(await response.json()).toEqual({ pattern, params });
-      }
-    },
-  );
-
-  it.each([
+    "/manual",
+    "/manual/",
+    "/manual/a/b/c/d",
+    "/manual/guide/%E6%97%A5%E6%9C%AC%E8%AA%9E%20space",
+    "/manual/guide/%252F%252e%252e%25",
+    "/manual/guide/punctuation!()'$&+,=@",
+    "/manual/guide/a%3Fb%23c",
+    "/manual/about",
+    "/manual/hello%20there",
+    "/localized/ja",
+    "/localized/ja/a/b",
+    "/localized/ja%2Fen/a%5Cb",
+    "/plain",
+    "/%E6%97%A5%E6%9C%AC%E8%AA%9E/%E5%85%A5%E9%96%80",
     "/manual/guide/%",
     "/manual/guide/%E0%A4%A",
     "/manual/guide/%FF",
@@ -90,21 +97,43 @@ describe("catch-all public Fetch routing", () => {
     "/manual/guide/%1F",
     "/manual/guide/%7f",
     "/manual/guide//nested",
-  ])(
-    "rejects unsafe capture %s before middleware or Server Functions execute",
-    async (pathname) => {
-      const handler = makeHandler();
+    "/manual/guide/./nested",
+    "/manual/guide/%2e%2e/nested",
+    "/manual/guide/leaf/",
+    "/MANUAL/guide/leaf?query=value",
+    "/manuals/a/b",
+  ])("delegates %s matching and decoding to native Effect HTTP", async (pathname) => {
+    const handler = makeHandler();
+    const native = makeNativeHandler();
+    try {
       for (const method of ["GET", "HEAD", "POST"]) {
-        const response = await handler(
-          new Request(`https://routes.test${pathname}`, { method }),
-          {},
-          {},
-        );
-        expect(response.status).toBe(404);
-        await response.body?.cancel();
+        for (const accept of ["text/html", "text/x-component"]) {
+          const request = new Request(`https://routes.test${pathname}`, {
+            method,
+            headers: { accept },
+          });
+          const expected = await native.handler(request.clone());
+          const response = await handler(request, {}, {});
+          expect(response.status).toBe(expected.status);
+          if (method === "GET" && expected.status === 200) {
+            const { pattern, params } = (await expected.json()) as {
+              pattern: string;
+              params: Record<string, string>;
+            };
+            const { "*": captured, ...named } = params;
+            expect(await response.json()).toEqual({
+              pattern,
+              params: pattern.endsWith("/*") ? { ...named, path: captured ?? "" } : params,
+            });
+          } else {
+            expect(await response.text()).toBe(await expected.text());
+          }
+        }
       }
-    },
-  );
+    } finally {
+      await native.dispose();
+    }
+  });
 
   it("preserves HEAD fallback and returns 404 outside registered prefixes", async () => {
     const handler = makeHandler();

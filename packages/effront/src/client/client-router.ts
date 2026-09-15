@@ -387,7 +387,7 @@ export const installClientRouter = Effect.gen(function* () {
     return transition;
   };
 
-  const executeRouterCommand = Effect.fnUntraced(function* (command: RouterCommand | null) {
+  const executeRouterCommand = Effect.fn(function* (command: RouterCommand | null) {
     if (command === null) {
       return;
     }

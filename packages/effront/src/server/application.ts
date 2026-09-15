@@ -91,7 +91,7 @@ const httpLayer = <Services, ApplicationError>(
 ): HttpApplicationLayer<ApplicationError> => {
   const applicationState = getApplicationState(application);
   const identity = getEFFRONTIdentity(application);
-  const render = Effect.fnUntraced(function* ({
+  const render = Effect.fn(function* ({
     destination,
     formState,
     middleware,
@@ -111,7 +111,7 @@ const httpLayer = <Services, ApplicationError>(
     const encodedParams = yield* destination.page.paramsSchema === null
       ? Effect.succeed(EmptyEncodedPageParams)
       : HttpRouter.params;
-    const renderResponse = Effect.fnUntraced(function* (params: PageParams) {
+    const renderResponse = Effect.fn(function* (params: PageParams) {
       const routeTree = renderRouteTree({
         destination,
         params,
@@ -217,27 +217,11 @@ const httpLayer = <Services, ApplicationError>(
             if (catchAll === null) {
               return yield* httpEffect;
             }
-            const request = yield* HttpServerRequest.HttpServerRequest;
-            const url = HttpServerRequest.toURL(request);
             const context = yield* HttpRouter.RouteContext;
             const { "*": captured, ...parameters } = context.params;
-            // Effect already decodes captures once. Reject encoded separators rather than
-            // allowing an encoded slash to alias a distinct nested content path.
-            if (
-              Option.isNone(url) ||
-              /%2f|%5c|\/\//iu.test(url.value.pathname) ||
-              Object.values(context.params).some(
-                (value) =>
-                  value !== undefined &&
-                  (/\p{Cc}/u.test(value) ||
-                    value.includes("\\") ||
-                    value.split("/").some((segment) => segment === "." || segment === "..")),
-              )
-            ) {
-              return HttpServerResponse.empty({ status: 404, headers: DynamicResponseHeaders });
-            }
+            // Matching and decoding belong to Effect HTTP. Only adapt its wildcard key.
             return yield* Effect.provideService(httpEffect, HttpRouter.RouteContext, {
-              route: { ...context.route, path: destination.pattern },
+              route: context.route,
               params: Object.freeze({ ...parameters, [catchAll]: captured ?? "" }),
             });
           }),

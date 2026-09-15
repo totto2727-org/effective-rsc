@@ -55,7 +55,7 @@ export const installCallServer = Effect.gen(function* () {
           : "CurrentRoute";
     }
   };
-  const callServer = Effect.fnUntraced(function* (
+  const callServer = Effect.fn(function* (
     id: string,
     args: Array<unknown>,
     invocationResult: PromiseWithResolvers<unknown>,
