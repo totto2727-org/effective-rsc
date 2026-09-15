@@ -244,7 +244,7 @@ export class RequestInfo extends Context.Service<
 export const EFFRONT = Application.effront();
 
 const WithRequestInfo = EFFRONT.Middleware.make<{ provides: RequestInfo }>(
-  Effect.fnUntraced(function* (httpEffect) {
+  Effect.fn(function* (httpEffect) {
     const request = yield* HttpServerRequest.HttpServerRequest;
     return yield* httpEffect.pipe(
       Effect.provideService(RequestInfo, { url: request.url }),
@@ -376,7 +376,7 @@ import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { Greeting } from "./greeting";
 
 export const GreetingApi = HttpRouter.use(
-  Effect.fnUntraced(function* (router) {
+  Effect.fn(function* (router) {
     const greeting = yield* Greeting;
     yield* router.add(
       "GET",

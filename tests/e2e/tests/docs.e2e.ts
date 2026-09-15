@@ -386,10 +386,10 @@ test.describe("server-rendered public documentation", () => {
       const baseline = page.locator("[data-architecture-baseline]");
       await expect(baseline).toHaveAttribute(
         "data-architecture-baseline",
-        "d0826188490338376058399c9026518026d246d9",
+        "9174592e352d1213cb0546b2ebc35dcf28d4e8c1",
       );
       await expect(baseline).toContainText("effront@0.1.4-workers.0");
-      await expect(baseline).toContainText("2026-09-12");
+      await expect(baseline).toContainText("2026-09-15");
       const excerpts = page.locator("main article figure[data-core-source]");
       expect(await excerpts.count(), route).toBeGreaterThan(0);
       for (const excerpt of await excerpts.all()) {

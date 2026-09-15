@@ -77,24 +77,6 @@ const literalSegments = (path: string, description: string): string[] => {
   return segments;
 };
 
-const decodedSegments = (path: string, description: string): string[] => {
-  const segments: string[] = [];
-  for (const rawSegment of path.split("/")) {
-    if (rawSegment === "" || rawSegment === ".") {
-      continue;
-    }
-    const segment = decodeSegment(rawSegment);
-    if (segment === "." || segment === "..") {
-      fail(`${description} must not contain traversal segments`);
-    }
-    if (segment.includes("/") || segment.includes("\\") || segment.includes("\0")) {
-      fail(`${description} contains an invalid path segment: ${rawSegment}`);
-    }
-    segments.push(segment);
-  }
-  return segments;
-};
-
 const sourceDirectory = (source: string): readonly string[] => {
   if (!source.startsWith("./")) {
     fail(`source must start with "./": ${source}`);
@@ -338,7 +320,13 @@ export const createMarkdownCollection = (
       if (!path.startsWith("/")) {
         return undefined;
       }
-      const segments = decodedSegments(path.slice(1), "pathname");
+      // Keep empty segments distinct, allowing only a single trailing slash alias.
+      // Decode and re-encode each segment so an encoded slash never becomes hierarchy.
+      const segments = path
+        .replace(/([^/])\/$/u, "$1")
+        .slice(1)
+        .split("/")
+        .map(decodeSegment);
       return entriesByPathname.get(encodedPathname(segments));
     },
     resolveLink: (entry, href) => resolveLocal(entry, href, false),

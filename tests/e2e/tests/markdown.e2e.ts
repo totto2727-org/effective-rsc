@@ -175,7 +175,7 @@ for (const accept of ["text/html", "text/x-component"]) {
     expect(response.status()).toBe(404);
   });
 
-  test(`rejects malformed and encoded-separator catch-all paths with ${accept}`, async ({
+  test(`returns 404 for unindexed URL segments without aliasing Markdown content with ${accept}`, async ({
     request,
   }) => {
     for (const path of [
@@ -184,9 +184,14 @@ for (const accept of ["text/html", "text/x-component"]) {
       "/manual/guide%2Fdeep/details",
       "/manual/guide%5Cdeep/details",
       "/manual/guide/deep/details%00",
+      "/manual/guide//deep/details",
+      "/manual/guide%252Fdeep/details",
     ]) {
       const response = await request.get(path, { headers: { Accept: accept } });
-      expect(response.status(), `Reject ${path} without aliasing content or throwing`).toBe(404);
+      expect(
+        response.status(),
+        `No indexed document for ${path}, without aliasing or throwing`,
+      ).toBe(404);
       expect(await response.text()).not.toContain("Deep details");
     }
   });

@@ -70,6 +70,81 @@ describe("createMarkdownCollection", () => {
     expect(markdown.get("/manual/%3Aname")?.content).toBe("# Colon");
   });
 
+  it.each([
+    "/manual/guides%2Fadvanced",
+    "/manual/guides%2fadvanced",
+    "/manual/guides%5Cadvanced",
+    "/manual/guides\\advanced",
+    "/manual/guides/advanced%00",
+    "/manual/guides/advanced\0",
+    "/manual/guides/%2E/advanced",
+    "/manual/guides/./advanced",
+    "/manual/guides/%2E%2E",
+    "/manual/guides/../guides/advanced",
+    "/manual//guides/advanced",
+    "//manual/guides/advanced",
+    "/manual/guides/advanced//",
+    "/manual//",
+    "/manual/guides/%",
+    "/manual/guides/%E0%A4",
+  ])("returns undefined for an unknown pathname without throwing: %s", (pathname) => {
+    expect(collection().get(pathname)).toBeUndefined();
+  });
+
+  it.each(["/manual/", "/manual/guides/", "/manual/guides/advanced/"])(
+    "preserves a single trailing slash alias: %s",
+    (pathname) => {
+      const markdown = collection();
+      expect(markdown.get(pathname)).toBe(markdown.get(pathname.slice(0, -1)));
+      expect(markdown.get(pathname)).toBeDefined();
+    },
+  );
+
+  it.each(["/", "/?mode=full#top"])("looks up a root index: %s", (pathname) => {
+    const markdown = createMarkdownCollection({
+      source: "./content",
+      basePath: "/",
+      documents: { "./content/index.md": "# Root" },
+    });
+    expect(markdown.get(pathname)?.content).toBe("# Root");
+  });
+
+  it.each(["//", "///", "/./", "/%2E/", "/%00", "/%2F"])(
+    "does not alias unknown paths to a root index: %s",
+    (pathname) => {
+      const markdown = createMarkdownCollection({
+        source: "./content",
+        basePath: "/",
+        documents: { "./content/index.md": "# Root" },
+      });
+      expect(markdown.get(pathname)).toBeUndefined();
+    },
+  );
+
+  it.each(["%2F", "%5C", "%00", "%2E", "%", "%E0%A4"])(
+    "looks up a literal escape filename after decoding once: %s",
+    (filename) => {
+      const markdown = createMarkdownCollection({
+        source: "./content",
+        basePath: "/manual",
+        documents: { [`./content/${filename}.md`]: "# Literal escape" },
+      });
+      expect(markdown.get(`/manual/${encodeURIComponent(filename)}`)?.content).toBe(
+        "# Literal escape",
+      );
+    },
+  );
+
+  it.each(["%2F", "%5C", "%00"])(
+    "keeps encoded separator and NUL validation for content references: %s",
+    (segment) => {
+      const entry = collection().get("/manual/guides/advanced")!;
+      // Links and images share the local-reference validation contract.
+      expect(() => entry.resolveLink(`${segment}.md`)).toThrow(/invalid path segment/u);
+      expect(() => entry.resolveImage(`${segment}.svg`)).toThrow(/invalid path segment/u);
+    },
+  );
+
   it("resolves Markdown relative to its source directory and preserves suffixes", () => {
     const markdown = collection();
     const entry = markdown.get("/manual/guides/advanced");

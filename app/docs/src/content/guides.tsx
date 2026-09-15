@@ -237,9 +237,10 @@ const routes = EFFRONT.Routes.make({ layout: RootLayout })
         <p>
           <code>/manual</code> と <code>/manual/</code> では <code>path</code>{" "}
           は空文字列になります。
-          <code>/manual/a/b</code> では <code>"a/b"</code> を一度だけdecodeしてSchemaへ渡します。
-          catch-all は末尾だけに置けます。<code>/manual</code>{" "}
-          を別のPageとして同時に登録することはできません。
+          <code>/manual/a/b</code> では Effect HTTP が一度だけdecodeした <code>"a/b"</code>{" "}
+          をSchemaへ渡します。URLの照合と検証はEffect
+          HTTPへ委ね、coreはcatch-allの名前を変換します。 catch-all は末尾だけに置けます。
+          <code>/manual</code> を別のPageとして同時に登録することはできません。
         </p>
         <h2 id="mount">ネストした Routes と Loading</h2>
         <p>

@@ -10,6 +10,10 @@ See [the package README](../packages/markdown/README.md) for installation, compo
 Relative links resolve from the containing source file, preserving query strings and fragments.
 Images and non-document links resolve through the supplied Vite asset map.
 A single named catch-all Page handles the collection. Middleware looks up the original request URL, returns 404 before streaming for missing entries, and provides the found entry through request-scoped Effect context.
+Core delegates URL matching and capture decoding to Effect HTTP and only renames the catch-all parameter.
+Collection lookup decodes each original URL path segment once and re-encodes it for the document index, so encoded separators do not become directory boundaries.
+Paths without an indexed document produce a lookup miss rather than a collection error.
+Valid escapes are decoded once, while malformed escapes remain literal filename text, preserving percent characters without a second decode.
 
 ## Default rendering
 
@@ -46,7 +50,7 @@ Creating its follow-up issue is currently blocked because the fork has GitHub Is
 - Markdown browser acceptance passed 32 cases, with two intentional host-specific skips.
 - Existing Workers acceptance passed 36 cases; documentation acceptance passed 12 cases.
 - One `/manual/*path` route serves the directory root and arbitrary nested documents through request-time lookup.
-- Unknown documents return 404 for HTML and Flight before streaming begins. Malformed escapes, encoded separators, and control characters are rejected before lookup.
+- Unknown documents return 404 for HTML and Flight before streaming begins. Current collection lookup preserves segment boundaries, so encoded separators do not alias nested documents.
 - Real dev content editing, glob addition, and glob deletion update the collection while the route stays fixed. The added filename includes literal `%20`, exercising decode-once behavior through its `%2520` URL.
 - Built client module inspection found no Markdown parser or highlighter implementation; browser requests required no remote font service.
 - The npm tarball contains public source, stylesheet, README, and license, without tests or temporary evidence.

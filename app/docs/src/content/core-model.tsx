@@ -468,7 +468,8 @@ export const coreModelPages: readonly DocPage[] = [
           PageのmiddlewareとリクエストContextを通った後、パラメーター付きPageでは{" "}
           <code>HttpRouter.params</code> を読みます。 catch-allではEffect
           HTTPが一度decodeした残りのcaptureを、宣言した名前へ入れ直します。
-          空のcaptureは空文字列とし、エンコードされた区切り文字、backslash、制御文字を含むcaptureは404にします。
+          空のcaptureは空文字列とします。URLの検証とcaptureのdecodeはEffect HTTPへ委ね、
+          coreはcatch-allのパラメーター名だけを変換します。
           次の抜粋は、その値に対するSchema検証と描画の分岐です。
         </p>
         <SourceExcerpt source={coreModelSources.parameterValidation} />
