@@ -1,6 +1,6 @@
 {
   "name": "@effront/cloudflare",
-  "version": "0.1.4-workers.0",
+  "version": "0.1.0",
   "description": "Effront Cloudflare Workers Vite integration and typed request context accessors.",
   "license": "MIT",
   "repository": {
@@ -23,7 +23,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "next"
+    "tag": "latest"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "1.54.7"

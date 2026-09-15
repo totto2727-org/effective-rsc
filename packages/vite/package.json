@@ -1,6 +1,6 @@
 {
   "name": "@effront/vite",
-  "version": "0.1.4-workers.0",
+  "version": "0.1.0",
   "description": "Effront portable Vite RSC and React Compiler integration.",
   "license": "MIT",
   "repository": {
@@ -22,7 +22,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "next"
+    "tag": "latest"
   },
   "dependencies": {
     "@vitejs/plugin-react": "6.1.1",
